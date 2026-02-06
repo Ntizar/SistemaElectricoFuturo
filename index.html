@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador interactivo del sistema eléctrico español 2026-2035. Analiza escenarios de mix energético, precios mayoristas, emisiones y cumplimiento PNIEC.">
+    <meta name="author" content="David Antizar">
+    <title>Simulador Sistema Eléctrico Español 2026-2035 | David Antizar</title>
+
+    <!-- Dependencias externas -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos propios -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             LOADING OVERLAY
+        ════════════════════════════════════════════════════════════════ -->
+        <div class="loading-overlay" v-if="simulando">
+            <div class="loading-spinner"></div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             HEADER
+        ════════════════════════════════════════════════════════════════ -->
+        <header>
+            <div class="header-brand">
+                <div class="header-logo">⚡</div>
+                <div>
+                    <h1>Simulador Sistema Eléctrico España</h1>
+                    <div class="header-subtitle">Horizonte 2026-2035 · Simulación hora a hora (8760 h)</div>
+                </div>
+            </div>
+            <div class="header-meta">
+                <div class="header-scenario-badge">{{ nombreEscenario }} · {{ params.anioObjetivo }}</div>
+                <div class="header-author">
+                    <div class="header-author-name">David Antizar</div>
+                    <div class="header-author-role">Análisis Energético</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             SIDEBAR — CONTROLES
+        ════════════════════════════════════════════════════════════════ -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="action-row">
+                    <button class="btn btn-primary btn-full btn-simulate" @click="simular">🚀 Simular</button>
+                    <button class="btn btn-ghost" @click="resetear" title="Volver a configuración 2025">🔄</button>
+                </div>
+
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab" :class="{active: tabActual === 'escenarios'}" @click="tabActual = 'escenarios'">📊 Escenarios</button>
+                    <button class="sidebar-tab" :class="{active: tabActual === 'config'}" @click="tabActual = 'config'">📖 Guía</button>
+                    <button class="sidebar-tab" :class="{active: tabActual === 'pniec'}" @click="tabActual = 'pniec'">📋 PNIEC</button>
+                </div>
+            </div>
+
+            <div class="sidebar-body">
+
+                <!-- ═══════════════════════════════════════════════════════
+                     TAB: ESCENARIOS Y PARÁMETROS
+                ════════════════════════════════════════════════════════ -->
+                <div v-show="tabActual === 'escenarios'">
+
+                    <!-- Info rapida -->
+                    <div class="info-box" style="margin-bottom: 10px;">
+                        <h4>ℹ️ Cómo influyen los controles</h4>
+                        <ul>
+                            <li><strong>Capacidad (GW):</strong> sube producción de esa tecnología; más solar/eólica baja precio salvo que genere vertidos.</li>
+                            <li><strong>Almacenamiento:</strong> reduce vertidos y precios nocturnos; potencia = MW instantáneos, capacidad = horas útiles.</li>
+                            <li><strong>Precio Gas / CO₂:</strong> encarece las horas con CCGT; impacta en precio medio, emisiones y dependencia gas.</li>
+                            <li><strong>Demanda:</strong> más TWh = más horas con gas si no hay flex.</li>
+                            <li><strong>Cargos/Peajes:</strong> suben todos los precios; simulan ajustes CNMC/red.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Escenarios predefinidos -->
+                    <div class="control-group">
+                        <div class="control-group-header">
+                            🎯 Escenarios Predefinidos
+                        </div>
+                        <div class="control-group-body">
+                            <div class="scenario-pills">
+                                <div v-for="esc in escenarios" :key="esc.id"
+                                     class="pill"
+                                     :class="{active: escenarioActual === esc.id, reference: esc.estilo === 'reference'}"
+                                     @click="cargarEscenario(esc.id)">
+                                    {{ esc.icono }} {{ esc.nombre }}
+                                </div>
+                            </div>
+
+                            <div class="slider-row mt-sm">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Semilla meteorológica</span>
+                                    <span class="slider-value">{{ params.semilla }}</span>
+                                </div>
+                                <input type="number" v-model.number="params.semilla" min="1" max="9999" step="1">
+                                <div class="hint-text">Misma semilla = misma meteorología. Cambia para explorar variabilidad.</div>
+                                <div class="seed-input-row">
+                                    <button class="btn btn-ghost btn-sm" @click="randomizarSemilla">🎲 Aleatoria</button>
+                                    <button class="btn btn-ghost btn-sm" @click="copiarConfig">📋 Copiar config</button>
+                                </div>
+                                <div class="copy-toast" v-if="copiado">✓ Configuración copiada al portapapeles</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Capacidad Instalada -->
+                    <div class="control-group">
+                        <div class="control-group-header">⚛️ Capacidad Instalada (GW)</div>
+                        <div class="control-group-body">
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">🔴 Nuclear</span>
+                                    <span class="slider-value">{{ params.nuclear.toFixed(1) }} GW</span>
+                                </div>
+                                <input type="range" v-model.number="params.nuclear" min="0" max="10" step="0.1">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">🟡 Solar FV</span>
+                                    <span class="slider-value">{{ params.solar.toFixed(0) }} GW</span>
+                                </div>
+                                <input type="range" v-model.number="params.solar" min="0" max="150" step="1">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">🟢 Eólica</span>
+                                    <span class="slider-value">{{ params.eolica.toFixed(0) }} GW</span>
+                                </div>
+                                <input type="range" v-model.number="params.eolica" min="0" max="100" step="1">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">🔵 Hidráulica</span>
+                                    <span class="slider-value">{{ params.hidraulica.toFixed(1) }} GW</span>
+                                </div>
+                                <input type="range" v-model.number="params.hidraulica" min="0" max="25" step="0.5">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">⚫ CCGT Gas</span>
+                                    <span class="slider-value">{{ params.ccgt.toFixed(1) }} GW</span>
+                                </div>
+                                <input type="range" v-model.number="params.ccgt" min="0" max="40" step="0.5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Almacenamiento -->
+                    <div class="control-group">
+                        <div class="control-group-header">🔋 Almacenamiento</div>
+                        <div class="control-group-body">
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Potencia Baterías</span>
+                                    <span class="slider-value">{{ params.bateriasPotencia.toFixed(1) }} GW</span>
+                                </div>
+                                <input type="range" v-model.number="params.bateriasPotencia" min="0" max="50" step="0.5">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Capacidad Baterías</span>
+                                    <span class="slider-value">{{ params.bateriasCapacidad }} GWh</span>
+                                </div>
+                                <input type="range" v-model.number="params.bateriasCapacidad" min="0" max="200" step="1">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Potencia Bombeo</span>
+                                    <span class="slider-value">{{ params.bombeo.toFixed(1) }} GW</span>
+                                </div>
+                                <input type="range" v-model.number="params.bombeo" min="0" max="15" step="0.5">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Capacidad Bombeo</span>
+                                    <span class="slider-value">{{ params.bombeoCapacidad }} GWh</span>
+                                </div>
+                                <input type="range" v-model.number="params.bombeoCapacidad" min="0" max="100" step="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Precios Commodities -->
+                    <div class="control-group">
+                        <div class="control-group-header">💰 Precios Commodities & Costes</div>
+                        <div class="control-group-body">
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Gas TTF</span>
+                                    <span class="slider-value">{{ params.precioGas }} €/MWh</span>
+                                </div>
+                                <input type="range" v-model.number="params.precioGas" min="15" max="120" step="1">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">CO₂ ETS</span>
+                                    <span class="slider-value">{{ params.precioCO2 }} €/ton</span>
+                                </div>
+                                <input type="range" v-model.number="params.precioCO2" min="30" max="150" step="5">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Rendimiento CCGT</span>
+                                    <span class="slider-value">{{ (params.rendimientoCCGT * 100).toFixed(0) }}%</span>
+                                </div>
+                                <input type="range" v-model.number="params.rendimientoCCGT" min="0.45" max="0.62" step="0.01">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">O&M Variable CCGT</span>
+                                    <span class="slider-value">{{ params.omCCGT.toFixed(1) }} €/MWh</span>
+                                </div>
+                                <input type="range" v-model.number="params.omCCGT" min="1" max="8" step="0.1">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Cargos + Peajes</span>
+                                    <span class="slider-value">{{ params.cargosSistema.toFixed(1) }} €/MWh</span>
+                                </div>
+                                <input type="range" v-model.number="params.cargosSistema" min="5" max="25" step="0.5">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Pérdidas de Red</span>
+                                    <span class="slider-value">{{ (params.perdidasRed * 100).toFixed(1) }}%</span>
+                                </div>
+                                <input type="range" v-model.number="params.perdidasRed" min="0" max="0.08" step="0.005">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Demanda -->
+                    <div class="control-group">
+                        <div class="control-group-header">📈 Demanda</div>
+                        <div class="control-group-body">
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Demanda Anual</span>
+                                    <span class="slider-value">{{ params.demandaAnual }} TWh</span>
+                                </div>
+                                <input type="range" v-model.number="params.demandaAnual" min="240" max="300" step="1">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Hidraulicidad</span>
+                                    <span class="slider-value">{{ (params.hidraulicidad * 100).toFixed(0) }}%</span>
+                                </div>
+                                <input type="range" v-model.number="params.hidraulicidad" min="0.5" max="1.5" step="0.05">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Horizonte temporal -->
+                    <div class="control-group">
+                        <div class="control-group-header">📆 Horizonte 2026-2035</div>
+                        <div class="control-group-body">
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Año objetivo</span>
+                                    <span class="slider-value">{{ params.anioObjetivo }}</span>
+                                </div>
+                                <input type="range" v-model.number="params.anioObjetivo" min="2026" max="2035" step="1">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Crecimiento demanda</span>
+                                    <span class="slider-value">{{ params.crecimientoDemanda.toFixed(1) }}%/año</span>
+                                </div>
+                                <input type="range" v-model.number="params.crecimientoDemanda" min="-1" max="2.5" step="0.1">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Electrificación extra</span>
+                                    <span class="slider-value">{{ params.electrificacionTWh.toFixed(1) }} TWh/año</span>
+                                </div>
+                                <input type="range" v-model.number="params.electrificacionTWh" min="0" max="8" step="0.2">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Eficiencia/ahorro</span>
+                                    <span class="slider-value">{{ params.eficienciaDemanda.toFixed(1) }}%</span>
+                                </div>
+                                <input type="range" v-model.number="params.eficienciaDemanda" min="0" max="8" step="0.2">
+                            </div>
+                            <div class="slider-row">
+                                <label class="checkbox-row">
+                                    <input type="checkbox" v-model="params.aplicarPlanNuclear">
+                                    Aplicar plan de cierre nuclear
+                                </label>
+                            </div>
+                            <div class="slider-row" v-if="params.aplicarPlanNuclear">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Año cierre nuclear</span>
+                                    <span class="slider-value">{{ params.cierreNuclear }}</span>
+                                </div>
+                                <input type="range" v-model.number="params.cierreNuclear" min="2028" max="2035" step="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flexibilidad -->
+                    <div class="control-group">
+                        <div class="control-group-header">🔁 Flexibilidad de Demanda</div>
+                        <div class="control-group-body">
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Potencia flexible</span>
+                                    <span class="slider-value">{{ params.flexibilidadGW.toFixed(1) }} GW</span>
+                                </div>
+                                <input type="range" v-model.number="params.flexibilidadGW" min="0" max="15" step="0.5">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">% demanda gestionable</span>
+                                    <span class="slider-value">{{ params.flexibilidadPct }}%</span>
+                                </div>
+                                <input type="range" v-model.number="params.flexibilidadPct" min="0" max="20" step="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interconexiones -->
+                    <div class="control-group">
+                        <div class="control-group-header">🔗 Interconexiones y Escasez</div>
+                        <div class="control-group-body">
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Interconexión max</span>
+                                    <span class="slider-value">{{ params.interconexion.toFixed(1) }} GW</span>
+                                </div>
+                                <input type="range" v-model.number="params.interconexion" min="0" max="10" step="0.5">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Precio importación</span>
+                                    <span class="slider-value">{{ params.precioImport }} €/MWh</span>
+                                </div>
+                                <input type="range" v-model.number="params.precioImport" min="40" max="180" step="5">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Precio exportación</span>
+                                    <span class="slider-value">{{ params.precioExport }} €/MWh</span>
+                                </div>
+                                <input type="range" v-model.number="params.precioExport" min="0" max="40" step="2">
+                            </div>
+                            <div class="slider-row">
+                                <div class="slider-label">
+                                    <span class="slider-label-name">Precio escasez (VOLL)</span>
+                                    <span class="slider-value">{{ params.precioEscasez }} €/MWh</span>
+                                </div>
+                                <input type="range" v-model.number="params.precioEscasez" min="200" max="600" step="10">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     TAB: GUÍA / SISTEMA
+                ════════════════════════════════════════════════════════ -->
+                <div v-show="tabActual === 'config'">
+                    <div class="info-box">
+                        <h4>📖 Cómo Funciona el Sistema Eléctrico</h4>
+                        <p>El sistema eléctrico español cubre la demanda hora a hora siguiendo un <strong>orden de mérito</strong> (merit order) basado en costes marginales:</p>
+                        <div class="merit-order">
+                            <span class="merit-item" style="background: rgba(239,68,68,0.15); color: #fca5a5;">1. Nuclear</span>
+                            <span class="merit-arrow">→</span>
+                            <span class="merit-item" style="background: rgba(250,204,21,0.15); color: #fde68a;">2. Solar</span>
+                            <span class="merit-arrow">→</span>
+                            <span class="merit-item" style="background: rgba(34,197,94,0.15); color: #86efac;">3. Eólica</span>
+                            <span class="merit-arrow">→</span>
+                            <span class="merit-item" style="background: rgba(59,130,246,0.15); color: #93c5fd;">4. Hidro</span>
+                            <span class="merit-arrow">→</span>
+                            <span class="merit-item" style="background: rgba(148,163,184,0.15); color: #cbd5e1;">5. Gas</span>
+                        </div>
+                        <p><strong>Reglas del despacho:</strong></p>
+                        <ul>
+                            <li><strong>Nuclear:</strong> Base inflexible, factor de capacidad ~90%</li>
+                            <li><strong>Solar:</strong> Geometría solar real (latitud 40.4°N) + nubosidad</li>
+                            <li><strong>Eólica:</strong> Modelo con persistencia meteorológica y estacionalidad</li>
+                            <li><strong>Hidráulica:</strong> Gestionable, reservada para picos</li>
+                            <li><strong>Gas CCGT:</strong> Respaldo final con limitación de rampa</li>
+                            <li><strong>Almacenamiento:</strong> Carga con excedentes, descarga en déficit</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box">
+                        <h4>🔋 Almacenamiento y Vertidos</h4>
+                        <p><strong>Las baterías entran cuando hay exceso de renovables:</strong></p>
+                        <ul>
+                            <li>Se cargan con excedentes solares/eólicos (eficiencia 90%)</li>
+                            <li>Se descargan cuando hay déficit antes que el gas</li>
+                            <li>El bombeo hidráulico funciona igual (eficiencia 75%)</li>
+                        </ul>
+                        <p><strong>Vertidos:</strong> Energía renovable perdida cuando la generación supera demanda + almacenamiento + exportación disponible.</p>
+                    </div>
+
+                    <div class="info-box">
+                        <h4>💶 Formación de Precios (Marginalista)</h4>
+                        <ul>
+                            <li>El precio lo marca la <strong>última tecnología necesaria</strong> (OMIE)</li>
+                            <li>CCGT: Gas/eficiencia + CO₂/eficiencia × ETS + O&M + prima estrés</li>
+                            <li>Se añaden <strong>pérdidas de red</strong> y <strong>cargos/peajes</strong> regulados</li>
+                            <li>Más renovables = precios más bajos (canibalización renovable)</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box">
+                        <h4>🧠 Cómo leer el simulador</h4>
+                        <ul>
+                            <li><strong>Media ponderada:</strong> pondera por demanda horaria (≈ PMD real)</li>
+                            <li><strong>P10/P50/P90:</strong> rango típico; alerta si P90 &gt; 150€</li>
+                            <li><strong>Horas negativas:</strong> exceso renovable + poca flexibilidad</li>
+                            <li><strong>Vertidos &gt; 5%:</strong> instala baterías antes que más potencia renovable</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box">
+                        <h4>🔗 Fuentes oficiales</h4>
+                        <ul>
+                            <li><a href="https://www.ree.es/es/datos" target="_blank" rel="noopener">REE — Datos del sistema eléctrico</a></li>
+                            <li><a href="https://www.omie.es/" target="_blank" rel="noopener">OMIE — Mercado diario e intradiario</a></li>
+                            <li><a href="https://www.miteco.gob.es/es/energia/temas/planificacion/plan-nacional-integrado-energia-clima.html" target="_blank" rel="noopener">MITECO — PNIEC</a></li>
+                            <li><a href="https://www.cnmc.es/ambitos-de-actuacion/energia/peajes-y-cargos" target="_blank" rel="noopener">CNMC — Peajes y cargos</a></li>
+                            <li><a href="https://transparency.entsoe.eu/" target="_blank" rel="noopener">ENTSO-E — Transparencia europea</a></li>
+                            <li><a href="https://climate.ec.europa.eu/eu-action/eu-emissions-trading-system-eu-ets_es" target="_blank" rel="noopener">EU ETS — Precio CO₂</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     TAB: PNIEC
+                ════════════════════════════════════════════════════════ -->
+                <div v-show="tabActual === 'pniec'">
+                    <div class="control-group">
+                        <div class="control-group-header">📋 Cumplimiento PNIEC 2030</div>
+                        <div class="control-group-body">
+                            <div class="pniec-item" v-for="item in pniecStatus" :key="item.indicador">
+                                <div>
+                                    <div class="pniec-label">{{ item.indicador }}</div>
+                                    <div class="pniec-detail">Objetivo: {{ item.objetivo }} | Actual: {{ item.actual }}</div>
+                                </div>
+                                <div class="pniec-status" :class="item.status">
+                                    {{ item.status === 'cumple' ? '✓ CUMPLE' : item.status === 'parcial' ? '~ PARCIAL' : '✗ NO CUMPLE' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <h4>📊 {{ nombreEscenario }}</h4>
+                        <p>{{ descripcionEscenario }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats siempre visibles -->
+            <div class="stats-grid">
+                <div class="stat-box" :class="{'warning': resultados.precioMedio > 80}">
+                    <div class="stat-value">{{ resultados.precioMedio.toFixed(0) }}</div>
+                    <div class="stat-label">€/MWh Precio</div>
+                </div>
+                <div class="stat-box" :class="{'warning': resultados.emisionesAnuales > 40}">
+                    <div class="stat-value">{{ resultados.emisionesAnuales.toFixed(1) }}</div>
+                    <div class="stat-label">Mt CO₂/año</div>
+                </div>
+                <div class="stat-box" :class="{'success': resultados.coberturaRenovable > 70}">
+                    <div class="stat-value">{{ resultados.coberturaRenovable.toFixed(0) }}</div>
+                    <div class="stat-label">% Renovable</div>
+                </div>
+                <div class="stat-box" :class="{'warning': resultados.dependenciaGas > 20}">
+                    <div class="stat-value">{{ resultados.dependenciaGas.toFixed(0) }}</div>
+                    <div class="stat-label">% Gas</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             MAIN CONTENT
+        ════════════════════════════════════════════════════════════════ -->
+        <main class="main-content">
+
+            <!-- Tabs principales -->
+            <div class="viz-panel" style="padding: 8px 14px;">
+                <div class="flex-between">
+                    <div class="main-tabs">
+                        <button class="main-tab" :class="{active: tabPrincipal === 'dashboard'}" @click="cambiarTabPrincipal('dashboard')">📊 Dashboard</button>
+                        <button class="main-tab" :class="{active: tabPrincipal === 'analisis'}" @click="cambiarTabPrincipal('analisis')">📈 Análisis</button>
+                    </div>
+                    <div class="header-scenario-badge" style="font-size: 0.65rem;">
+                        Demanda: {{ resultados.demandaAjustadaTWh.toFixed(0) }} TWh · Nuclear: {{ resultados.nuclearEfectivaGW.toFixed(1) }} GW
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════
+                 DASHBOARD VIEW
+            ════════════════════════════════════════════════════════ -->
+            <template v-if="tabPrincipal === 'dashboard'">
+
+                <!-- Indicadores Críticos -->
+                <div class="viz-panel">
+                    <div class="viz-title">⚠️ Indicadores Críticos — Impacto del Mix Energético</div>
+                    <div class="critical-grid">
+                        <div class="critical-card">
+                            <div class="critical-label">🔥 Consumo Gas Anual</div>
+                            <div class="critical-value" :class="criticalClass(resultados.consumoGasTWh, 40, 60)">
+                                {{ resultados.consumoGasTWh.toFixed(1) }} TWh
+                            </div>
+                            <div class="critical-sub">
+                                {{ resultados.horasGas.toFixed(0) }} h con gas ·
+                                {{ ((resultados.consumoGasTWh / Math.max(1, resultados.demandaAjustadaTWh)) * 100).toFixed(1) }}% del mix
+                            </div>
+                        </div>
+                        <div class="critical-card">
+                            <div class="critical-label">⚡ Vertidos Renovables</div>
+                            <div class="critical-value" :class="criticalClass(resultados.vertidosTWh, 5, 15)">
+                                {{ resultados.vertidosTWh.toFixed(1) }} TWh
+                            </div>
+                            <div class="critical-sub">
+                                {{ resultados.horasVertido.toFixed(0) }} h con vertidos ·
+                                {{ resultados.vertidosPct.toFixed(1) }}% de VRE
+                            </div>
+                        </div>
+                        <div class="critical-card">
+                            <div class="critical-label">🚨 Déficit / Estrés</div>
+                            <div class="critical-value" :class="criticalClass(resultados.horasDeficit, 20, 100)">
+                                {{ resultados.horasDeficit.toFixed(0) }} h
+                            </div>
+                            <div class="critical-sub">
+                                Gen &lt; 98% demanda ·
+                                Pico: {{ resultados.maxDeficit.toFixed(1) }} GW
+                            </div>
+                        </div>
+                        <div class="critical-card">
+                            <div class="critical-label">🔗 Interconexión & Flex</div>
+                            <div class="critical-value" :class="criticalClass(resultados.importacionesTWh, 15, 30)">
+                                {{ resultados.importacionesTWh.toFixed(1) }} TWh
+                            </div>
+                            <div class="critical-sub">
+                                Exp: {{ resultados.exportacionesTWh.toFixed(1) }} TWh ·
+                                Flex: {{ resultados.demandaFlexTWh.toFixed(1) }} TWh ·
+                                DR: {{ resultados.demandaReducidaTWh.toFixed(1) }} TWh
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mix de Generación -->
+                <div class="viz-panel" style="flex: 1; min-height: 320px;">
+                    <div class="viz-panel-header">
+                        <div class="viz-title">📊 Mix de Generación</div>
+                        <div class="viz-controls">
+                            <label>Semana:</label>
+                            <select v-model.number="semanaVista" @change="actualizarGraficos">
+                                <option value="2">Ene (Invierno)</option>
+                                <option value="10">Mar (Primavera)</option>
+                                <option value="25">Jun (Verano)</option>
+                                <option value="35">Sep (Otoño)</option>
+                                <option value="45">Nov (Otoño tard.)</option>
+                            </select>
+                            <button class="btn btn-ghost btn-sm" @click="toggleVistaAnual">
+                                {{ vistaAnual ? '📅 Semanal' : '📈 Anual' }}
+                            </button>
+                        </div>
+                    </div>
+                    <div id="plot-mix" style="height: calc(100% - 35px); min-height: 280px;"></div>
+                </div>
+
+                <!-- Fila inferior: Precios + Comparación -->
+                <div class="charts-row">
+                    <!-- Precios -->
+                    <div class="viz-panel">
+                        <div class="viz-panel-header">
+                            <div class="viz-title">💶 Precio Mayorista</div>
+                            <div class="viz-controls gap-sm">
+                                <button class="btn btn-ghost btn-sm" :class="{active: vistaPrecios === 'semana'}" @click="cambiarVistaPrecios('semana')">Semana</button>
+                                <button class="btn btn-ghost btn-sm" :class="{active: vistaPrecios === 'anual'}" @click="cambiarVistaPrecios('anual')">Distrib.</button>
+                                <button class="btn btn-ghost btn-sm" :class="{active: vistaPrecios === 'duracion'}" @click="cambiarVistaPrecios('duracion')">Duración</button>
+                            </div>
+                        </div>
+                        <div id="plot-precios" style="height: 195px;"></div>
+                        <div class="price-stats-inline">
+                            <div class="price-stat-item">
+                                <div class="price-stat-label">Media (simple)</div>
+                                <div class="price-stat-value">{{ resultados.precioMedio.toFixed(1) }}</div>
+                            </div>
+                            <div class="price-stat-item">
+                                <div class="price-stat-label">Media ponderada</div>
+                                <div class="price-stat-value">{{ resultados.precioMedioPonderado.toFixed(1) }}</div>
+                            </div>
+                            <div class="price-stat-item">
+                                <div class="price-stat-label">P10 · P50 · P90</div>
+                                <div class="price-stat-value" style="font-size: 0.72rem;">
+                                    {{ resultados.precioP10.toFixed(0) }} · {{ resultados.precioMediana.toFixed(0) }} · {{ resultados.precioP90.toFixed(0) }}
+                                </div>
+                            </div>
+                            <div class="price-stat-item">
+                                <div class="price-stat-label">Horas &lt; 0€</div>
+                                <div class="price-stat-value">{{ resultados.horasPrecioNegativo }}</div>
+                            </div>
+                            <div class="price-stat-item">
+                                <div class="price-stat-label">Horas &gt; 150€</div>
+                                <div class="price-stat-value">{{ resultados.horasPrecioAlto }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparación con 2025 -->
+                    <div class="viz-panel">
+                        <div class="viz-title">📈 Comparación con datos 2025</div>
+                        <div class="comparison-grid">
+                            <div class="comparison-card">
+                                <div class="comparison-title">Gas (TWh)</div>
+                                <div class="comparison-values">
+                                    <span class="val-2025">{{ datos2025.gasTWh }}</span>→
+                                    <span class="val-sim">{{ resultados.consumoGasTWh.toFixed(0) }}</span>
+                                </div>
+                                <div class="val-diff" :class="diffClass(resultados.consumoGasTWh, datos2025.gasTWh)">
+                                    {{ diffPct(resultados.consumoGasTWh, datos2025.gasTWh).toFixed(0) }}%
+                                </div>
+                            </div>
+                            <div class="comparison-card">
+                                <div class="comparison-title">CO₂ (Mt)</div>
+                                <div class="comparison-values">
+                                    <span class="val-2025">{{ datos2025.emisiones }}</span>→
+                                    <span class="val-sim">{{ resultados.emisionesAnuales.toFixed(0) }}</span>
+                                </div>
+                                <div class="val-diff" :class="diffClass(resultados.emisionesAnuales, datos2025.emisiones)">
+                                    {{ diffPct(resultados.emisionesAnuales, datos2025.emisiones).toFixed(0) }}%
+                                </div>
+                            </div>
+                            <div class="comparison-card">
+                                <div class="comparison-title">Precio (€)</div>
+                                <div class="comparison-values">
+                                    <span class="val-2025">{{ datos2025.precioMedio }}</span>→
+                                    <span class="val-sim">{{ resultados.precioMedio.toFixed(0) }}</span>
+                                </div>
+                                <div class="val-diff" :class="diffClass(resultados.precioMedio, datos2025.precioMedio)">
+                                    {{ diffPct(resultados.precioMedio, datos2025.precioMedio).toFixed(0) }}%
+                                </div>
+                            </div>
+                            <div class="comparison-card">
+                                <div class="comparison-title">% Renovable</div>
+                                <div class="comparison-values">
+                                    <span class="val-2025">{{ datos2025.renovables }}%</span>→
+                                    <span class="val-sim">{{ resultados.coberturaRenovable.toFixed(0) }}%</span>
+                                </div>
+                                <div class="val-diff" :class="diffClass(resultados.coberturaRenovable, datos2025.renovables, true)">
+                                    {{ resultados.coberturaRenovable > datos2025.renovables ? '+' : '' }}{{ (resultados.coberturaRenovable - datos2025.renovables).toFixed(0) }}pp
+                                </div>
+                            </div>
+                        </div>
+                        <div id="plot-barras" style="height: 150px; margin-top: 8px;"></div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ═══════════════════════════════════════════════════════
+                 ANÁLISIS VIEW
+            ════════════════════════════════════════════════════════ -->
+            <template v-if="tabPrincipal === 'analisis'">
+                <div class="viz-panel" style="flex: 1; min-height: 300px;">
+                    <div class="viz-title">📊 Generación Mensual por Tecnología (TWh)</div>
+                    <div id="plot-mensual" style="height: calc(100% - 30px); min-height: 270px;"></div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="viz-panel">
+                        <div class="viz-title">💶 Precio Medio Mensual (€/MWh)</div>
+                        <div id="plot-precios-mensuales" style="height: 240px;"></div>
+                    </div>
+                    <div class="viz-panel">
+                        <div class="viz-title">📉 Curva de Duración de Precios</div>
+                        <div id="plot-duracion" style="height: 240px;"></div>
+                    </div>
+                </div>
+            </template>
+
+        </main>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SCRIPTS — Orden de carga importante
+    ════════════════════════════════════════════════════════════════════ -->
+    <script src="js/constants.js"></script>
+    <script src="js/scenarios.js"></script>
+    <script src="js/simulator.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
