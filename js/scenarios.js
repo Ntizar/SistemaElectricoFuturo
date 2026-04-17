@@ -2,189 +2,368 @@
  * ============================================================================
  *  ESCENARIOS PREDEFINIDOS
  * ============================================================================
- *  Configuraciones de escenarios basados en planes oficiales, hipótesis
- *  de política energética y eventos de mercado.
- *
- *  Cada escenario define todos los parámetros del simulador para reflejar
- *  una situación concreta y coherente del sistema eléctrico español.
- *
- *  Autor: David Antizar
- * ============================================================================
  */
 
 'use strict';
 
 (function() {
+    function escenario(id, nombre, icono, descripcion, params, extra = {}) {
+        return {
+            id,
+            nombre,
+            icono,
+            descripcion,
+            estilo: extra.estilo || 'default',
+            anio: extra.anio || params.anioObjetivo || SEF.PARAMS_DEFAULT.anioObjetivo,
+            params: { ...SEF.PARAMS_DEFAULT, ...params },
+        };
+    }
 
     SEF.ESCENARIOS = [
-        // ── 0. Datos Reales 2025 ─────────────────────────────────────────
-        {
-            id: 0,
-            nombre: 'Datos Reales 2025',
-            icono: '📅',
-            estilo: 'reference',
-            descripcion: 'Configuración basada en datos reales de 2025. Nuclear 7 GW (51.9 TWh), Solar 24 GW (52.5 TWh), Eólica 31 GW (55.6 TWh), Gas CCGT 24 GW (52.1 TWh). Precio medio OMIE ~65 €/MWh.',
-            params: {
-                nuclear: 7.0, solar: 24.0, eolica: 31.0, hidraulica: 17.0, ccgt: 24.0,
-                bateriasPotencia: 3.0, bateriasCapacidad: 10, bombeo: 3.5, bombeoCapacidad: 30,
-                precioGas: 42, precioCO2: 65, rendimientoCCGT: 0.55, omCCGT: 3.0,
-                cargosSistema: 12.0, perdidasRed: 0.05, semilla: 42,
-                demandaAnual: 260, hidraulicidad: 1.0,
-                anioObjetivo: 2026, crecimientoDemanda: 0.2, electrificacionTWh: 1.0,
-                eficienciaDemanda: 0.3, aplicarPlanNuclear: true, cierreNuclear: 2035,
-                flexibilidadGW: 3.0, flexibilidadPct: 5,
-                interconexion: 3.0, precioImport: 90, precioExport: 5, precioEscasez: 350
+        escenario(
+            0,
+            'Datos Reales 2025',
+            '📅',
+            'Aproxima el sistema espanol observado en 2025 con demanda moderada, poca offshore y almacenamiento todavia limitado.',
+            {
+                anioObjetivo: 2026,
+                nuclear: 7.0,
+                solar: 24.7,
+                eolica: 31.6,
+                eolicaOffshore: 0,
+                hidraulica: 17.1,
+                ccgt: 24.0,
+                bateriasPotencia: 3.0,
+                bateriasCapacidad: 10,
+                precioGas: 42,
+                precioCO2: 65,
+                demandaAnual: 248,
+                crecimientoDemanda: 0.2,
+                electrificacionTWh: 1.0,
+                eficienciaDemanda: 0.2,
+                vePorcentajeParque: 2,
+                bombaCalorPct: 8,
+                h2ObjetivoMt: 0.05,
+                autoconsumoFV_GW: 8,
+            },
+            { estilo: 'reference', anio: 2025 }
+        ),
+        escenario(
+            1,
+            'PNIEC Base 2030',
+            '📊',
+            'Escenario base de despliegue renovable fuerte con cierre nuclear progresivo y almacenamiento en linea con el PNIEC.',
+            {
+                anioObjetivo: 2030,
+                nuclear: 7.0,
+                solar: 76,
+                eolica: 62,
+                eolicaOffshore: 1,
+                hidraulica: 17,
+                ccgt: 26,
+                bateriasPotencia: 14,
+                bateriasCapacidad: 56,
+                bombeo: 7,
+                bombeoCapacidad: 50,
+                precioGas: 45,
+                precioCO2: 85,
+                demandaAnual: 255,
+                crecimientoDemanda: 0.8,
+                electrificacionTWh: 3.2,
+                eficienciaDemanda: 0.8,
+                flexibilidadGW: 6,
+                flexibilidadPct: 9,
+                interconexion: 4.2,
+                vePorcentajeParque: 18,
+                smartChargingPct: 60,
+                bombaCalorPct: 24,
+                h2ObjetivoMt: 0.35,
+                autoconsumoFV_GW: 14,
             }
-        },
-
-        // ── 1. PNIEC Base 2030 ───────────────────────────────────────────
-        {
-            id: 1,
-            nombre: 'PNIEC Base 2030',
-            icono: '📊',
-            estilo: 'default',
-            descripcion: 'Escenario del Plan Nacional Integrado de Energía y Clima 2030: cierre progresivo nuclear, fuerte expansión solar (76 GW) y eólica (62 GW), almacenamiento 22 GW. Objetivo: 74% renovables en generación eléctrica.',
-            params: {
-                nuclear: 3.0, solar: 76.0, eolica: 62.0, hidraulica: 17.0, ccgt: 26.0,
-                bateriasPotencia: 15.0, bateriasCapacidad: 60, bombeo: 7.0, bombeoCapacidad: 50,
-                precioGas: 45, precioCO2: 85, rendimientoCCGT: 0.57, omCCGT: 3.5,
-                cargosSistema: 11.5, perdidasRed: 0.045, semilla: 123,
-                demandaAnual: 270, hidraulicidad: 1.0,
-                anioObjetivo: 2030, crecimientoDemanda: 0.7, electrificacionTWh: 3.0,
-                eficienciaDemanda: 0.8, aplicarPlanNuclear: true, cierreNuclear: 2035,
-                flexibilidadGW: 6.0, flexibilidadPct: 8,
-                interconexion: 4.0, precioImport: 95, precioExport: 6, precioEscasez: 350
+        ),
+        escenario(
+            2,
+            'Prorroga Nuclear',
+            '⚛️',
+            'Extiende la vida util del parque nuclear y reduce la urgencia de desplegar almacenamiento y gas de respaldo.',
+            {
+                anioObjetivo: 2032,
+                aplicarPlanNuclear: true,
+                prorrogaNuclear: true,
+                prorrogaGlobal: 10,
+                solar: 64,
+                eolica: 50,
+                ccgt: 22,
+                bateriasPotencia: 10,
+                bateriasCapacidad: 40,
+                precioCO2: 78,
+                vePorcentajeParque: 16,
+                bombaCalorPct: 20,
+                h2ObjetivoMt: 0.2,
             }
-        },
-
-        // ── 2. Prórroga Nuclear ──────────────────────────────────────────
-        {
-            id: 2,
-            nombre: 'Prórroga Nuclear',
-            icono: '⚛️',
-            estilo: 'default',
-            descripcion: 'Extensión de la vida útil de las centrales nucleares más allá de 2035. Mantiene 7 GW de base firme, reduciendo la necesidad de gas y almacenamiento a corto plazo. Menor presión inversora.',
-            params: {
-                nuclear: 7.0, solar: 55.0, eolica: 45.0, hidraulica: 17.0, ccgt: 24.0,
-                bateriasPotencia: 10.0, bateriasCapacidad: 40, bombeo: 5.0, bombeoCapacidad: 40,
-                precioGas: 45, precioCO2: 80, rendimientoCCGT: 0.55, omCCGT: 3.0,
-                cargosSistema: 11.0, perdidasRed: 0.05, semilla: 321,
-                demandaAnual: 265, hidraulicidad: 1.0,
-                anioObjetivo: 2030, crecimientoDemanda: 0.5, electrificacionTWh: 2.0,
-                eficienciaDemanda: 0.6, aplicarPlanNuclear: false, cierreNuclear: 2035,
-                flexibilidadGW: 5.0, flexibilidadPct: 7,
-                interconexion: 4.0, precioImport: 90, precioExport: 5, precioEscasez: 330
+        ),
+        escenario(
+            3,
+            'Sin Nuclear',
+            '🚀',
+            'Cierre acelerado del parque nuclear para 2028 con maxima presion sobre renovables, flexibilidad y gas de respaldo.',
+            {
+                anioObjetivo: 2030,
+                aplicarPlanNuclear: true,
+                cierreNuclear: 2028,
+                solar: 95,
+                eolica: 70,
+                eolicaOffshore: 2,
+                ccgt: 30,
+                bateriasPotencia: 25,
+                bateriasCapacidad: 100,
+                bombeo: 10,
+                bombeoCapacidad: 60,
+                precioGas: 52,
+                precioCO2: 92,
+                flexibilidadGW: 8,
+                flexibilidadPct: 11,
+                interconexion: 4.8,
+                vePorcentajeParque: 20,
+                smartChargingPct: 62,
+                bombaCalorPct: 24,
+                h2ObjetivoMt: 0.35,
             }
-        },
-
-        // ── 3. Cierre Nuclear Total ──────────────────────────────────────
-        {
-            id: 3,
-            nombre: 'Sin Nuclear',
-            icono: '🚀',
-            estilo: 'default',
-            descripcion: 'Cierre total nuclear para 2028. ESCENARIO CRÍTICO: requiere máxima expansión renovable (95 GW solar, 70 GW eólica), abundante almacenamiento y gas de respaldo. Mayor volatilidad de precios.',
-            params: {
-                nuclear: 0, solar: 95.0, eolica: 70.0, hidraulica: 18.0, ccgt: 30.0,
-                bateriasPotencia: 25.0, bateriasCapacidad: 100, bombeo: 10.0, bombeoCapacidad: 60,
-                precioGas: 50, precioCO2: 90, rendimientoCCGT: 0.56, omCCGT: 3.5,
-                cargosSistema: 13.5, perdidasRed: 0.05, semilla: 888,
-                demandaAnual: 270, hidraulicidad: 1.0,
-                anioObjetivo: 2030, crecimientoDemanda: 0.8, electrificacionTWh: 3.5,
-                eficienciaDemanda: 0.6, aplicarPlanNuclear: true, cierreNuclear: 2028,
-                flexibilidadGW: 7.0, flexibilidadPct: 10,
-                interconexion: 4.5, precioImport: 110, precioExport: 8, precioEscasez: 420
+        ),
+        escenario(
+            4,
+            'Almacenamiento Masivo',
+            '🔋',
+            'Baterias y bombeo en escala industrial para absorber vertidos y desplazar energia renovable a las horas de punta.',
+            {
+                anioObjetivo: 2032,
+                solar: 82,
+                eolica: 60,
+                eolicaOffshore: 2,
+                bateriasPotencia: 40,
+                bateriasCapacidad: 160,
+                bombeo: 12,
+                bombeoCapacidad: 85,
+                flexibilidadGW: 8,
+                flexibilidadPct: 13,
+                interconexion: 5,
+                vePorcentajeParque: 22,
+                smartChargingPct: 68,
+                v2gPct: 12,
             }
-        },
-
-        // ── 4. Almacenamiento Masivo ─────────────────────────────────────
-        {
-            id: 4,
-            nombre: 'Almacenamiento Masivo',
-            icono: '🔋',
-            estilo: 'default',
-            descripcion: 'Inversión masiva en baterías (40 GW / 160 GWh) y bombeo (12 GW / 80 GWh). Reduce drásticamente vertidos y dependencia del gas en horas pico. Escenario de madurez renovable.',
-            params: {
-                nuclear: 5.0, solar: 80.0, eolica: 60.0, hidraulica: 17.0, ccgt: 22.0,
-                bateriasPotencia: 40.0, bateriasCapacidad: 160, bombeo: 12.0, bombeoCapacidad: 80,
-                precioGas: 45, precioCO2: 85, rendimientoCCGT: 0.58, omCCGT: 3.2,
-                cargosSistema: 11.0, perdidasRed: 0.04, semilla: 2026,
-                demandaAnual: 268, hidraulicidad: 1.0,
-                anioObjetivo: 2032, crecimientoDemanda: 0.7, electrificacionTWh: 3.0,
-                eficienciaDemanda: 0.9, aplicarPlanNuclear: true, cierreNuclear: 2035,
-                flexibilidadGW: 8.0, flexibilidadPct: 12,
-                interconexion: 5.0, precioImport: 90, precioExport: 4, precioEscasez: 320
+        ),
+        escenario(
+            5,
+            'Crisis del Gas',
+            '💨',
+            'Gas y CO2 disparados, con tension estructural en el pool y fuerte incentivo para acelerar almacenamiento y electrificacion eficiente.',
+            {
+                anioObjetivo: 2027,
+                solar: 34,
+                eolica: 36,
+                precioGas: 95,
+                precioCO2: 105,
+                rendimientoCCGT: 0.53,
+                omCCGT: 4.2,
+                hidraulicidad: 0.9,
+                precioImport: 145,
+                precioEscasez: 520,
             }
-        },
-
-        // ── 5. Crisis del Gas ────────────────────────────────────────────
-        {
-            id: 5,
-            nombre: 'Crisis del Gas',
-            icono: '💨',
-            estilo: 'default',
-            descripcion: 'Escenario de crisis en el mercado del gas natural: precio TTF a 95 €/MWh, CO₂ a 100 €/ton. Precios eléctricos elevados. Fuerte incentivo para acelerar transición renovable.',
-            params: {
-                nuclear: 7.0, solar: 30.0, eolica: 35.0, hidraulica: 17.0, ccgt: 24.0,
-                bateriasPotencia: 5.0, bateriasCapacidad: 20, bombeo: 4.0, bombeoCapacidad: 35,
-                precioGas: 95, precioCO2: 100, rendimientoCCGT: 0.53, omCCGT: 4.0,
-                cargosSistema: 13.0, perdidasRed: 0.055, semilla: 451,
-                demandaAnual: 255, hidraulicidad: 0.9,
-                anioObjetivo: 2027, crecimientoDemanda: 0.4, electrificacionTWh: 1.2,
-                eficienciaDemanda: 0.2, aplicarPlanNuclear: true, cierreNuclear: 2035,
-                flexibilidadGW: 4.0, flexibilidadPct: 6,
-                interconexion: 3.0, precioImport: 140, precioExport: 8, precioEscasez: 500
+        ),
+        escenario(
+            6,
+            'Hidrogeno Verde',
+            '🟢',
+            'Electrolizadores como demanda flexible estructural que absorbe excedentes solares y eolicos en las horas de baja señal de precio.',
+            {
+                anioObjetivo: 2033,
+                solar: 92,
+                eolica: 66,
+                eolicaOffshore: 2.5,
+                bateriasPotencia: 14,
+                bateriasCapacidad: 56,
+                ccgt: 20,
+                demandaAnual: 260,
+                crecimientoDemanda: 1.0,
+                electrificacionTWh: 5.0,
+                flexibilidadGW: 12,
+                flexibilidadPct: 15,
+                h2ObjetivoMt: 0.8,
+                h2FlexibilidadHoras: 12,
             }
-        },
-
-        // ── 6. Hidrógeno Verde ───────────────────────────────────────────
-        {
-            id: 6,
-            nombre: 'Hidrógeno Verde',
-            icono: '🟢',
-            estilo: 'default',
-            descripcion: 'Desarrollo masivo de electrolizadores para producción de H₂ verde. Alta flexibilidad de demanda (12 GW), absorbe excedentes renovables. Requiere exceso de capacidad solar/eólica para alimentar electrólisis.',
-            params: {
-                nuclear: 3.0, solar: 90.0, eolica: 65.0, hidraulica: 17.0, ccgt: 20.0,
-                bateriasPotencia: 12.0, bateriasCapacidad: 50, bombeo: 6.0, bombeoCapacidad: 40,
-                precioGas: 48, precioCO2: 90, rendimientoCCGT: 0.57, omCCGT: 3.0,
-                cargosSistema: 10.5, perdidasRed: 0.045, semilla: 777,
-                demandaAnual: 285, hidraulicidad: 1.0,
-                anioObjetivo: 2033, crecimientoDemanda: 1.0, electrificacionTWh: 5.0,
-                eficienciaDemanda: 0.7, aplicarPlanNuclear: true, cierreNuclear: 2035,
-                flexibilidadGW: 12.0, flexibilidadPct: 15,
-                interconexion: 5.0, precioImport: 85, precioExport: 3, precioEscasez: 300
+        ),
+        escenario(
+            7,
+            'Sequia Extrema',
+            '🏜️',
+            'Dos anos secos seguidos y baja hidraulicidad estructural que elevan la dependencia del gas y la importacion.',
+            {
+                anioObjetivo: 2028,
+                hidraulicidad: 0.55,
+                sequiaClusterAnios: 2,
+                solar: 42,
+                eolica: 38,
+                precioImport: 110,
+                precioEscasez: 390,
             }
-        },
-
-        // ── 7. Sequía Extrema ────────────────────────────────────────────
-        {
-            id: 7,
-            nombre: 'Sequía Extrema',
-            icono: '🏜️',
-            estilo: 'default',
-            descripcion: 'Año de baja hidraulicidad extrema (50% de la media). La hidráulica pierde protagonismo, aumenta la dependencia del gas y el estrés del sistema. Escenario climático adverso.',
-            params: {
-                nuclear: 7.0, solar: 40.0, eolica: 38.0, hidraulica: 17.0, ccgt: 24.0,
-                bateriasPotencia: 6.0, bateriasCapacidad: 25, bombeo: 3.5, bombeoCapacidad: 30,
-                precioGas: 48, precioCO2: 70, rendimientoCCGT: 0.55, omCCGT: 3.5,
-                cargosSistema: 12.5, perdidasRed: 0.05, semilla: 555,
-                demandaAnual: 265, hidraulicidad: 0.50,
-                anioObjetivo: 2028, crecimientoDemanda: 0.5, electrificacionTWh: 1.5,
-                eficienciaDemanda: 0.4, aplicarPlanNuclear: true, cierreNuclear: 2035,
-                flexibilidadGW: 4.0, flexibilidadPct: 6,
-                interconexion: 3.5, precioImport: 100, precioExport: 5, precioEscasez: 380
+        ),
+        escenario(
+            8,
+            'Cierre Nuclear ENRESA',
+            '📉',
+            'Usa el calendario oficial de cierres sin prorroga para tensionar el sistema entre 2027 y 2035.',
+            {
+                anioObjetivo: 2035,
+                aplicarPlanNuclear: true,
+                prorrogaNuclear: false,
+                solar: 90,
+                eolica: 70,
+                eolicaOffshore: 2.5,
+                bateriasPotencia: 22,
+                bateriasCapacidad: 90,
+                interconexion: 5.2,
+                vePorcentajeParque: 26,
+                bombaCalorPct: 30,
+                h2ObjetivoMt: 0.55,
             }
-        }
+        ),
+        escenario(
+            9,
+            'Prorroga 60 Anos',
+            '🧱',
+            'Escenario defensivo de seguridad de suministro con prorroga larga del parque nuclear y despliegue renovable menos abrupto.',
+            {
+                anioObjetivo: 2035,
+                prorrogaNuclear: true,
+                prorrogaGlobal: 20,
+                solar: 72,
+                eolica: 56,
+                eolicaOffshore: 1.5,
+                ccgt: 20,
+                bateriasPotencia: 12,
+                bateriasCapacidad: 48,
+            }
+        ),
+        escenario(
+            10,
+            'Apagon Iberico Repetido',
+            '🌩️',
+            'Replica una semana de estres tipo abril 2025 para forzar chequeos de inercia, reserva rodante e importaciones.',
+            {
+                anioObjetivo: 2029,
+                eventoApagonPct: 12,
+                inerciaMinGW: 4,
+                reservaRodantePct: 5,
+                precioEscasez: 580,
+                interconexion: 4.5,
+            }
+        ),
+        escenario(
+            11,
+            'VE Masivo 2030',
+            '🚗',
+            'Penetracion masiva del vehiculo electrico con carga inteligente y una capa inicial de V2G.',
+            {
+                anioObjetivo: 2030,
+                vePorcentajeParque: 33,
+                smartChargingPct: 70,
+                v2gPct: 15,
+                demandaAnual: 258,
+                electrificacionTWh: 5.2,
+                bateriasPotencia: 18,
+                bateriasCapacidad: 72,
+            }
+        ),
+        escenario(
+            12,
+            'Autoconsumo 30 GW',
+            '🏠',
+            'La FV detras del contador desplaza demanda residual diurna y canibaliza precios solares de mediodia.',
+            {
+                anioObjetivo: 2031,
+                autoconsumoFV_GW: 30,
+                solar: 82,
+                eolica: 58,
+                bateriasPotencia: 18,
+                bateriasCapacidad: 80,
+                precioExport: 3,
+            }
+        ),
+        escenario(
+            13,
+            'PNIEC 2030 Actualizado',
+            '🧭',
+            'Version mas ambiciosa con 81 GW solares, 62 GW eolicos terrestres, 3 GW offshore y 22 GW de almacenamiento.',
+            {
+                anioObjetivo: 2030,
+                solar: 81,
+                eolica: 62,
+                eolicaOffshore: 3,
+                bateriasPotencia: 15,
+                bateriasCapacidad: 60,
+                bombeo: 7,
+                bombeoCapacidad: 50,
+                interconexion: 4.6,
+                vePorcentajeParque: 20,
+                bombaCalorPct: 26,
+            }
+        ),
+        escenario(
+            14,
+            'Ley Climatico 2050',
+            '📈',
+            'Escenario de trayectoria multi-anio con senda de descarbonizacion y electrificacion acelerada hasta 2035.',
+            {
+                anioObjetivo: 2035,
+                leyCambioClimaticoActiva: true,
+                solar: 70,
+                eolica: 54,
+                eolicaOffshore: 1.8,
+                solarRampaGW_anio: 5.2,
+                eolicaTerrestreRampa: 2.6,
+                eolicaOffshoreRampa: 0.35,
+                bateriasRampaGW_anio: 1.8,
+                interconexionRampaGW_anio: 0.35,
+                vePorcentajeParque: 15,
+                bombaCalorPct: 18,
+                h2ObjetivoMt: 0.2,
+            }
+        ),
+        escenario(
+            15,
+            'Ola de Calor Extrema',
+            '🌡️',
+            'Dos semanas de calor severo elevan la demanda, reducen rendimiento solar y tensionan la reserva operativa.',
+            {
+                anioObjetivo: 2031,
+                olaCalorExtrema: true,
+                demandaAnual: 260,
+                crecimientoDemanda: 1.1,
+                precioEscasez: 540,
+                reservaRodantePct: 5,
+                smartChargingPct: 65,
+            }
+        ),
+        escenario(
+            16,
+            'Crisis Geopolitica Gas + CO2',
+            '🛢️',
+            'Escenario de shock energetico europeo con TTF 110, ETS 140 y prorroga nuclear defensiva para contener precios.',
+            {
+                anioObjetivo: 2032,
+                prorrogaNuclear: true,
+                prorrogaGlobal: 12,
+                precioGas: 110,
+                precioCO2: 140,
+                precioImport: 165,
+                precioEscasez: 600,
+                cfdRenovables_strike: 65,
+                topeIbericoActivo: true,
+            }
+        ),
     ];
 
-    /**
-     * Obtiene un escenario por su ID.
-     * @param {number} id
-     * @returns {Object|null}
-     */
     SEF.getEscenario = function(id) {
-        return SEF.ESCENARIOS.find(e => e.id === id) || null;
+        return SEF.ESCENARIOS.find(item => item.id === id) || null;
     };
-
 })();

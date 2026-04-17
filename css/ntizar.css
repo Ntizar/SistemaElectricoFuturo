@@ -1,0 +1,1187 @@
+/* ============================================================
+   NTIZAR DESIGN SYSTEM
+   Aurora v4.0.0
+
+   Objetivo:
+   - Un solo CSS copiable para apps nuevas
+   - API namespaced para evitar colisiones
+   - CSS-only, sin build, sin dependencias
+
+   Contrato publico:
+   - Root opt-in: `.nz`
+   - Tokens: `--nz-*`
+   - Objetos: `.nz-container`, `.nz-section`, `.nz-stack`, `.nz-grid`, ...
+   - Componentes: `.nz-btn`, `.nz-card`, `.nz-field`, `.nz-badge`, ...
+   - Tema: `[data-nz-theme="light|dark"]`
+   ============================================================ */
+
+@layer ntizar.tokens, ntizar.base, ntizar.objects, ntizar.components, ntizar.utilities;
+
+@layer ntizar.tokens {
+  :root,
+  .nz[data-nz-theme="light"] {
+    --nz-font-sans: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --nz-font-mono: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", ui-monospace, monospace;
+
+    --nz-space-1: 0.25rem;
+    --nz-space-2: 0.5rem;
+    --nz-space-3: 0.75rem;
+    --nz-space-4: 1rem;
+    --nz-space-5: 1.5rem;
+    --nz-space-6: 2rem;
+    --nz-space-7: 3rem;
+    --nz-space-8: 4rem;
+
+    --nz-radius-sm: 0.625rem;
+    --nz-radius-md: 0.875rem;
+    --nz-radius-lg: 1.25rem;
+    --nz-radius-xl: 1.75rem;
+    --nz-radius-pill: 999px;
+
+    --nz-text-xs: 0.75rem;
+    --nz-text-sm: 0.875rem;
+    --nz-text-md: 1rem;
+    --nz-text-lg: 1.125rem;
+    --nz-text-xl: 1.375rem;
+    --nz-text-2xl: clamp(1.75rem, 1.4rem + 1.2vw, 2.5rem);
+    --nz-text-3xl: clamp(2.5rem, 2rem + 2.6vw, 4.5rem);
+
+    --nz-color-blue-50: #eff6ff;
+    --nz-color-blue-100: #dbeafe;
+    --nz-color-blue-200: #bfdbfe;
+    --nz-color-blue-300: #93c5fd;
+    --nz-color-blue-400: #60a5fa;
+    --nz-color-blue-500: #3b82f6;
+    --nz-color-blue-600: #2563eb;
+    --nz-color-blue-700: #1d4ed8;
+    --nz-color-blue-800: #1e40af;
+    --nz-color-blue-900: #1e3a8a;
+
+    --nz-color-orange-50: #fff7ed;
+    --nz-color-orange-100: #ffedd5;
+    --nz-color-orange-200: #fed7aa;
+    --nz-color-orange-300: #fdba74;
+    --nz-color-orange-400: #fb923c;
+    --nz-color-orange-500: #f97316;
+    --nz-color-orange-600: #ea580c;
+    --nz-color-orange-700: #c2410c;
+    --nz-color-orange-800: #9a3412;
+    --nz-color-orange-900: #7c2d12;
+
+    --nz-color-violet-400: #8b5cf6;
+    --nz-color-violet-500: #7c3aed;
+    --nz-color-violet-600: #6d28d9;
+    --nz-color-cyan-400: #22d3ee;
+    --nz-color-pink-400: #f472b6;
+
+    --nz-color-green-50: #f0fdf4;
+    --nz-color-green-100: #dcfce7;
+    --nz-color-green-600: #16a34a;
+
+    --nz-color-red-50: #fef2f2;
+    --nz-color-red-100: #fee2e2;
+    --nz-color-red-600: #dc2626;
+
+    --nz-color-yellow-50: #fffbeb;
+    --nz-color-yellow-100: #fef3c7;
+    --nz-color-yellow-600: #d97706;
+
+    --nz-color-slate-50: #f8fafc;
+    --nz-color-slate-100: #f1f5f9;
+    --nz-color-slate-200: #e2e8f0;
+    --nz-color-slate-400: #94a3b8;
+    --nz-color-slate-600: #475569;
+    --nz-color-slate-800: #1e293b;
+    --nz-color-slate-900: #0f172a;
+    --nz-color-slate-950: #020617;
+
+    --nz-color-brand: var(--nz-color-blue-600);
+    --nz-color-brand-strong: var(--nz-color-blue-700);
+    --nz-color-brand-soft: var(--nz-color-blue-400);
+    --nz-color-accent: var(--nz-color-orange-500);
+    --nz-color-accent-strong: var(--nz-color-orange-600);
+    --nz-color-accent-soft: var(--nz-color-orange-300);
+    --nz-color-success: var(--nz-color-green-600);
+    --nz-color-danger: var(--nz-color-red-600);
+    --nz-color-warning: var(--nz-color-yellow-600);
+
+    --nz-surface-page: #f4f7ff;
+    --nz-surface-base: rgba(255, 255, 255, 0.94);
+    --nz-surface-soft: rgba(255, 255, 255, 0.72);
+    --nz-surface-raised: #ffffff;
+    --nz-surface-glass-soft: rgba(255, 255, 255, 0.44);
+    --nz-surface-glass: rgba(255, 255, 255, 0.60);
+    --nz-surface-glass-strong: rgba(255, 255, 255, 0.78);
+    --nz-surface-glass-brand: linear-gradient(180deg, rgba(255, 255, 255, 0.76) 0%, rgba(96, 165, 250, 0.18) 100%);
+    --nz-surface-glass-accent: linear-gradient(180deg, rgba(255, 255, 255, 0.76) 0%, rgba(251, 146, 60, 0.18) 100%);
+    --nz-surface-brand-soft: color-mix(in srgb, var(--nz-color-brand) 12%, white);
+    --nz-surface-accent-soft: color-mix(in srgb, var(--nz-color-accent) 12%, white);
+    --nz-surface-success-soft: rgba(22, 163, 74, 0.10);
+    --nz-surface-danger-soft: rgba(220, 38, 38, 0.10);
+    --nz-surface-warning-soft: rgba(217, 119, 6, 0.12);
+
+    --nz-text-strong: #0f172a;
+    --nz-text-default: #334155;
+    --nz-text-muted: #64748b;
+    --nz-text-inverse: #f8fafc;
+
+    --nz-border-soft: rgba(15, 23, 42, 0.08);
+    --nz-border-default: color-mix(in srgb, var(--nz-color-brand) 18%, transparent);
+    --nz-border-strong: color-mix(in srgb, var(--nz-color-brand) 32%, transparent);
+    --nz-border-brand: color-mix(in srgb, var(--nz-color-brand) 28%, transparent);
+    --nz-border-accent: color-mix(in srgb, var(--nz-color-accent) 28%, transparent);
+    --nz-border-glass: rgba(255, 255, 255, 0.58);
+
+    --nz-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(37, 99, 235, 0.08);
+    --nz-shadow-md: 0 12px 32px rgba(15, 23, 42, 0.10), 0 20px 48px rgba(37, 99, 235, 0.10);
+    --nz-shadow-lg: 0 24px 56px rgba(15, 23, 42, 0.16), 0 28px 80px rgba(37, 99, 235, 0.12);
+    --nz-shadow-brand: 0 14px 34px rgba(37, 99, 235, 0.22), 0 24px 54px rgba(59, 130, 246, 0.12);
+    --nz-shadow-accent: 0 14px 34px rgba(249, 115, 22, 0.22), 0 24px 54px rgba(251, 146, 60, 0.12);
+    --nz-shadow-aurora: 0 16px 36px rgba(37, 99, 235, 0.20), 0 26px 54px rgba(249, 115, 22, 0.16);
+
+    --nz-ring: 0 0 0 3px color-mix(in srgb, var(--nz-color-brand) 24%, transparent);
+    --nz-ring-danger: 0 0 0 3px rgba(220, 38, 38, 0.20);
+    --nz-inset-highlight: rgba(255, 255, 255, 0.24);
+    --nz-glass-stroke: inset 0 1px 0 rgba(255, 255, 255, 0.46);
+    --nz-glass-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.20) 20%, rgba(255, 255, 255, 0.06) 34%, transparent 62%);
+
+    --nz-backdrop-blur-soft: blur(12px);
+    --nz-backdrop-blur: blur(18px);
+    --nz-backdrop-blur-strong: blur(28px);
+    --nz-gradient-brand: linear-gradient(135deg, var(--nz-color-brand-soft) 0%, var(--nz-color-brand) 58%, var(--nz-color-brand-strong) 100%);
+    --nz-gradient-accent: linear-gradient(135deg, var(--nz-color-accent-soft) 0%, var(--nz-color-accent) 56%, var(--nz-color-accent-strong) 100%);
+    --nz-gradient-aurora: linear-gradient(135deg, var(--nz-color-blue-500) 0%, var(--nz-color-violet-500) 46%, var(--nz-color-orange-500) 100%);
+
+    --nz-duration-fast: 150ms;
+    --nz-duration-base: 220ms;
+    --nz-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    --nz-status-info-soft: color-mix(in srgb, var(--nz-color-brand) 10%, white);
+    --nz-status-info-border: color-mix(in srgb, var(--nz-color-brand) 24%, transparent);
+    --nz-status-info-text: var(--nz-color-brand-strong);
+
+    --nz-status-success-soft: rgba(22, 163, 74, 0.10);
+    --nz-status-success-border: rgba(22, 163, 74, 0.24);
+    --nz-status-success-text: #15803d;
+
+    --nz-status-warning-soft: rgba(217, 119, 6, 0.12);
+    --nz-status-warning-border: rgba(217, 119, 6, 0.24);
+    --nz-status-warning-text: #92400e;
+
+    --nz-status-danger-soft: rgba(220, 38, 38, 0.10);
+    --nz-status-danger-border: rgba(220, 38, 38, 0.22);
+    --nz-status-danger-text: #b91c1c;
+  }
+
+  .nz,
+  .nz[data-nz-theme="light"] {
+    color-scheme: light;
+  }
+
+  .nz[data-nz-theme="dark"] {
+    color-scheme: dark;
+
+    --nz-surface-page: #0a0e1c;
+    --nz-surface-base: rgba(15, 23, 42, 0.92);
+    --nz-surface-soft: rgba(30, 41, 59, 0.74);
+    --nz-surface-raised: rgba(19, 29, 49, 0.98);
+    --nz-surface-glass-soft: rgba(15, 23, 42, 0.44);
+    --nz-surface-glass: rgba(15, 23, 42, 0.60);
+    --nz-surface-glass-strong: rgba(30, 41, 59, 0.74);
+    --nz-surface-glass-brand: linear-gradient(180deg, rgba(30, 41, 59, 0.78) 0%, rgba(59, 130, 246, 0.20) 100%);
+    --nz-surface-glass-accent: linear-gradient(180deg, rgba(30, 41, 59, 0.78) 0%, rgba(249, 115, 22, 0.20) 100%);
+    --nz-surface-brand-soft: color-mix(in srgb, var(--nz-color-brand) 18%, transparent);
+    --nz-surface-accent-soft: color-mix(in srgb, var(--nz-color-accent) 18%, transparent);
+    --nz-surface-success-soft: rgba(34, 197, 94, 0.14);
+    --nz-surface-danger-soft: rgba(239, 68, 68, 0.14);
+    --nz-surface-warning-soft: rgba(245, 158, 11, 0.18);
+
+    --nz-text-strong: #eff6ff;
+    --nz-text-default: #cbd5e1;
+    --nz-text-muted: #94a3b8;
+    --nz-text-inverse: #020617;
+
+    --nz-border-soft: rgba(148, 163, 184, 0.18);
+    --nz-border-default: color-mix(in srgb, var(--nz-color-brand-soft) 28%, transparent);
+    --nz-border-strong: color-mix(in srgb, var(--nz-color-brand-soft) 42%, transparent);
+    --nz-border-brand: color-mix(in srgb, var(--nz-color-brand-soft) 34%, transparent);
+    --nz-border-accent: color-mix(in srgb, var(--nz-color-accent-soft) 34%, transparent);
+    --nz-border-glass: rgba(226, 232, 240, 0.18);
+
+    --nz-shadow-sm: 0 1px 2px rgba(2, 6, 23, 0.42), 0 12px 32px rgba(2, 6, 23, 0.26);
+    --nz-shadow-md: 0 18px 42px rgba(2, 6, 23, 0.46), 0 28px 64px rgba(2, 6, 23, 0.28);
+    --nz-shadow-lg: 0 30px 72px rgba(2, 6, 23, 0.62), 0 36px 96px rgba(2, 6, 23, 0.36);
+    --nz-shadow-brand: 0 20px 44px rgba(37, 99, 235, 0.30), 0 12px 28px rgba(30, 64, 175, 0.18);
+    --nz-shadow-accent: 0 20px 44px rgba(249, 115, 22, 0.24), 0 12px 28px rgba(194, 65, 12, 0.18);
+    --nz-shadow-aurora: 0 18px 42px rgba(37, 99, 235, 0.24), 0 28px 58px rgba(249, 115, 22, 0.18);
+
+    --nz-ring: 0 0 0 3px color-mix(in srgb, var(--nz-color-brand-soft) 28%, transparent);
+    --nz-ring-danger: 0 0 0 3px rgba(248, 113, 113, 0.24);
+    --nz-inset-highlight: rgba(255, 255, 255, 0.08);
+    --nz-glass-stroke: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --nz-glass-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0.08) 20%, rgba(255, 255, 255, 0.03) 34%, transparent 62%);
+
+    --nz-status-info-soft: color-mix(in srgb, var(--nz-color-brand) 16%, transparent);
+    --nz-status-info-border: color-mix(in srgb, var(--nz-color-brand-soft) 28%, transparent);
+    --nz-status-info-text: var(--nz-color-blue-100);
+
+    --nz-status-success-soft: rgba(34, 197, 94, 0.16);
+    --nz-status-success-border: rgba(74, 222, 128, 0.28);
+    --nz-status-success-text: #bbf7d0;
+
+    --nz-status-warning-soft: rgba(245, 158, 11, 0.18);
+    --nz-status-warning-border: rgba(251, 191, 36, 0.28);
+    --nz-status-warning-text: #fde68a;
+
+    --nz-status-danger-soft: rgba(239, 68, 68, 0.16);
+    --nz-status-danger-border: rgba(248, 113, 113, 0.28);
+    --nz-status-danger-text: #fecaca;
+  }
+}
+
+@layer ntizar.base {
+  .nz,
+  .nz *,
+  .nz *::before,
+  .nz *::after {
+    box-sizing: border-box;
+  }
+
+  .nz {
+    margin: 0;
+    background: var(--nz-surface-page);
+    color: var(--nz-text-default);
+    font-family: var(--nz-font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .nz :where(a) {
+    color: var(--nz-color-brand);
+    text-underline-offset: 0.2em;
+  }
+
+  .nz :where(img, svg, video, canvas) {
+    display: block;
+    max-width: 100%;
+  }
+
+  .nz :where(button, input, select, textarea) {
+    font: inherit;
+    color: inherit;
+  }
+
+  .nz :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, blockquote, pre, figure) {
+    margin: 0;
+  }
+
+  .nz :where(h1, h2, h3, h4, h5, h6) {
+    color: var(--nz-text-strong);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .nz :where(h1) { font-size: var(--nz-text-3xl); }
+  .nz :where(h2) { font-size: var(--nz-text-2xl); }
+  .nz :where(h3) { font-size: var(--nz-text-xl); }
+  .nz :where(h4) { font-size: var(--nz-text-lg); }
+  .nz :where(h5, h6) { font-size: var(--nz-text-md); }
+
+  .nz :where(p, li, dd) {
+    color: var(--nz-text-default);
+    text-wrap: pretty;
+  }
+
+  .nz :where(ul, ol) {
+    padding-left: 1.25rem;
+  }
+
+  .nz :where(strong) {
+    color: var(--nz-text-strong);
+  }
+
+  .nz :where(hr) {
+    border: 0;
+    border-top: 1px solid var(--nz-border-soft);
+  }
+
+  .nz :where(code:not(pre code)) {
+    display: inline-block;
+    padding: 0.125rem 0.4rem;
+    border: 1px solid var(--nz-border-soft);
+    border-radius: calc(var(--nz-radius-sm) - 0.125rem);
+    background: var(--nz-surface-soft);
+    color: var(--nz-text-strong);
+    font-family: var(--nz-font-mono);
+    font-size: 0.875em;
+  }
+
+  .nz ::selection {
+    background: color-mix(in srgb, var(--nz-color-brand) 18%, transparent);
+    color: var(--nz-text-strong);
+  }
+
+  .nz :where(a, button, input, textarea, select, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: none;
+    box-shadow: var(--nz-ring);
+    border-radius: calc(var(--nz-radius-sm) + 0.125rem);
+  }
+
+  .nz :where(input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"]):focus-visible {
+    box-shadow: var(--nz-ring-danger);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nz *,
+    .nz *::before,
+    .nz *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer ntizar.objects {
+  .nz :where(.nz-container) {
+    width: min(100% - 2rem, 72rem);
+    margin-inline: auto;
+  }
+
+  .nz :where(.nz-container--narrow) {
+    width: min(100% - 2rem, 54rem);
+  }
+
+  .nz :where(.nz-container--wide) {
+    width: min(100% - 2rem, 86rem);
+  }
+
+  .nz :where(.nz-section) {
+    padding-block: clamp(3rem, 6vw, 5rem);
+  }
+
+  .nz :where(.nz-stack) {
+    --nz-stack-space: var(--nz-space-4);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nz :where(.nz-stack) > * + * {
+    margin-top: var(--nz-stack-space);
+  }
+
+  .nz :where(.nz-stack--sm) {
+    --nz-stack-space: var(--nz-space-3);
+  }
+
+  .nz :where(.nz-stack--lg) {
+    --nz-stack-space: var(--nz-space-5);
+  }
+
+  .nz :where(.nz-cluster) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nz-space-3);
+  }
+
+  .nz :where(.nz-cluster--between) {
+    justify-content: space-between;
+  }
+
+  .nz :where(.nz-grid) {
+    display: grid;
+    gap: var(--nz-space-5);
+  }
+
+  .nz :where(.nz-grid--2) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nz :where(.nz-grid--3) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .nz :where(.nz-grid--aside) {
+    grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+  }
+
+  .nz :where(.nz-surface) {
+    padding: var(--nz-space-5);
+    border: 1px solid var(--nz-border-soft);
+    border-radius: var(--nz-radius-lg);
+    background: var(--nz-surface-base);
+    box-shadow: var(--nz-shadow-sm);
+  }
+
+  .nz :where(.nz-surface--soft) {
+    background: var(--nz-surface-soft);
+    box-shadow: none;
+  }
+
+  .nz :where(.nz-surface--raised) {
+    background: var(--nz-surface-raised);
+    border-color: var(--nz-border-default);
+    box-shadow: var(--nz-shadow-md);
+  }
+
+  .nz :where(.nz-surface--glass-soft, .nz-surface--glass, .nz-surface--glass-strong, .nz-surface--glass-brand, .nz-surface--glass-accent) {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .nz :where(.nz-surface--glass-soft, .nz-surface--glass, .nz-surface--glass-strong, .nz-surface--glass-brand, .nz-surface--glass-accent)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--nz-glass-sheen);
+    pointer-events: none;
+  }
+
+  .nz :where(.nz-surface--glass-soft) {
+    background: var(--nz-surface-glass-soft);
+    border-color: var(--nz-border-glass);
+    box-shadow: var(--nz-shadow-sm), var(--nz-glass-stroke);
+  }
+
+  .nz :where(.nz-surface--glass) {
+    background: var(--nz-surface-glass);
+    border-color: var(--nz-border-default);
+    box-shadow: var(--nz-shadow-md), var(--nz-glass-stroke);
+  }
+
+  .nz :where(.nz-surface--glass-strong) {
+    background: var(--nz-surface-glass-strong);
+    border-color: var(--nz-border-strong);
+    box-shadow: var(--nz-shadow-lg), var(--nz-glass-stroke);
+  }
+
+  .nz :where(.nz-surface--glass-brand) {
+    background: var(--nz-surface-glass-brand);
+    border-color: var(--nz-border-brand);
+    box-shadow: var(--nz-shadow-brand), var(--nz-glass-stroke);
+  }
+
+  .nz :where(.nz-surface--glass-accent) {
+    background: var(--nz-surface-glass-accent);
+    border-color: var(--nz-border-accent);
+    box-shadow: var(--nz-shadow-accent), var(--nz-glass-stroke);
+  }
+
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .nz :where(.nz-surface--glass-soft, .nz-surface--glass, .nz-surface--glass-brand, .nz-surface--glass-accent) {
+      -webkit-backdrop-filter: var(--nz-backdrop-blur) saturate(1.22);
+      backdrop-filter: var(--nz-backdrop-blur) saturate(1.22);
+    }
+
+    .nz :where(.nz-surface--glass-strong) {
+      -webkit-backdrop-filter: var(--nz-backdrop-blur-strong) saturate(1.3);
+      backdrop-filter: var(--nz-backdrop-blur-strong) saturate(1.3);
+    }
+  }
+
+  .nz :where(.nz-divider) {
+    height: 1px;
+    background: var(--nz-border-soft);
+  }
+
+  .nz :where(.nz-prose) > * + * {
+    margin-top: var(--nz-space-4);
+  }
+
+  .nz :where(.nz-prose) :where(ul, ol) {
+    display: grid;
+    gap: var(--nz-space-2);
+  }
+
+  @media (max-width: 860px) {
+    .nz :where(.nz-grid--2),
+    .nz :where(.nz-grid--3),
+    .nz :where(.nz-grid--aside) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@layer ntizar.components {
+  .nz :where(.nz-btn) {
+    --nz-btn-shadow: none;
+    --nz-btn-shadow-hover: var(--nz-btn-shadow);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--nz-radius-md);
+    background: transparent;
+    color: var(--nz-text-strong);
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: var(--nz-btn-shadow);
+    transition:
+      transform var(--nz-duration-fast) var(--nz-ease-standard),
+      box-shadow var(--nz-duration-base) var(--nz-ease-standard),
+      background var(--nz-duration-base) var(--nz-ease-standard),
+      border-color var(--nz-duration-base) var(--nz-ease-standard),
+      color var(--nz-duration-base) var(--nz-ease-standard);
+  }
+
+  .nz :where(.nz-btn)::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.06) 58%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .nz :where(.nz-btn):hover {
+    transform: translateY(-1px);
+  }
+
+  .nz :where(.nz-btn):active {
+    transform: translateY(0);
+  }
+
+  .nz :where(.nz-btn:disabled, .nz-btn[aria-disabled="true"]) {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .nz :where(.nz-btn--primary) {
+    background: var(--nz-gradient-brand);
+    color: #ffffff;
+    border-color: color-mix(in srgb, var(--nz-color-brand) 52%, transparent);
+    --nz-btn-shadow: var(--nz-shadow-brand);
+    --nz-btn-shadow-hover: var(--nz-shadow-aurora);
+  }
+
+  .nz :where(.nz-btn--primary):hover {
+    box-shadow: var(--nz-btn-shadow-hover);
+  }
+
+  .nz :where(.nz-btn--accent) {
+    background: var(--nz-gradient-accent);
+    color: #ffffff;
+    border-color: color-mix(in srgb, var(--nz-color-accent) 48%, transparent);
+    --nz-btn-shadow: var(--nz-shadow-accent);
+    --nz-btn-shadow-hover: var(--nz-shadow-accent);
+  }
+
+  .nz :where(.nz-btn--accent):hover {
+    box-shadow: var(--nz-btn-shadow-hover);
+  }
+
+  .nz :where(.nz-btn--brand-mix) {
+    background: var(--nz-gradient-aurora);
+    color: #ffffff;
+    border-color: color-mix(in srgb, var(--nz-color-violet-500) 42%, transparent);
+    --nz-btn-shadow: var(--nz-shadow-aurora);
+    --nz-btn-shadow-hover: var(--nz-shadow-lg);
+  }
+
+  .nz :where(.nz-btn--brand-mix):hover {
+    box-shadow: var(--nz-btn-shadow-hover);
+  }
+
+  .nz :where(.nz-btn--glass, .nz-btn--glass-brand, .nz-btn--glass-accent) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .nz :where(.nz-btn--glass) {
+    background: var(--nz-surface-glass);
+    border-color: var(--nz-border-glass);
+    color: var(--nz-text-strong);
+    --nz-btn-shadow: var(--nz-shadow-sm);
+    --nz-btn-shadow-hover: var(--nz-shadow-md);
+  }
+
+  .nz :where(.nz-btn--glass-brand) {
+    background: var(--nz-surface-glass-brand);
+    border-color: var(--nz-border-brand);
+    color: var(--nz-status-info-text);
+    --nz-btn-shadow: var(--nz-shadow-brand);
+    --nz-btn-shadow-hover: var(--nz-shadow-aurora);
+  }
+
+  .nz :where(.nz-btn--glass-accent) {
+    background: var(--nz-surface-glass-accent);
+    border-color: var(--nz-border-accent);
+    color: var(--nz-color-accent-strong);
+    --nz-btn-shadow: var(--nz-shadow-accent);
+    --nz-btn-shadow-hover: var(--nz-shadow-accent);
+  }
+
+  .nz :where(.nz-btn--glass):hover,
+  .nz :where(.nz-btn--glass-brand):hover,
+  .nz :where(.nz-btn--glass-accent):hover {
+    box-shadow: var(--nz-btn-shadow-hover);
+  }
+
+  .nz :where(.nz-btn--secondary) {
+    background: linear-gradient(180deg, var(--nz-surface-raised) 0%, var(--nz-surface-soft) 100%);
+    border-color: var(--nz-border-default);
+    color: var(--nz-text-strong);
+    --nz-btn-shadow: 0 1px 0 rgba(255, 255, 255, 0.14);
+    --nz-btn-shadow-hover: var(--nz-shadow-sm);
+  }
+
+  .nz :where(.nz-btn--secondary):hover {
+    background: var(--nz-surface-base);
+    box-shadow: var(--nz-btn-shadow-hover);
+  }
+
+  .nz :where(.nz-btn--ghost) {
+    color: var(--nz-text-default);
+  }
+
+  .nz :where(.nz-btn--ghost):hover {
+    background: var(--nz-surface-soft);
+    border-color: var(--nz-border-soft);
+    color: var(--nz-text-strong);
+  }
+
+  .nz :where(.nz-btn--danger) {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    border-color: rgba(220, 38, 38, 0.42);
+    --nz-btn-shadow: var(--nz-shadow-sm);
+    --nz-btn-shadow-hover: var(--nz-shadow-md);
+  }
+
+  .nz :where(.nz-btn--danger):hover {
+    box-shadow: var(--nz-btn-shadow-hover);
+  }
+
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .nz :where(.nz-btn--glass, .nz-btn--glass-brand, .nz-btn--glass-accent) {
+      -webkit-backdrop-filter: var(--nz-backdrop-blur-soft) saturate(1.18);
+      backdrop-filter: var(--nz-backdrop-blur-soft) saturate(1.18);
+    }
+  }
+
+  .nz :where(.nz-btn--sm) {
+    min-height: 2.25rem;
+    padding: 0.55rem 0.8rem;
+    border-radius: var(--nz-radius-sm);
+    font-size: var(--nz-text-sm);
+  }
+
+  .nz :where(.nz-btn--lg) {
+    min-height: 3.1rem;
+    padding: 0.9rem 1.25rem;
+    font-size: var(--nz-text-lg);
+  }
+
+  .nz :where(.nz-btn--block) {
+    display: flex;
+    width: 100%;
+  }
+
+  .nz :where(.nz-badge) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid transparent;
+    border-radius: var(--nz-radius-pill);
+    font-size: var(--nz-text-xs);
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .nz :where(.nz-badge)::before {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: currentColor;
+    flex: 0 0 auto;
+  }
+
+  .nz :where(.nz-badge--no-dot)::before {
+    display: none;
+  }
+
+  .nz :where(.nz-badge--neutral) {
+    background: var(--nz-surface-soft);
+    border-color: var(--nz-border-soft);
+    color: var(--nz-text-default);
+  }
+
+  .nz :where(.nz-badge--primary) {
+    background: var(--nz-surface-brand-soft);
+    border-color: color-mix(in srgb, var(--nz-color-brand) 24%, transparent);
+    color: var(--nz-status-info-text);
+  }
+
+  .nz :where(.nz-badge--accent) {
+    background: var(--nz-surface-accent-soft);
+    border-color: color-mix(in srgb, var(--nz-color-accent) 24%, transparent);
+    color: var(--nz-color-accent-strong);
+  }
+
+  .nz :where(.nz-badge--success) {
+    background: var(--nz-surface-success-soft);
+    border-color: var(--nz-status-success-border);
+    color: var(--nz-status-success-text);
+  }
+
+  .nz :where(.nz-badge--warning) {
+    background: var(--nz-surface-warning-soft);
+    border-color: var(--nz-status-warning-border);
+    color: var(--nz-status-warning-text);
+  }
+
+  .nz :where(.nz-badge--danger) {
+    background: var(--nz-surface-danger-soft);
+    border-color: var(--nz-status-danger-border);
+    color: var(--nz-status-danger-text);
+  }
+
+  .nz :where(.nz-badge--glass) {
+    background: var(--nz-surface-glass);
+    border-color: var(--nz-border-glass);
+    color: var(--nz-text-strong);
+  }
+
+  .nz :where(.nz-badge--glass-brand) {
+    background: var(--nz-surface-glass-brand);
+    border-color: var(--nz-border-brand);
+    color: var(--nz-status-info-text);
+  }
+
+  .nz :where(.nz-badge--glass-accent) {
+    background: var(--nz-surface-glass-accent);
+    border-color: var(--nz-border-accent);
+    color: var(--nz-color-accent-strong);
+  }
+
+  .nz :where(.nz-card) {
+    --nz-card-hover-shadow: var(--nz-shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--nz-space-4);
+    padding: var(--nz-space-5);
+    border: 1px solid var(--nz-border-soft);
+    border-radius: var(--nz-radius-lg);
+    background: var(--nz-surface-base);
+    box-shadow: var(--nz-shadow-sm);
+  }
+
+  .nz :where(.nz-card--soft) {
+    background: var(--nz-surface-soft);
+    box-shadow: none;
+  }
+
+  .nz :where(.nz-card--glass-soft, .nz-card--glass, .nz-card--glass-strong, .nz-card--glass-brand, .nz-card--glass-accent) {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .nz :where(.nz-card--glass-soft, .nz-card--glass, .nz-card--glass-strong, .nz-card--glass-brand, .nz-card--glass-accent)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--nz-glass-sheen);
+    pointer-events: none;
+  }
+
+  .nz :where(.nz-card--glass-soft) {
+    background: var(--nz-surface-glass-soft);
+    border-color: var(--nz-border-glass);
+    box-shadow: var(--nz-shadow-sm), var(--nz-glass-stroke);
+    --nz-card-hover-shadow: var(--nz-shadow-md);
+  }
+
+  .nz :where(.nz-card--glass) {
+    background: var(--nz-surface-glass);
+    border-color: var(--nz-border-default);
+    box-shadow: var(--nz-shadow-md), var(--nz-glass-stroke);
+    --nz-card-hover-shadow: var(--nz-shadow-lg);
+  }
+
+  .nz :where(.nz-card--glass-strong) {
+    background: var(--nz-surface-glass-strong);
+    border-color: var(--nz-border-strong);
+    box-shadow: var(--nz-shadow-lg), var(--nz-glass-stroke);
+    --nz-card-hover-shadow: var(--nz-shadow-lg);
+  }
+
+  .nz :where(.nz-card--glass-brand) {
+    background: var(--nz-surface-glass-brand);
+    border-color: var(--nz-border-brand);
+    box-shadow: var(--nz-shadow-brand), var(--nz-glass-stroke);
+    --nz-card-hover-shadow: var(--nz-shadow-aurora);
+  }
+
+  .nz :where(.nz-card--glass-accent) {
+    background: var(--nz-surface-glass-accent);
+    border-color: var(--nz-border-accent);
+    box-shadow: var(--nz-shadow-accent), var(--nz-glass-stroke);
+    --nz-card-hover-shadow: var(--nz-shadow-accent);
+  }
+
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .nz :where(.nz-card--glass-soft, .nz-card--glass, .nz-card--glass-brand, .nz-card--glass-accent) {
+      -webkit-backdrop-filter: var(--nz-backdrop-blur) saturate(1.22);
+      backdrop-filter: var(--nz-backdrop-blur) saturate(1.22);
+    }
+
+    .nz :where(.nz-card--glass-strong) {
+      -webkit-backdrop-filter: var(--nz-backdrop-blur-strong) saturate(1.3);
+      backdrop-filter: var(--nz-backdrop-blur-strong) saturate(1.3);
+    }
+  }
+
+  .nz :where(.nz-card--interactive) {
+    transition:
+      transform var(--nz-duration-fast) var(--nz-ease-standard),
+      box-shadow var(--nz-duration-base) var(--nz-ease-standard),
+      border-color var(--nz-duration-base) var(--nz-ease-standard);
+  }
+
+  .nz :where(.nz-card--interactive):hover {
+    transform: translateY(-2px);
+    border-color: var(--nz-border-default);
+    box-shadow: var(--nz-card-hover-shadow);
+  }
+
+  .nz :where(.nz-card__header) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--nz-space-3);
+  }
+
+  .nz :where(.nz-card__title) {
+    font-size: var(--nz-text-lg);
+    font-weight: 700;
+    color: var(--nz-text-strong);
+  }
+
+  .nz :where(.nz-card__meta) {
+    font-size: var(--nz-text-sm);
+    color: var(--nz-text-muted);
+  }
+
+  .nz :where(.nz-card__body) {
+    color: var(--nz-text-default);
+  }
+
+  .nz :where(.nz-card__footer) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nz-space-3);
+    padding-top: var(--nz-space-3);
+    border-top: 1px solid var(--nz-border-soft);
+  }
+
+  .nz :where(.nz-field) {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .nz :where(.nz-label) {
+    font-size: var(--nz-text-sm);
+    font-weight: 700;
+    color: var(--nz-text-strong);
+  }
+
+  .nz :where(.nz-help) {
+    font-size: var(--nz-text-sm);
+    color: var(--nz-text-muted);
+  }
+
+  .nz :where(.nz-help--error) {
+    color: var(--nz-status-danger-text);
+  }
+
+  .nz :where(.nz-input, .nz-select, .nz-textarea) {
+    width: 100%;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--nz-border-default);
+    border-radius: var(--nz-radius-md);
+    background: var(--nz-surface-raised);
+    box-shadow: inset 0 1px 0 var(--nz-inset-highlight);
+    color: var(--nz-text-strong);
+    transition:
+      border-color var(--nz-duration-base) var(--nz-ease-standard),
+      box-shadow var(--nz-duration-base) var(--nz-ease-standard),
+      background var(--nz-duration-base) var(--nz-ease-standard);
+  }
+
+  .nz :where(.nz-input, .nz-textarea)::placeholder {
+    color: var(--nz-text-muted);
+  }
+
+  .nz :where(.nz-input, .nz-select, .nz-textarea):hover {
+    border-color: var(--nz-border-strong);
+  }
+
+  .nz :where(.nz-input, .nz-select, .nz-textarea):focus {
+    outline: none;
+    border-color: var(--nz-color-brand);
+    box-shadow: var(--nz-ring);
+  }
+
+  .nz :where(.nz-input, .nz-select, .nz-textarea)[aria-invalid="true"] {
+    border-color: var(--nz-status-danger-border);
+  }
+
+  .nz :where(.nz-input, .nz-select, .nz-textarea)[aria-invalid="true"]:focus {
+    box-shadow: var(--nz-ring-danger);
+  }
+
+  .nz :where(.nz-select) {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 2.75rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 5.25 7 9l4-3.75' fill='none' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+  }
+
+  .nz :where(.nz-textarea) {
+    min-height: 8rem;
+    resize: vertical;
+  }
+
+  .nz :where(.nz-alert) {
+    display: grid;
+    gap: 0.35rem;
+    padding: var(--nz-space-4) var(--nz-space-5);
+    border: 1px solid var(--nz-status-info-border);
+    border-left: 4px solid var(--nz-color-brand);
+    border-radius: var(--nz-radius-md);
+    background: var(--nz-status-info-soft);
+  }
+
+  .nz :where(.nz-alert__title) {
+    font-size: var(--nz-text-sm);
+    font-weight: 700;
+    color: var(--nz-status-info-text);
+  }
+
+  .nz :where(.nz-alert__body) {
+    font-size: var(--nz-text-sm);
+    color: var(--nz-text-default);
+  }
+
+  .nz :where(.nz-alert--success) {
+    background: var(--nz-status-success-soft);
+    border-color: var(--nz-status-success-border);
+    border-left-color: var(--nz-color-success);
+  }
+
+  .nz :where(.nz-alert--success) .nz-alert__title {
+    color: var(--nz-status-success-text);
+  }
+
+  .nz :where(.nz-alert--warning) {
+    background: var(--nz-status-warning-soft);
+    border-color: var(--nz-status-warning-border);
+    border-left-color: var(--nz-color-warning);
+  }
+
+  .nz :where(.nz-alert--warning) .nz-alert__title {
+    color: var(--nz-status-warning-text);
+  }
+
+  .nz :where(.nz-alert--danger) {
+    background: var(--nz-status-danger-soft);
+    border-color: var(--nz-status-danger-border);
+    border-left-color: var(--nz-color-danger);
+  }
+
+  .nz :where(.nz-alert--danger) .nz-alert__title {
+    color: var(--nz-status-danger-text);
+  }
+
+  .nz :where(.nz-callout) {
+    padding: var(--nz-space-4);
+    border: 1px solid var(--nz-border-default);
+    border-radius: var(--nz-radius-md);
+    background: var(--nz-surface-soft);
+  }
+
+  .nz :where(.nz-callout__title) {
+    display: block;
+    margin-bottom: var(--nz-space-2);
+    font-size: var(--nz-text-sm);
+    font-weight: 700;
+    color: var(--nz-text-strong);
+  }
+
+  .nz :where(.nz-callout__body) {
+    font-size: var(--nz-text-sm);
+    color: var(--nz-text-default);
+  }
+
+  .nz :where(.nz-callout--tip) {
+    background: var(--nz-status-info-soft);
+    border-color: var(--nz-status-info-border);
+  }
+
+  .nz :where(.nz-callout--warning) {
+    background: var(--nz-status-warning-soft);
+    border-color: var(--nz-status-warning-border);
+  }
+
+  .nz :where(.nz-callout--danger) {
+    background: var(--nz-status-danger-soft);
+    border-color: var(--nz-status-danger-border);
+  }
+
+  .nz :where(.nz-codeblock) {
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: var(--nz-radius-lg);
+    background: #0f172a;
+    color: #e2e8f0;
+    box-shadow: var(--nz-shadow-lg);
+  }
+
+  .nz :where(.nz-codeblock__head) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nz-space-3);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(15, 23, 42, 0.88);
+    font-size: var(--nz-text-xs);
+  }
+
+  .nz :where(.nz-codeblock__label) {
+    color: #93c5fd;
+    font-family: var(--nz-font-mono);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .nz :where(.nz-codeblock__hint) {
+    color: rgba(226, 232, 240, 0.72);
+  }
+
+  .nz :where(.nz-codeblock) pre {
+    margin: 0;
+    padding: 1rem;
+    overflow: auto;
+    font-size: var(--nz-text-sm);
+    line-height: 1.7;
+  }
+
+  .nz :where(.nz-codeblock) pre code {
+    display: block;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .nz :where(.nz-table-wrap) {
+    overflow: auto;
+    border: 1px solid var(--nz-border-soft);
+    border-radius: var(--nz-radius-lg);
+    background: var(--nz-surface-base);
+    box-shadow: var(--nz-shadow-sm);
+  }
+
+  .nz :where(.nz-table) {
+    width: 100%;
+    min-width: 38rem;
+    border-collapse: collapse;
+  }
+
+  .nz :where(.nz-table) th,
+  .nz :where(.nz-table) td {
+    padding: 0.9rem 1rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .nz :where(.nz-table) th {
+    background: var(--nz-surface-soft);
+    color: var(--nz-text-muted);
+    font-size: var(--nz-text-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .nz :where(.nz-table) td {
+    color: var(--nz-text-default);
+  }
+
+  .nz :where(.nz-table) tbody tr + tr td {
+    border-top: 1px solid var(--nz-border-soft);
+  }
+}
+
+@layer ntizar.utilities {
+  .nz :where(.u-nz-text-muted) {
+    color: var(--nz-text-muted) !important;
+  }
+
+  .nz :where(.u-nz-text-strong) {
+    color: var(--nz-text-strong) !important;
+  }
+
+  .nz :where(.u-nz-text-brand) {
+    color: var(--nz-color-brand) !important;
+  }
+
+  .nz :where(.u-nz-text-gradient) {
+    background: var(--nz-gradient-aurora);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent !important;
+  }
+
+  .nz :where(.u-nz-text-gradient-brand) {
+    background: var(--nz-gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent !important;
+  }
+
+  .nz :where(.u-nz-full-width) {
+    width: 100% !important;
+  }
+
+  .nz :where(.u-nz-sr-only) {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+}

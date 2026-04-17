@@ -1,140 +1,123 @@
-# ⚡ Simulador Sistema Eléctrico Español 2026-2035
+# Sistema Electrico Futuro 2026-2035
 
 **Autor:** David Antizar  
-**Versión:** 2.0  
+**Version:** 3.0  
 **Licencia:** MIT
 
 ---
+
 Pruébalo en https://ntizar.github.io/SistemaElectricoFuturo/
 
-## 📋 Descripción
+## Descripcion
 
-Herramienta interactiva de simulación del sistema eléctrico español que permite explorar diferentes escenarios energéticos en el horizonte 2026-2035. Simula **8.760 horas** (un año completo) de despacho de generación eléctrica siguiendo el orden de mérito (merit order) del mercado mayorista español (OMIE).
+Simulador interactivo del sistema electrico espanol con foco en el horizonte 2026-2035. La v3 ya no se limita a un unico anio estacionario: combina simulacion anual de 8.760 horas con una trayectoria multi-anio que incorpora decisiones de parque, electrificacion, almacenamiento, politica energetica y estres climaticos plausibles.
 
-### Características principales
+## Novedades de la v3
 
-- **Simulación hora a hora** con modelos realistas de solar, eólica, demanda y formación de precios
-- **8 escenarios predefinidos** basados en datos reales y planes oficiales (PNIEC 2030)
-- **30+ parámetros configurables**: capacidades instaladas, precios de commodities, almacenamiento, interconexiones, flexibilidad, horizonte temporal
-- **Semilla meteorológica reproducible** para comparar escenarios bajo las mismas condiciones climáticas
-- **Indicadores clave**: precio medio ponderado, emisiones CO₂, cobertura renovable, vertidos, déficit, horas de estrés
-- **Cumplimiento PNIEC**: verificación automática de objetivos del Plan Nacional Integrado de Energía y Clima
-- **Visualizaciones interactivas** con Plotly.js: mix de generación, precios, distribución horaria, comparación con 2025
+- interfaz rehecha sobre **Ntizar Aurora v4** con modo claro por defecto y toggle dark
+- **17 escenarios** con casos realistas para Espana: cierre ENRESA, VE masivo, autoconsumo 30 GW, crisis geopolitica del gas, ley climatica, sequias y ola de calor
+- **demanda sectorial**: residencial, servicios, industria, vehiculo electrico, bombas de calor, H2 verde y autoconsumo
+- **calendario nuclear real** basado en ENRESA con opcion de prorroga
+- **almacenamiento avanzado**: degradacion de baterias, bombeo y soporte V2G
+- **politica energetica**: tope iberico, CfDs, peajes dinamicos, PVPC y pagos por capacidad
+- **trayectoria 2026-2035** con rampas de despliegue y estado persistente entre anios
+- nuevas metricas: horas sin gas, estres de red, coste del sistema, LCOE y LCOS aproximados
 
----
+## Estructura
 
-## 🏗️ Estructura del proyecto
-
-```
+```text
 SistemaElectricoFuturo/
-├── index.html              # Punto de entrada principal
-├── css/
-│   └── styles.css          # Estilos CSS (variables, layout, componentes)
-├── js/
-│   ├── constants.js        # Constantes, datos 2025, PNIEC, paleta de colores
-│   ├── scenarios.js        # 8 escenarios predefinidos con descripciones
-│   ├── simulator.js        # Motor de simulación (clase SimuladorElectrico)
-│   ├── charts.js           # Módulo de gráficos Plotly.js
-│   └── app.js              # Aplicación Vue 3 (estado, interacción, orquestación)
-├── docs/
-│   └── METHODOLOGY.md      # Documentación técnica de la metodología
-└── README.md               # Este archivo
+|- index.html
+|- PLAN.md
+|- css/
+|  |- ntizar.css
+|  |- app.css
+|- js/
+|  |- constants.js
+|  |- theme.js
+|  |- nuclear.js
+|  |- weather.js
+|  |- demand.js
+|  |- storage.js
+|  |- policy.js
+|  |- scenarios.js
+|  |- simulator.js
+|  |- trajectory.js
+|  |- charts.js
+|  |- app.js
+|- docs/
+   |- METHODOLOGY.md
+   |- POLICY.md
+   |- DATA-2025.md
 ```
 
----
+## Uso
 
-## 🚀 Uso
+### Opcion 1: abrir directamente
 
-### Opción 1: Abrir directamente
-Abre `index.html` en cualquier navegador moderno (Chrome, Firefox, Edge, Safari).
+Abre `index.html` en un navegador moderno.
 
-### Opción 2: Servidor local
+### Opcion 2: servidor local
+
 ```bash
-# Con Python
 python -m http.server 8080
-
-# Con Node.js
-npx serve .
-
-# Con VS Code
-# Instalar extensión "Live Server" y hacer clic derecho → "Open with Live Server"
 ```
 
-### Opción 3: GitHub Pages
-El proyecto está preparado para desplegarlo directamente en GitHub Pages sin configuración adicional.
+o
 
----
+```bash
+npx serve .
+```
 
-## 📊 Escenarios incluidos
+## Modos de analisis
 
-| # | Escenario | Descripción |
-|---|-----------|-------------|
-| 0 | **Datos Reales 2025** | Configuración base con datos reales del sistema español |
-| 1 | **PNIEC Base 2030** | Objetivos del Plan Nacional: 76 GW solar, 62 GW eólica |
-| 2 | **Prórroga Nuclear** | Extensión de vida útil nuclear, menos presión renovable |
-| 3 | **Sin Nuclear** | Cierre total para 2028, máxima expansión renovable |
-| 4 | **Almacenamiento Masivo** | 40 GW baterías + 12 GW bombeo |
-| 5 | **Crisis del Gas** | Gas TTF a 95€/MWh, incentivo transición renovable |
-| 6 | **Hidrógeno Verde** | Alta flexibilidad (12 GW electrolizadores), absorbe excedentes |
-| 7 | **Sequía Extrema** | Hidraulicidad al 50%, estrés del sistema |
+### 1. Simulacion anual
 
----
+Calcula una unica anualidad de 8.760 horas para un anio objetivo. Sirve para comparar escenarios, ajustar parametros o estudiar sensibilidad.
 
-## 🔧 Modelo de simulación
+### 2. Trayectoria 2026-2035
 
-### Motor de despacho (merit order)
+Ejecuta 10 anos consecutivos con:
 
-1. **Nuclear** → Base inflexible, ~90% factor de capacidad
-2. **Solar FV** → Modelo geométrico solar real (lat. 40.4°N) con nubosidad estocástica
-3. **Eólica** → Serie temporal con autocorrelación y persistencia meteorológica
-4. **Almacenamiento** → Baterías (90% eficiencia) y bombeo (75%) cargan con excedentes
-5. **Flexibilidad** → Demanda gestionable absorbe o reduce ante exceso/déficit
-6. **Interconexiones** → Importación/exportación con países vecinos
-7. **Hidráulica** → Gestionable, priorizada en déficit, estacional
-8. **Gas CCGT** → Último recurso, con rampa térmica y mínimo estable
+- rampas de solar, eolica, offshore y baterias
+- crecimiento del parque VE y bombas de calor
+- acumulacion del objetivo de H2
+- degradacion de baterias entre anios
+- disponibilidad nuclear segun calendario real o prorroga
 
-### Formación de precios
+## Escenarios incluidos
 
-- Sistema **marginalista** (OMIE): el precio lo fija la última tecnología necesaria
-- Coste CCGT = Gas/eficiencia + CO₂×ETS/eficiencia + O&M + prima de estrés
-- Canibalización renovable: precios bajos o negativos con alto ratio VRE/demanda
-- Ajustes regulados: pérdidas de red + cargos/peajes (CNMC/MITECO)
+| # | Escenario | Idea principal |
+| --- | --- | --- |
+| 0 | Datos Reales 2025 | Referencia base del sistema reciente |
+| 1 | PNIEC Base 2030 | Despliegue renovable y almacenamiento de referencia |
+| 2 | Prorroga Nuclear | Mas firmeza nuclear, menos urgencia de respaldo |
+| 3 | Sin Nuclear | Cierre acelerado y fuerte tension de sistema |
+| 4 | Almacenamiento Masivo | Mucha bateria y bombeo para absorber excedentes |
+| 5 | Crisis del Gas | Gas y CO2 muy altos |
+| 6 | Hidrogeno Verde | Electrolisis flexible absorbiendo excedentes |
+| 7 | Sequia Extrema | Baja hidraulicidad y mas estres del sistema |
+| 8 | Cierre Nuclear ENRESA | Calendario oficial sin prorroga |
+| 9 | Prorroga 60 Anos | Escenario defensivo de seguridad de suministro |
+| 10 | Apagon Iberico Repetido | Shock de inercia y reserva rodante |
+| 11 | VE Masivo 2030 | 10M de VE, smart charging y V2G |
+| 12 | Autoconsumo 30 GW | FV detras del contador a gran escala |
+| 13 | PNIEC 2030 Actualizado | Variante mas ambiciosa del despliegue |
+| 14 | Ley Climatico 2050 | Senda multi-anio de descarbonizacion |
+| 15 | Ola de Calor Extrema | Pico de demanda y penalizacion solar |
+| 16 | Crisis Geopolitica Gas + CO2 | Shock europeo con prorroga nuclear defensiva |
 
-### Mejoras respecto a v1
+## Fuentes
 
-- Modelo solar basado en geometría solar real (declinación, ángulo horario, masa de aire)
-- Viento con autocorrelación temporal y bloques sinópticos de persistencia
-- Demanda sensible a temperatura (curva en U: calefacción/refrigeración)
-- Rampa térmica y limitaciones operativas de CCGT
-- Vista de análisis mensual con curva de duración de precios
-- 2 escenarios adicionales (Hidrógeno Verde, Sequía Extrema)
+- REE: https://www.ree.es/es/datos
+- OMIE: https://www.omie.es/
+- MITECO: https://www.miteco.gob.es/es/energia/temas/planificacion/plan-nacional-integrado-energia-clima.html
+- CNMC: https://www.cnmc.es/ambitos-de-actuacion/energia/peajes-y-cargos
+- ENTSO-E: https://transparency.entsoe.eu/
+- EU ETS: https://climate.ec.europa.eu/eu-action/eu-emissions-trading-system-eu-ets_es
 
----
+## Notas
 
-## 📐 Fuentes de datos
-
-| Fuente | Datos | URL |
-|--------|-------|-----|
-| **REE** | Generación, demanda, capacidad instalada | [ree.es/es/datos](https://www.ree.es/es/datos) |
-| **OMIE** | Precios mercado diario | [omie.es](https://www.omie.es/) |
-| **MITECO** | PNIEC 2030, planificación | [miteco.gob.es](https://www.miteco.gob.es/es/energia/temas/planificacion/plan-nacional-integrado-energia-clima.html) |
-| **CNMC** | Peajes y cargos regulados | [cnmc.es](https://www.cnmc.es/ambitos-de-actuacion/energia/peajes-y-cargos) |
-| **ENTSO-E** | Interconexiones, transparencia | [transparency.entsoe.eu](https://transparency.entsoe.eu/) |
-| **EU ETS** | Precio CO₂ | [climate.ec.europa.eu](https://climate.ec.europa.eu/eu-action/eu-emissions-trading-system-eu-ets_es) |
-
----
-
-## 🛠️ Tecnologías
-
-- **Vue 3** (Composition API) — Framework reactivo
-- **Plotly.js** — Gráficos interactivos de alta calidad
-- **CSS Custom Properties** — Tematización y mantenibilidad
-- **Vanilla JS** — Motor de simulación sin dependencias
-- **GitHub Pages** — Despliegue estático
-
----
-
-## 📄 Licencia
-
-MIT © David Antizar
-
+- El proyecto sigue siendo una herramienta exploratoria, no un modelo de despacho oficial.
+- La validacion tecnica minima ya cubre sintaxis JS, simulacion anual y trayectoria multi-anio en entorno Node.
+- Falta validacion manual en navegador para confirmar experiencia completa de Vue + Plotly + tema claro/oscuro.

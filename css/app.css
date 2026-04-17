@@ -1,0 +1,410 @@
+/*
+ * Overrides especificos de la app sobre Aurora v4.
+ */
+
+.app-shell {
+    min-height: 100vh;
+}
+
+.app-section {
+    padding-block: 2rem 3rem;
+}
+
+.app-layout {
+    align-items: start;
+}
+
+.app-sidebar,
+.app-main {
+    min-width: 0;
+}
+
+.hero-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.85fr);
+    gap: 1.5rem;
+    padding: 1.75rem;
+}
+
+.hero-copy,
+.hero-meta {
+    min-width: 0;
+}
+
+.hero-headline h1 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1.02;
+    color: var(--nz-text-strong);
+}
+
+.hero-subtitle {
+    margin: 0;
+    max-width: 65ch;
+    font-size: 1rem;
+    color: var(--nz-text-default);
+}
+
+.hero-actions {
+    flex-wrap: wrap;
+}
+
+.hero-kpis {
+    gap: 0.9rem;
+}
+
+.hero-kpis .nz-card {
+    padding: 1rem;
+}
+
+.hero-kpis__value,
+.kpi-card__value,
+.trajectory-card__value {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--nz-text-strong);
+}
+
+.hero-kpis__value.is-success,
+.kpi-card__value.is-success {
+    color: var(--nz-color-success);
+}
+
+.hero-kpis__value.is-warning,
+.kpi-card__value.is-warning {
+    color: var(--nz-color-warning);
+}
+
+.hero-kpis__value.is-danger,
+.kpi-card__value.is-danger {
+    color: var(--nz-color-danger);
+}
+
+.app-tab-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.app-tab-row .nz-btn.is-active {
+    background: var(--nz-gradient-brand);
+    color: #ffffff;
+    border-color: color-mix(in srgb, var(--nz-color-brand) 50%, transparent);
+    box-shadow: var(--nz-shadow-brand);
+}
+
+.app-tab-row--compact {
+    gap: 0.35rem;
+}
+
+.app-sidebar__eyebrow {
+    font-size: var(--nz-text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--nz-text-muted);
+}
+
+.app-sidebar__title {
+    margin: 0;
+    font-size: 1.35rem;
+}
+
+.scenario-grid {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.scenario-card {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.scenario-card--active {
+    border-color: var(--nz-border-brand);
+    box-shadow: var(--nz-shadow-brand);
+}
+
+.copy-banner {
+    font-size: var(--nz-text-sm);
+    color: var(--nz-color-success);
+}
+
+.control-section {
+    gap: 0.9rem;
+}
+
+.control-section__header h3,
+.panel-title {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--nz-text-strong);
+}
+
+.control-section__header p {
+    margin: 0;
+    color: var(--nz-text-muted);
+    font-size: var(--nz-text-sm);
+}
+
+.control-list {
+    gap: 0.8rem;
+}
+
+.control-row {
+    gap: 0.55rem;
+}
+
+.control-row__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.control-row__value {
+    font-size: var(--nz-text-sm);
+    font-weight: 700;
+    color: var(--nz-color-brand-strong);
+}
+
+.app-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--nz-color-brand) 22%, transparent) 0%, color-mix(in srgb, var(--nz-color-violet-500) 20%, transparent) 100%);
+    outline: none;
+    border: 1px solid color-mix(in srgb, var(--nz-color-brand) 18%, transparent);
+}
+
+.app-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: var(--nz-gradient-aurora);
+    border: 2px solid rgba(255, 255, 255, 0.92);
+    box-shadow: var(--nz-shadow-brand);
+    cursor: pointer;
+}
+
+.app-range::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: var(--nz-gradient-aurora);
+    border: 2px solid rgba(255, 255, 255, 0.92);
+    box-shadow: var(--nz-shadow-brand);
+    cursor: pointer;
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: var(--nz-text-sm);
+    color: var(--nz-text-default);
+}
+
+.toggle-row input {
+    width: 1rem;
+    height: 1rem;
+}
+
+.sources-list {
+    gap: 0.5rem;
+}
+
+.source-link {
+    color: var(--nz-color-brand-strong);
+    text-decoration: none;
+}
+
+.source-link:hover {
+    text-decoration: underline;
+}
+
+.app-main__topbar {
+    gap: 0.8rem;
+}
+
+.app-main__actions {
+    flex-wrap: wrap;
+}
+
+.dashboard-panels,
+.kpi-grid {
+    gap: 1rem;
+}
+
+.chart-card--wide {
+    grid-column: 1 / -1;
+}
+
+.chart-host {
+    width: 100%;
+    min-height: 220px;
+}
+
+.chart-host--sm {
+    min-height: 180px;
+}
+
+.chart-host--md {
+    min-height: 260px;
+}
+
+.chart-host--lg {
+    min-height: 340px;
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.metric-grid--compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric-pill {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.85rem 1rem;
+}
+
+.metric-pill span {
+    font-size: var(--nz-text-xs);
+    color: var(--nz-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.metric-pill strong {
+    font-size: 1rem;
+    color: var(--nz-text-strong);
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.comparison-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.95rem 1rem;
+}
+
+.comparison-card span {
+    font-size: var(--nz-text-sm);
+    color: var(--nz-text-muted);
+}
+
+.comparison-card strong {
+    font-size: 1rem;
+    color: var(--nz-text-strong);
+}
+
+.comparison-card small {
+    font-weight: 700;
+}
+
+.comparison-card .is-positive {
+    color: var(--nz-color-success);
+}
+
+.comparison-card .is-negative {
+    color: var(--nz-color-danger);
+}
+
+.analysis-prose p {
+    margin: 0;
+}
+
+.trajectory-toolbar {
+    align-items: center;
+}
+
+.week-select {
+    min-width: 6rem;
+}
+
+.app-loading {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 40;
+    background: rgba(15, 23, 42, 0.16);
+    backdrop-filter: blur(8px);
+}
+
+.app-loading__card {
+    min-width: min(28rem, calc(100vw - 2rem));
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.app-loading__spinner {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    border: 3px solid color-mix(in srgb, var(--nz-color-brand) 20%, transparent);
+    border-top-color: var(--nz-color-accent);
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 1100px) {
+    .hero-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .metric-grid--compact,
+    .metric-grid,
+    .comparison-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .app-section {
+        padding-block: 1rem 2rem;
+    }
+
+    .hero-shell {
+        padding: 1.2rem;
+    }
+
+    .metric-grid--compact,
+    .metric-grid,
+    .comparison-grid,
+    .hero-kpis {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card--wide {
+        grid-column: auto;
+    }
+
+    .control-row__header,
+    .app-main__topbar,
+    .trajectory-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

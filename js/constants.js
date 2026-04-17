@@ -1,19 +1,9 @@
 /**
  * ============================================================================
- *  CONSTANTES DEL SISTEMA ELÉCTRICO ESPAÑOL
+ *  CONSTANTES DEL SISTEMA ELECTRICO ESPANOL
  * ============================================================================
- *  Datos de referencia 2025, objetivos PNIEC 2030, factores de emisión,
- *  costes de referencia y parámetros del modelo de simulación.
- *
- *  Fuentes oficiales:
- *    - REE (Red Eléctrica de España): datos de demanda y generación
- *    - OMIE: precios del mercado diario
- *    - MITECO: PNIEC (Plan Nacional Integrado de Energía y Clima)
- *    - CNMC: peajes y cargos regulados
- *    - ENTSO-E: interconexiones europeas
- *    - EU ETS: precios de CO₂
- *
- *  Autor: David Antizar
+ *  Datos de referencia 2025, objetivos PNIEC, costes, colores y parametros
+ *  base para el simulador anual y la trayectoria 2026-2035.
  * ============================================================================
  */
 
@@ -22,145 +12,236 @@
 const SEF = window.SEF || {};
 window.SEF = SEF;
 
-// ── Datos reales de España 2025 ─────────────────────────────────────────────
+SEF.Utils = Object.freeze({
+    clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+    },
+    lerp(a, b, t) {
+        return a + (b - a) * t;
+    },
+    sum(values) {
+        let total = 0;
+        for (let i = 0; i < values.length; i++) total += values[i];
+        return total;
+    },
+    normalizeSeries(series, targetGWh) {
+        const total = this.sum(series);
+        const factor = total > 0 ? targetGWh / total : 0;
+        const out = new Float64Array(series.length);
+        for (let i = 0; i < series.length; i++) out[i] = series[i] * factor;
+        return out;
+    },
+    SeededRNG: class SeededRNG {
+        constructor(seed) {
+            this.seed = Number.isFinite(seed) ? seed : 42;
+        }
+        next() {
+            this.seed = Math.sin(this.seed * 9301 + 49297) * 49271;
+            return this.seed - Math.floor(this.seed);
+        }
+        gauss(mean = 0, sigma = 1) {
+            const u1 = Math.max(1e-10, this.next());
+            const u2 = this.next();
+            const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+            return mean + sigma * z;
+        }
+    },
+});
+
 SEF.DATOS_2025 = Object.freeze({
-    nuclear:      7.0,     // GW instalados
-    nuclearTWh:  51.9,     // TWh generados
-    solar:       24.0,     // GW instalados
-    solarTWh:    52.5,     // TWh generados
-    eolica:      31.0,     // GW instalados
-    eolicaTWh:   55.6,     // TWh generados
-    hidraulica:  17.0,     // GW instalados
-    hidroTWh:    37.6,     // TWh generados
-    gas:         24.0,     // GW instalados (CCGT)
-    gasTWh:      52.1,     // TWh generados
-    demanda:     260,      // TWh demanda anual peninsular
-    precioMedio:  65,      // €/MWh media OMIE
-    emisiones:    38,      // Mt CO₂ del sector eléctrico
-    renovables:   56       // % del mix de generación
+    nuclear: 7.0,
+    nuclearTWh: 51.9,
+    solar: 24.7,
+    solarTWh: 52.5,
+    eolica: 31.6,
+    offshore: 0.0,
+    eolicaTWh: 55.6,
+    hidraulica: 17.1,
+    hidroTWh: 37.6,
+    gas: 24.0,
+    gasTWh: 52.1,
+    demanda: 248,
+    precioMedio: 63,
+    emisiones: 36,
+    renovables: 56,
+    autoconsumoGW: 8.2,
+    veParqueMiles: 650,
+    bombaCalorStockMiles: 2200,
+    horasSinGas: 1620,
 });
 
-// ── Objetivos PNIEC 2030 ────────────────────────────────────────────────────
 SEF.PNIEC_2030 = Object.freeze({
-    renovablesGeneracion:   74,    // % de renovables en generación eléctrica
-    emisionesMax:          35,    // Mt CO₂ techo sector eléctrico
-    solarGW:               76,    // GW de solar FV instalados
-    eolicaGW:              62,    // GW de eólica instalada
-    almacenamientoGW:      22,    // GW de almacenamiento (baterías + bombeo)
-    demandaTWh:           280,    // TWh demanda prevista
-    interconexionPct:      15,    // % de ratio de interconexión
-    eficienciaEnergetica:  39.5   // % mejora de eficiencia energética
+    renovablesGeneracion: 81,
+    emisionesMax: 20,
+    solarGW: 81,
+    eolicaGW: 62,
+    offshoreGW: 3,
+    almacenamientoGW: 22,
+    demandaTWh: 295,
+    interconexionPct: 15,
 });
 
-// ── Parámetros del modelo de simulación ─────────────────────────────────────
 SEF.MODEL = Object.freeze({
-    HORAS_ANIO:         8760,
-    LATITUD_ESPANA:     40.4,       // grados N (Madrid, representativa)
-    FACTOR_CO2_GAS:     0.202,      // tCO₂ por MWh térmico de gas natural
-    EFICIENCIA_BAT:     0.90,       // round-trip baterías Li-ion
-    EFICIENCIA_BOMBEO:  0.75,       // round-trip bombeo hidráulico
-    FC_NUCLEAR:         0.90,       // factor de capacidad nuclear
-    AUTODESCARGA_BAT:   0.001,      // % por hora
-    RAMPA_CCGT:         0.15,       // GW/hora rampa máxima por unidad
-    MIN_ESTABLE_CCGT:   0.40,       // % de potencia mínima estable
-    INERCIA_MIN_GW:     3.0,        // GW mínimos síncronos para estabilidad
+    HORAS_ANIO: 8760,
+    BASE_ANIO: 2026,
+    LATITUD_ESPANA: 40.4,
+    FACTOR_CO2_GAS: 0.202,
+    FC_NUCLEAR: 0.90,
+    EFICIENCIA_BAT: 0.90,
+    EFICIENCIA_BOMBEO: 0.75,
+    AUTODESCARGA_BAT: 0.001,
+    RAMPA_CCGT: 0.15,
+    MIN_ESTABLE_CCGT: 0.40,
+    INERCIA_MIN_GW: 3.0,
+    RESERVA_RODANTE_PCT: 4.0,
+    TWH_POR_MT_H2: 52,
+    VEHICULOS_PARC_TOTAL_M: 30,
+    VEHICULO_KM_ANIO: 11000,
+    VEHICULO_KWH_KM: 0.17,
+    BOMBAS_CALOR_TWH_MAX: 24,
 });
 
-// ── Temperaturas medias mensuales (Madrid, °C) ─────────────────────────────
 SEF.TEMP_MENSUAL = Object.freeze([
-    6.3, 7.9, 11.2, 13.7, 17.6, 23.4, 27.0, 26.4, 21.8, 15.8, 10.1, 6.9
+    6.3, 7.9, 11.2, 13.7, 17.6, 23.4, 27.0, 26.4, 21.8, 15.8, 10.1, 6.9,
 ]);
 
-// ── Factores de capacidad históricos (España) ───────────────────────────────
 SEF.FC_HISTORICOS = Object.freeze({
     nuclear: 0.90,
-    solar:   0.18,    // horas equivalentes ~1580 h/año
-    eolica:  0.24,    // horas equivalentes ~2100 h/año
-    hidro:   0.20,    // muy variable por hidraulicidad
+    solar: 0.18,
+    eolica: 0.24,
+    offshore: 0.43,
+    hidro: 0.20,
 });
 
-// ── Costes de referencia 2025 (€/MWh, LCOE) ────────────────────────────────
 SEF.COSTES_REF = Object.freeze({
-    nuclear:     35,
-    solarFV:     28,
-    eolica:      32,
-    hidro:       40,
-    ccgt:        85,     // variable, depende de gas y CO₂
-    baterias:    55,     // LCOS (€/MWh almacenado y descargado)
-    bombeo:      45,
+    nuclear: 42,
+    solarFV: 31,
+    eolica: 36,
+    offshore: 62,
+    hidro: 44,
+    ccgt: 92,
+    baterias: 68,
+    bombeo: 52,
+    importacion: 90,
 });
 
-// ── Colores del sistema para gráficos ───────────────────────────────────────
 SEF.COLORES = Object.freeze({
-    nuclear:   { fill: 'rgba(239, 68, 68, 0.85)',  line: '#ef4444', label: '#fca5a5' },
-    solar:     { fill: 'rgba(250, 204, 21, 0.85)', line: '#facc15', label: '#fde68a' },
-    eolica:    { fill: 'rgba(34, 197, 94, 0.85)',   line: '#22c55e', label: '#86efac' },
-    hidro:     { fill: 'rgba(59, 130, 246, 0.85)',  line: '#3b82f6', label: '#93c5fd' },
-    gas:       { fill: 'rgba(148, 163, 184, 0.85)', line: '#94a3b8', label: '#cbd5e1' },
-    baterias:  { fill: 'rgba(168, 85, 247, 0.85)',  line: '#a855f7', label: '#d8b4fe' },
-    bombeo:    { fill: 'rgba(139, 92, 246, 0.50)',   line: '#8b5cf6', label: '#c4b5fd' },
-    vertido:   { fill: 'rgba(251, 146, 60, 0.50)',   line: '#fb923c', label: '#fdba74' },
-    deficit:   { fill: 'rgba(239, 68, 68, 0.30)',   line: '#ef4444', label: '#fca5a5' },
-    demanda:   { fill: 'rgba(255,255,255,0.0)',      line: '#f8fafc', label: '#f8fafc' },
-    importar:  { fill: 'rgba(6, 182, 212, 0.70)',    line: '#06b6d4', label: '#67e8f9' },
-    exportar:  { fill: 'rgba(20, 184, 166, 0.50)',   line: '#14b8a6', label: '#5eead4' },
-    precio:    { fill: 'rgba(0, 245, 212, 0.20)',    line: '#00f5d4', label: '#00f5d4' },
-    ref2025:   { line: '#fbbf24', label: '#fbbf24' },
+    nuclear: { fill: 'rgba(239, 68, 68, 0.76)', line: '#dc2626', label: '#ef4444' },
+    solar: { fill: 'rgba(245, 158, 11, 0.76)', line: '#f59e0b', label: '#f59e0b' },
+    eolica: { fill: 'rgba(34, 197, 94, 0.72)', line: '#16a34a', label: '#16a34a' },
+    offshore: { fill: 'rgba(20, 184, 166, 0.68)', line: '#0f766e', label: '#14b8a6' },
+    hidro: { fill: 'rgba(37, 99, 235, 0.72)', line: '#2563eb', label: '#2563eb' },
+    gas: { fill: 'rgba(100, 116, 139, 0.72)', line: '#475569', label: '#64748b' },
+    baterias: { fill: 'rgba(124, 58, 237, 0.70)', line: '#7c3aed', label: '#8b5cf6' },
+    bombeo: { fill: 'rgba(59, 130, 246, 0.32)', line: '#3b82f6', label: '#60a5fa' },
+    vertido: { fill: 'rgba(251, 146, 60, 0.42)', line: '#f97316', label: '#fb923c' },
+    deficit: { fill: 'rgba(239, 68, 68, 0.18)', line: '#ef4444', label: '#ef4444' },
+    importar: { fill: 'rgba(6, 182, 212, 0.64)', line: '#0891b2', label: '#06b6d4' },
+    exportar: { fill: 'rgba(20, 184, 166, 0.32)', line: '#14b8a6', label: '#14b8a6' },
+    precio: { fill: 'rgba(37, 99, 235, 0.12)', line: '#2563eb', label: '#2563eb' },
+    ref2025: { line: '#f59e0b', label: '#f59e0b' },
+    h2: { fill: 'rgba(249, 115, 22, 0.54)', line: '#ea580c', label: '#f97316' },
 });
 
-// ── Layout base de Plotly ───────────────────────────────────────────────────
 SEF.PLOTLY_LAYOUT_BASE = Object.freeze({
     paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor:  'rgba(0,0,0,0)',
-    font:          { family: 'Inter, system-ui, sans-serif', color: '#94a3b8', size: 10 },
-    margin:        { t: 25, r: 15, b: 45, l: 55 },
-    hovermode:     'x unified',
-    hoverlabel:    { bgcolor: 'rgba(15,23,42,0.95)', bordercolor: 'rgba(148,163,184,0.3)',
-                     font: { family: 'Inter, system-ui', size: 11, color: '#e2e8f0' } },
-    legend:        { orientation: 'h', y: -0.18, font: { size: 9 },
-                     bgcolor: 'rgba(0,0,0,0)', borderwidth: 0 },
-    xaxis:         { gridcolor: 'rgba(148,163,184,0.08)', zerolinecolor: 'rgba(148,163,184,0.15)' },
-    yaxis:         { gridcolor: 'rgba(148,163,184,0.08)', zerolinecolor: 'rgba(148,163,184,0.15)' },
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'Inter, system-ui, sans-serif', color: '#475569', size: 11 },
+    margin: { t: 24, r: 12, b: 42, l: 56 },
+    hovermode: 'x unified',
+    hoverlabel: {
+        bgcolor: 'rgba(15,23,42,0.92)',
+        bordercolor: 'rgba(148,163,184,0.24)',
+        font: { family: 'Inter, system-ui, sans-serif', size: 11, color: '#f8fafc' },
+    },
+    legend: {
+        orientation: 'h',
+        y: -0.22,
+        bgcolor: 'rgba(0,0,0,0)',
+        borderwidth: 0,
+        font: { size: 10 },
+    },
+    xaxis: {
+        gridcolor: 'rgba(148,163,184,0.12)',
+        zerolinecolor: 'rgba(148,163,184,0.18)',
+    },
+    yaxis: {
+        gridcolor: 'rgba(148,163,184,0.12)',
+        zerolinecolor: 'rgba(148,163,184,0.18)',
+    },
 });
 
-// ── Parámetros por defecto del simulador ────────────────────────────────────
 SEF.PARAMS_DEFAULT = Object.freeze({
-    nuclear:            7.0,
-    solar:             25.0,
-    eolica:            31.0,
-    hidraulica:        17.0,
-    ccgt:              24.0,
-    bateriasPotencia:   3.0,
-    bateriasCapacidad: 10,
-    bombeo:             3.5,
-    bombeoCapacidad:   30,
-    precioGas:         42,
-    precioCO2:         65,
-    rendimientoCCGT:    0.55,
-    omCCGT:             3.0,
-    cargosSistema:     12.0,
-    perdidasRed:        0.05,
-    semilla:           42,
-    demandaAnual:     260,
-    hidraulicidad:      1.0,
-    anioObjetivo:    2030,
-    crecimientoDemanda: 0.6,
-    electrificacionTWh: 2.0,
-    eficienciaDemanda:  0.5,
+    nuclear: 7.0,
+    solar: 48.0,
+    eolica: 41.0,
+    eolicaOffshore: 0.5,
+    hidraulica: 17.0,
+    ccgt: 24.0,
+    bateriasPotencia: 4.0,
+    bateriasCapacidad: 16,
+    bombeo: 3.5,
+    bombeoCapacidad: 30,
+    precioGas: 42,
+    precioCO2: 70,
+    rendimientoCCGT: 0.57,
+    omCCGT: 3.2,
+    cargosSistema: 10.5,
+    perdidasRed: 0.045,
+    semilla: 42,
+    demandaAnual: 248,
+    hidraulicidad: 1.0,
+    anioObjetivo: 2030,
+    crecimientoDemanda: 0.9,
+    electrificacionTWh: 2.5,
+    eficienciaDemanda: 0.6,
     aplicarPlanNuclear: true,
-    cierreNuclear:   2035,
-    flexibilidadGW:     4.0,
-    flexibilidadPct:    6,
-    interconexion:      3.0,
-    precioImport:      90,
-    precioExport:       5,
-    precioEscasez:    350,
+    cierreNuclear: 2035,
+    prorrogaNuclear: false,
+    prorrogaGlobal: 0,
+    flexibilidadGW: 4.5,
+    flexibilidadPct: 6,
+    interconexion: 3.2,
+    precioImport: 95,
+    precioExport: 8,
+    precioEscasez: 450,
+    solarRampaGW_anio: 4.5,
+    eolicaTerrestreRampa: 2.4,
+    eolicaOffshoreRampa: 0.3,
+    bateriasRampaGW_anio: 1.2,
+    bateriasDuracionH: 4,
+    interconexionRampaGW_anio: 0.25,
+    nuevaLineaFrancia_anio: 2028,
+    vePorcentajeParque: 12,
+    smartChargingPct: 45,
+    v2gPct: 6,
+    bombaCalorPct: 18,
+    industriaElectrificacionTWh: 3,
+    h2ObjetivoMt: 0.2,
+    h2FlexibilidadHoras: 10,
+    autoconsumoFV_GW: 8,
+    topeIbericoActivo: false,
+    topeIbericoAnios: 2,
+    mecanismoCapacidad_euro_kW: 12,
+    cfdActivo: true,
+    cfdRenovables_strike: 58,
+    peajesDinamicosActivos: true,
+    peajeP1: 17,
+    peajeP2: 11,
+    peajeP3: 6,
+    pvpcActivo: true,
+    sequiaClusterAnios: 0,
+    variabilidadInteranualPct: 8,
+    inerciaMinGW: 3,
+    reservaRodantePct: 4,
+    leyCambioClimaticoActiva: true,
+    eventoApagonPct: 0,
+    olaCalorExtrema: false,
 });
 
-// ── Nombres de meses en español ─────────────────────────────────────────────
 SEF.MESES = Object.freeze([
     'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
 ]);
 
-SEF.DIAS_SEMANA = Object.freeze(['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']);
+SEF.DIAS_SEMANA = Object.freeze(['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom']);
