@@ -2,6 +2,12 @@
  * ============================================================================
  *  DEMANDA SECTORIAL Y FLEXIBILIDAD
  * ============================================================================
+ *  Desagregación de la demanda anual en sectores con perfil horario propio.
+ *  El autoconsumo FV se modela como generación detrás del contador: produce
+ *  cuando hay recurso solar (weather.solar[i]) y se resta directamente de la
+ *  demanda residencial y de servicios antes de entrar en la red. Nunca deja
+ *  la demanda negativa.
+ * ============================================================================
  */
 
 'use strict';
@@ -95,11 +101,18 @@
         const ve = U.normalizeSeries(out.ve, reparto.ve * 1000);
         const bombasCalor = U.normalizeSeries(out.bombasCalor, reparto.bombasCalor * 1000);
         const h2 = U.normalizeSeries(out.h2, reparto.h2 * 1000);
-        const autoconsumoTWh = params.autoconsumoFV_GW * SEF.FC_HISTORICOS.solar * 8760 / 1000 * 0.82;
+
+        // Autoconsumo FV detrás del contador.
+        // Energía anual = potencia instalada × FC solar × 8760 h × η(inversor+cableado+suciedad).
+        // η = 0,88 típico para instalación residencial/comercial moderna.
+        // Se distribuye con el perfil horario solar real del año simulado.
+        const ETA_AUTOCONSUMO = 0.88;
+        const autoconsumoTWh = params.autoconsumoFV_GW * SEF.FC_HISTORICOS.solar * 8760 / 1000 * ETA_AUTOCONSUMO;
         const autoconsumo = U.normalizeSeries(rawAutoconsumo, autoconsumoTWh * 1000);
 
         const total = new Float64Array(M.HORAS_ANIO);
         for (let i = 0; i < M.HORAS_ANIO; i++) {
+            // Se resta de la demanda bruta: la red sólo ve el residuo.
             total[i] = Math.max(0, residencial[i] + servicios[i] + industrial[i] + ve[i] + bombasCalor[i] + h2[i] - autoconsumo[i]);
         }
 

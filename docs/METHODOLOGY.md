@@ -1,56 +1,61 @@
-# Metodologia del Simulador v3
+# Metodología del Simulador v3
 
 ## Alcance
 
-El simulador modela el sistema electrico peninsular espanol como una herramienta exploratoria y comparativa. No pretende reemplazar modelos operativos oficiales de REE, ESIOS o MITECO.
+El simulador modela el sistema eléctrico peninsular español como una herramienta exploratoria y comparativa. No pretende reemplazar modelos operativos oficiales de REE, ESIOS o MITECO.
 
 La v3 introduce dos modos:
 
-- simulacion anual de 8.760 horas para un anio objetivo concreto
-- trayectoria 2026-2035 con estado persistente entre anios
+- simulación anual de 8.760 horas para un año objetivo concreto
+- trayectoria 2026-2035 con estado persistente entre años
 
-## 1. Produccion renovable y clima
+## 1. Producción renovable y clima
 
 ### Solar FV
 
-La generacion solar se calcula a partir de geometria solar real:
+La generación solar se calcula a partir de geometría solar real:
 
-- declinacion solar de Cooper
-- angulo horario por hora del dia
-- elevacion solar para latitud representativa de 40.4 N
-- transmitancia atmosferica simplificada
-- nubosidad estocastica por hora
+- declinación solar de Cooper: `δ = 23,45° · sin(360/365 · (284 + día))`
+- ángulo horario por hora del día: `H = 15° · (hora − 12)`
+- elevación solar para latitud representativa de 40,4 °N:
+  `sin(α) = sin(φ)·sin(δ) + cos(φ)·cos(δ)·cos(H)`
+- transmitancia atmosférica simplificada en función de la masa de aire
+- nubosidad estocástica horaria con correlación temporal
 
-En escenarios de ola de calor extrema se aplica una penalizacion adicional de rendimiento de paneles.
+La irradiancia efectiva se multiplica por la potencia instalada y por un factor de rendimiento de panel que puede degradarse en olas de calor extremo (coeficiente de temperatura típico −0,4 %/°C sobre 25 °C de referencia).
 
-### Eolica
+### Eólica
 
-La eolica usa persistencia horaria con autocorrelacion y modulacion estacional. La eolica marina reutiliza la serie del viento, pero con un factor de disponibilidad mas estable y mayor factor de capacidad.
+La eólica terrestre usa persistencia horaria con autocorrelación AR(1) y modulación estacional (mayor factor en invierno, mínimo en verano). La eólica marina reutiliza la serie del viento pero con mayor factor de capacidad y menor variabilidad.
 
-### Clima multi-anio
+### Clima multianual
 
 `weather.js` genera variabilidad interanual:
 
-- hidraulicidad anual con proceso AR(1)
-- clustes de sequia configurables
-- perturbacion meteorologica anual reproducible por semilla
-- shock de inestabilidad tipo apagones ibericos
+- hidraulicidad anual con proceso AR(1) en torno a la media histórica
+- clústeres de sequía configurables (varios años secos consecutivos)
+- perturbación meteorológica anual reproducible por semilla
+- shock de inestabilidad tipo apagón ibérico
 
 ## 2. Demanda sectorial
 
-La demanda ya no es una unica curva agregada. La v3 descompone:
+La demanda ya no es una única curva agregada. La v3 la descompone por sectores:
 
 - residencial
 - servicios
 - industrial
-- vehiculo electrico
+- vehículo eléctrico
 - bombas de calor
-- electrolisis de H2 verde
-- autoconsumo FV detras del contador
+- electrólisis de H₂ verde
+- autoconsumo FV detrás del contador
 
-Cada sector tiene un perfil horario propio y se normaliza a su energia anual objetivo.
+Cada sector tiene un perfil horario propio y se normaliza a su energía anual objetivo mediante `normalizeSeries(perfil, energia_GWh)`.
 
-El autoconsumo no entra al pool como generacion de mercado: reduce la demanda neta residual.
+El autoconsumo se modela como reducción de demanda neta, no como generación de mercado:
+
+`E_autoconsumo_TWh = P_instalada_GW · FC_solar · 8760 h / 1000 · η`
+
+con `η = 0,88` (pérdidas inversor, orientación, suciedad, sombreado). El residuo nunca se fuerza por debajo de cero.
 
 ## 3. Calendario nuclear
 
@@ -58,104 +63,108 @@ La disponibilidad nuclear delega en `nuclear.js` y usa el calendario ENRESA como
 
 - Almaraz I 2027
 - Almaraz II 2028
-- Asco I 2030
+- Ascó I 2030
 - Cofrentes 2030
-- Asco II 2031
-- Vandellos II 2032
+- Ascó II 2031
+- Vandellós II 2032
 - Trillo 2035
 
-La UI permite activar prorrogas globales para explorar escenarios alternativos.
+La UI permite activar prórrogas globales para explorar escenarios alternativos (10, 12 o 20 años adicionales).
 
 ## 4. Despacho horario
 
-El orden de despacho base es:
+El orden de despacho base por orden de mérito es:
 
 1. nuclear
 2. solar FV
-3. eolica terrestre
-4. eolica marina
-5. carga de almacenamiento y absorcion flexible si hay excedente
-6. hidraulica gestionable si hay deficit
-7. descarga de baterias y bombeo
+3. eólica terrestre
+4. eólica marina
+5. carga de almacenamiento y absorción flexible si hay excedente
+6. hidráulica gestionable si hay déficit
+7. descarga de baterías y bombeo
 8. V2G nocturno
-9. reduccion flexible de demanda
+9. reducción flexible de demanda
 10. importaciones
 11. gas CCGT
 
-Se incluyen restricciones operativas nuevas:
+Restricciones operativas incorporadas:
 
-- rampa de CCGT
-- minimo sincronico de inercia
+- rampa máxima de CCGT entre horas
+- mínimo síncrono de inercia en GW
 - reserva rodante como porcentaje de la demanda efectiva
 
 ## 5. Almacenamiento y V2G
 
 `storage.js` modela:
 
-- baterias con degradacion por ciclos y calendario
-- eficiencia dependiente del C-rate
-- bombeo con reserva estacional
-- descarga V2G ligada al parque VE en ventana nocturna
+- **Eficiencia round-trip dependiente del C-rate**:
+  `η = 0,94 − 0,07 · (1/duración_h)`
+  → 4 h: 92,5 % | 2 h: 90,5 % | 1 h: 87,0 %
+- **Degradación**: `SoH = 1 − ciclos · 0,02/365` (pérdida del 2 % cada 365 ciclos equivalentes).
+- **SoC máximo utilizable**: baterías 95 %, bombeo 100 % (el embalse sí puede llenarse por completo).
+- **Bombeo con reserva estacional** para cubrir la punta seca de verano:
+  abr-jun 60 %, sep-oct 55 %, jul-ago 28 %, ene-feb 35 %, resto 45 %.
+- **V2G**: descarga nocturna proporcional al parque VE conectado y al porcentaje de participación configurado.
 
-Las baterias cargan con excedentes y descargan antes que el gas, manteniendo una reserva minima de estado de carga.
+Las baterías cargan con excedentes renovables y descargan antes que el gas, manteniendo una reserva mínima de estado de carga del 10 %.
 
-## 6. Precio y politica energetica
+## 6. Precio y política energética
 
-La base del precio sigue siendo marginalista:
+La base del precio sigue siendo marginalista. El coste variable del ciclo combinado marca precio cuando es la tecnología marginal:
 
-`coste_CCGT = gas / rendimiento + CO2 / rendimiento + O&M`
+`coste_CCGT (€/MWh) = precio_gas / η_CCGT + precio_CO2 · 0,35 / η_CCGT + O&M_variable`
 
-Sobre el precio marginal se aplican capas politicas desde `policy.js`:
+Sobre el precio marginal se aplican capas políticas desde `policy.js`:
 
-- tope iberico al gas
-- peajes dinamicos P1/P2/P3
+- tope ibérico al gas cuando el precio del gas supera el umbral
+- peajes dinámicos P1/P2/P3 según franja horaria
 - PVPC y ajustes regulados
 - pagos por capacidad
-- CfDs renovables con strike especifico para offshore
+- CfDs renovables con strike específico para eólica marina
 
 El resultado final se usa para:
 
-- precio medio simple
-- precio medio ponderado por demanda servida
-- curva de duracion
-- coste agregado del sistema
+- precio medio simple y ponderado por demanda servida
+- percentiles P10, P50 y P90
+- curva de duración
+- coste agregado anual del sistema
 
 ## 7. Trayectoria 2026-2035
 
-`trajectory.js` recalcula parametros por anio:
+`trajectory.js` recalcula parámetros año a año partiendo del estado del año anterior:
 
-- rampas de solar, eolica, offshore, baterias e interconexion
+- rampas anuales de solar, eólica terrestre y marina, baterías e interconexión
 - crecimiento del parque VE y bombas de calor
-- acumulacion del objetivo de H2 verde
-- degradacion de almacenamiento entre anios
-- disponibilidad nuclear segun calendario real o prorroga
+- acumulación del objetivo anual de H₂ verde
+- degradación acumulada de almacenamiento entre años
+- disponibilidad nuclear según calendario real o prórroga activa
 
-La simulacion se rebanada por anio con `setTimeout(0)` para no bloquear la UI.
+La simulación se trocea por año con `setTimeout(0)` para no bloquear la UI.
 
 ## 8. Indicadores calculados
 
-- precio medio simple y ponderado
-- percentiles P10, P50, P90
+- precio medio simple y ponderado por demanda
+- percentiles P10, P50 y P90
 - cobertura renovable primaria
-- dependencia del gas sobre generacion primaria
-- emisiones anuales
+- dependencia del gas sobre generación primaria
+- emisiones anuales de CO₂
 - vertidos renovables y su porcentaje sobre VRE
-- horas de deficit
+- horas de déficit
 - horas sin gas
-- horas de inercia critica
+- horas con inercia crítica
 - coste total del sistema
 - LCOE y LCOS aproximados
 
 ## 9. Limitaciones conocidas
 
 - no modela red nodal ni congestiones internas por zonas
-- no replica el mercado de servicios de ajuste real con detalle reglamentario
-- usa hipotesis sinteticas para autoconsumo, VE y H2
+- no replica el mercado de servicios de ajuste con detalle reglamentario
+- usa hipótesis sintéticas para autoconsumo, VE y H₂
 - no sustituye series oficiales ni previsiones regulatorias
 
-## 10. Verificacion recomendada
+## 10. Verificación recomendada
 
 - comparar `Datos Reales 2025` con magnitudes observadas de REE y OMIE
 - revisar `Autoconsumo 30 GW` para confirmar que la demanda neta nunca baja de cero
-- revisar `Hidrogeno Verde` para validar absorcion de excedentes
-- revisar `Cierre Nuclear ENRESA` y `Ley Climatico 2050` para confirmar la senda 2026-2035
+- revisar `Hidrógeno Verde` para validar absorción de excedentes
+- revisar `Cierre Nuclear ENRESA` y `Ley de Cambio Climático 2050` para confirmar la senda 2026-2035

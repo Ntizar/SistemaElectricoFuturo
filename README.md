@@ -1,27 +1,35 @@
-# Sistema Electrico Futuro 2026-2035
+# Sistema Eléctrico Futuro 2026-2035
 
 **Autor:** David Antizar  
-**Version:** 3.0  
+**Versión:** 3.1  
 **Licencia:** MIT
 
 ---
 
 Pruébalo en https://ntizar.github.io/SistemaElectricoFuturo/
 
-## Descripcion
+## Descripción
 
-Simulador interactivo del sistema electrico espanol con foco en el horizonte 2026-2035. La v3 ya no se limita a un unico anio estacionario: combina simulacion anual de 8.760 horas con una trayectoria multi-anio que incorpora decisiones de parque, electrificacion, almacenamiento, politica energetica y estres climaticos plausibles.
+Simulador interactivo del sistema eléctrico español con foco en el horizonte 2026-2035. La v3 ya no se limita a un único año estacionario: combina simulación anual de 8.760 horas con una trayectoria multianual que incorpora decisiones de parque, electrificación, almacenamiento, política energética y estreses climáticos plausibles.
 
 ## Novedades de la v3
 
-- interfaz rehecha sobre **Ntizar Aurora v4** con modo claro por defecto y toggle dark
-- **17 escenarios** con casos realistas para Espana: cierre ENRESA, VE masivo, autoconsumo 30 GW, crisis geopolitica del gas, ley climatica, sequias y ola de calor
-- **demanda sectorial**: residencial, servicios, industria, vehiculo electrico, bombas de calor, H2 verde y autoconsumo
-- **calendario nuclear real** basado en ENRESA con opcion de prorroga
-- **almacenamiento avanzado**: degradacion de baterias, bombeo y soporte V2G
-- **politica energetica**: tope iberico, CfDs, peajes dinamicos, PVPC y pagos por capacidad
-- **trayectoria 2026-2035** con rampas de despliegue y estado persistente entre anios
-- nuevas metricas: horas sin gas, estres de red, coste del sistema, LCOE y LCOS aproximados
+- interfaz rehecha sobre **Ntizar Aurora v4** con modo claro por defecto
+- **17 escenarios** con casos realistas para España: cierre ENRESA, VE masivo, autoconsumo 30 GW, crisis geopolítica del gas, ley climática, sequías y ola de calor
+- **demanda sectorial**: residencial, servicios, industria, vehículo eléctrico, bombas de calor, H₂ verde y autoconsumo
+- **calendario nuclear real** basado en ENRESA con opción de prórroga
+- **almacenamiento avanzado**: degradación de baterías, bombeo con reserva estacional y soporte V2G
+- **política energética**: tope ibérico, CfDs, peajes dinámicos, PVPC y pagos por capacidad
+- **trayectoria 2026-2035** con rampas de despliegue y estado persistente entre años
+- nuevas métricas: horas sin gas, estrés de red, coste del sistema, LCOE y LCOS aproximados
+
+## Novedades de la v3.1
+
+- castellano revisado con ñ y tildes en toda la interfaz, escenarios y documentación
+- gráficos protagonistas en ancho completo con lectura técnica adjunta
+- botón de trayectoria renombrado a **Simular PNIEC 2035**
+- almacenamiento recalibrado: eficiencia dependiente de la duración, degradación 2 %/365 ciclos y reserva estacional de bombeo realista
+- pestaña **Guía** ampliada con fórmulas y metodología
 
 ## Estructura
 
@@ -53,11 +61,11 @@ SistemaElectricoFuturo/
 
 ## Uso
 
-### Opcion 1: abrir directamente
+### Opción 1: abrir directamente
 
 Abre `index.html` en un navegador moderno.
 
-### Opcion 2: servidor local
+### Opción 2: servidor local
 
 ```bash
 python -m http.server 8080
@@ -69,21 +77,21 @@ o
 npx serve .
 ```
 
-## Modos de analisis
+## Modos de análisis
 
-### 1. Simulacion anual
+### 1. Simulación anual
 
-Calcula una unica anualidad de 8.760 horas para un anio objetivo. Sirve para comparar escenarios, ajustar parametros o estudiar sensibilidad.
+Calcula una única anualidad de 8.760 horas para un año objetivo. Sirve para comparar escenarios, ajustar parámetros o estudiar sensibilidad.
 
 ### 2. Trayectoria 2026-2035
 
-Ejecuta 10 anos consecutivos con:
+Ejecuta 10 años consecutivos con:
 
-- rampas de solar, eolica, offshore y baterias
+- rampas de solar, eólica, offshore y baterías
 - crecimiento del parque VE y bombas de calor
-- acumulacion del objetivo de H2
-- degradacion de baterias entre anios
-- disponibilidad nuclear segun calendario real o prorroga
+- acumulación del objetivo de H₂
+- degradación de baterías entre años
+- disponibilidad nuclear según calendario real o prórroga
 
 ## Escenarios incluidos
 
@@ -91,21 +99,21 @@ Ejecuta 10 anos consecutivos con:
 | --- | --- | --- |
 | 0 | Datos Reales 2025 | Referencia base del sistema reciente |
 | 1 | PNIEC Base 2030 | Despliegue renovable y almacenamiento de referencia |
-| 2 | Prorroga Nuclear | Mas firmeza nuclear, menos urgencia de respaldo |
-| 3 | Sin Nuclear | Cierre acelerado y fuerte tension de sistema |
-| 4 | Almacenamiento Masivo | Mucha bateria y bombeo para absorber excedentes |
-| 5 | Crisis del Gas | Gas y CO2 muy altos |
-| 6 | Hidrogeno Verde | Electrolisis flexible absorbiendo excedentes |
-| 7 | Sequia Extrema | Baja hidraulicidad y mas estres del sistema |
-| 8 | Cierre Nuclear ENRESA | Calendario oficial sin prorroga |
-| 9 | Prorroga 60 Anos | Escenario defensivo de seguridad de suministro |
-| 10 | Apagon Iberico Repetido | Shock de inercia y reserva rodante |
+| 2 | Prórroga Nuclear | Más firmeza nuclear, menos urgencia de respaldo |
+| 3 | Sin Nuclear | Cierre acelerado y fuerte tensión de sistema |
+| 4 | Almacenamiento Masivo | Mucha batería y bombeo para absorber excedentes |
+| 5 | Crisis del Gas | Gas y CO₂ muy altos |
+| 6 | Hidrógeno Verde | Electrólisis flexible absorbiendo excedentes |
+| 7 | Sequía Extrema | Baja hidraulicidad y más estrés del sistema |
+| 8 | Cierre Nuclear ENRESA | Calendario oficial sin prórroga |
+| 9 | Prórroga 60 Años | Escenario defensivo de seguridad de suministro |
+| 10 | Apagón Ibérico Repetido | Shock de inercia y reserva rodante |
 | 11 | VE Masivo 2030 | 10M de VE, smart charging y V2G |
-| 12 | Autoconsumo 30 GW | FV detras del contador a gran escala |
-| 13 | PNIEC 2030 Actualizado | Variante mas ambiciosa del despliegue |
-| 14 | Ley Climatico 2050 | Senda multi-anio de descarbonizacion |
-| 15 | Ola de Calor Extrema | Pico de demanda y penalizacion solar |
-| 16 | Crisis Geopolitica Gas + CO2 | Shock europeo con prorroga nuclear defensiva |
+| 12 | Autoconsumo 30 GW | FV detrás del contador a gran escala |
+| 13 | PNIEC 2030 Actualizado | Variante más ambiciosa del despliegue |
+| 14 | Ley de Cambio Climático 2050 | Senda multianual de descarbonización |
+| 15 | Ola de Calor Extrema | Pico de demanda y penalización solar |
+| 16 | Crisis Geopolítica Gas + CO₂ | Shock europeo con prórroga nuclear defensiva |
 
 ## Fuentes
 
@@ -119,5 +127,5 @@ Ejecuta 10 anos consecutivos con:
 ## Notas
 
 - El proyecto sigue siendo una herramienta exploratoria, no un modelo de despacho oficial.
-- La validacion tecnica minima ya cubre sintaxis JS, simulacion anual y trayectoria multi-anio en entorno Node.
-- Falta validacion manual en navegador para confirmar experiencia completa de Vue + Plotly + tema claro/oscuro.
+- La validación técnica mínima cubre sintaxis JS, simulación anual y trayectoria multianual en entorno Node.
+- Falta validación manual en navegador para confirmar experiencia completa de Vue + Plotly.

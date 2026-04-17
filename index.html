@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Simulador interactivo del sistema electrico espanol 2026-2035 con trayectoria multi-anio, politica energetica y escenarios realistas.">
+    <meta name="description" content="Simulador interactivo del sistema eléctrico español 2026-2035 con trayectoria multianual, política energética y escenarios realistas.">
     <meta name="author" content="David Antizar">
-    <title>Sistema Electrico Futuro 2026-2035 | Aurora v4</title>
+    <title>Sistema Eléctrico Futuro 2026-2035 | Aurora v4</title>
 
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
@@ -19,25 +19,24 @@
             <div class="app-loading__card nz-card nz-card--glass-brand">
                 <div class="app-loading__spinner"></div>
                 <div>
-                    <div class="nz-card__title">{{ trayectoriaSimulando ? 'Simulando trayectoria 2026-2035' : 'Ejecutando simulacion anual' }}</div>
+                    <div class="nz-card__title">{{ trayectoriaSimulando ? 'Simulando trayectoria PNIEC 2035' : 'Ejecutando simulación anual' }}</div>
                     <div class="nz-card__meta" v-if="trayectoriaSimulando">{{ progresoTrayectoria }}% completado</div>
                 </div>
             </div>
         </div>
 
         <section class="nz-section app-section">
-            <div class="nz-container nz-stack nz-stack--lg">
+            <div class="nz-container nz-container--wide nz-stack nz-stack--lg">
                 <header class="hero-shell nz-surface nz-surface--glass-brand">
                     <div class="hero-copy nz-stack">
-                        <span class="nz-badge nz-badge--glass-brand nz-badge--no-dot">Aurora v4 · Sistema electrico de Espana</span>
+                        <span class="nz-badge nz-badge--glass-brand nz-badge--no-dot">Sistema eléctrico de España · Aurora v4</span>
                         <div class="hero-headline nz-stack">
-                            <h1>Sistema Electrico Futuro 2026-2035</h1>
-                            <p class="hero-subtitle">Simulacion anual y trayectoria multi-anio con cierre nuclear real, V2G, H2 flexible, politica energetica y estres climaticos plausibles para Espana.</p>
+                            <h1>Sistema Eléctrico Futuro 2026-2035</h1>
+                            <p class="hero-subtitle">Simulación horaria anual y trayectoria multianual con cierre nuclear ENRESA, vehículo eléctrico con V2G, hidrógeno verde flexible, autoconsumo FV detrás del contador, política energética y estrés climáticos plausibles para la península.</p>
                         </div>
                         <div class="hero-actions nz-cluster">
-                            <button class="nz-btn nz-btn--brand-mix nz-btn--lg" @click="simular">Simular anio</button>
-                            <button class="nz-btn nz-btn--glass-brand nz-btn--lg" @click="simularTrayectoria">Simular 2026-2035</button>
-                            <button class="nz-btn nz-btn--glass" @click="toggleTheme">{{ theme === 'dark' ? 'Modo claro' : 'Modo oscuro' }}</button>
+                            <button class="nz-btn nz-btn--brand-mix nz-btn--lg" @click="simular">Simular año</button>
+                            <button class="nz-btn nz-btn--glass-brand nz-btn--lg" @click="simularTrayectoria">Simular PNIEC 2035</button>
                         </div>
                     </div>
                     <div class="hero-meta nz-stack">
@@ -52,8 +51,8 @@
                             </article>
                         </div>
                         <div class="hero-note nz-callout nz-callout--tip">
-                            <span class="nz-callout__title">Objetivo</span>
-                            <div class="nz-callout__body">Convertir el simulador en una herramienta mas realista para explorar el cierre nuclear, la electrificacion, el almacenamiento y la regulacion futura del sistema espanol.</div>
+                            <span class="nz-callout__title">Qué hace esta herramienta</span>
+                            <div class="nz-callout__body">Resuelve un despacho horario por orden de mérito (8760 horas/año) sobre todo el sistema peninsular: reparte demanda entre nuclear, renovables, almacenamiento, hidráulica, interconexiones y CCGT según coste marginal. El precio spot, las emisiones y la cobertura renovable salen de esa resolución hora a hora, no de promedios estimados.</div>
                         </div>
                     </div>
                 </header>
@@ -65,7 +64,7 @@
                                 <div class="nz-cluster nz-cluster--between">
                                     <div>
                                         <div class="app-sidebar__eyebrow">Controles de escenario</div>
-                                        <h2 class="app-sidebar__title">Modelo, politica y trayectoria</h2>
+                                        <h2 class="app-sidebar__title">Modelo, política y trayectoria</h2>
                                     </div>
                                     <button class="nz-btn nz-btn--ghost nz-btn--sm" @click="resetear">Base 2025</button>
                                 </div>
@@ -84,8 +83,8 @@
 
                             <div class="nz-stack" v-show="tabActual === 'escenarios'">
                                 <div class="nz-alert">
-                                    <div class="nz-alert__title">Como usar este panel</div>
-                                    <div class="nz-alert__body">Carga un escenario, ajusta parametros estructurales y compara despues el anio objetivo o la trayectoria completa.</div>
+                                    <div class="nz-alert__title">Cómo usar este panel</div>
+                                    <div class="nz-alert__body">Carga un escenario precocinado, ajusta parámetros estructurales a mano y después compara el año objetivo en el panel o la trayectoria completa 2026-2035.</div>
                                 </div>
 
                                 <div class="scenario-grid">
@@ -109,15 +108,15 @@
 
                                 <div class="nz-surface nz-surface--soft nz-stack">
                                     <div class="nz-field">
-                                        <label class="nz-label" for="seed-input">Semilla meteorologica</label>
+                                        <label class="nz-label" for="seed-input">Semilla meteorológica</label>
                                         <input class="nz-input" id="seed-input" type="number" v-model.number="params.semilla" min="1" max="9999" step="1">
-                                        <div class="nz-help">Misma semilla, misma climatologia. Cambiala para explorar anos meteorologicos alternativos.</div>
+                                        <div class="nz-help">Misma semilla, misma climatología reproducible. Cámbiala para explorar años meteorológicos alternativos (AR(1) sobre histórico REE).</div>
                                     </div>
                                     <div class="nz-cluster">
                                         <button class="nz-btn nz-btn--secondary nz-btn--sm" @click="randomizarSemilla">Semilla aleatoria</button>
                                         <button class="nz-btn nz-btn--ghost nz-btn--sm" @click="copiarConfig">Copiar config</button>
                                     </div>
-                                    <div class="copy-banner" v-if="copiado">Configuracion copiada al portapapeles.</div>
+                                    <div class="copy-banner" v-if="copiado">Configuración copiada al portapapeles.</div>
                                 </div>
                             </div>
 
@@ -166,7 +165,7 @@
                                 </section>
 
                                 <section class="nz-surface nz-surface--soft nz-stack">
-                                    <h3 class="panel-title">Efecto estimado de la politica</h3>
+                                    <h3 class="panel-title">Efecto estimado de la política</h3>
                                     <div class="nz-table-wrap">
                                         <table class="nz-table">
                                             <thead>
@@ -174,7 +173,7 @@
                                                     <th>Palanca</th>
                                                     <th>Estado</th>
                                                     <th>Precio</th>
-                                                    <th>CO2</th>
+                                                    <th>CO₂</th>
                                                     <th>Coste</th>
                                                 </tr>
                                             </thead>
@@ -195,6 +194,7 @@
                             <div class="nz-stack" v-show="tabActual === 'pniec'">
                                 <section class="nz-surface nz-surface--soft nz-stack">
                                     <h3 class="panel-title">Cumplimiento PNIEC 2030</h3>
+                                    <p class="panel-sub">Objetivos oficiales del Plan Nacional Integrado de Energía y Clima revisado en 2024. El estado se calcula sobre el resultado de la simulación del año objetivo.</p>
                                     <div class="nz-table-wrap">
                                         <table class="nz-table">
                                             <thead>
@@ -224,6 +224,10 @@
                             </div>
 
                             <div class="nz-stack" v-show="tabActual === 'guia'">
+                                <div class="nz-alert">
+                                    <div class="nz-alert__title">Documentación técnica</div>
+                                    <div class="nz-alert__body">Fórmulas, hipótesis y orden de mérito que usa el motor. Para detalle completo consulta <code>docs/METHODOLOGY.md</code> y <code>docs/POLICY.md</code>.</div>
+                                </div>
                                 <section class="nz-callout nz-callout--tip" v-for="block in GUIDE_BLOCKS" :key="block.title">
                                     <span class="nz-callout__title">{{ block.title }}</span>
                                     <div class="nz-callout__body">{{ block.body }}</div>
@@ -269,52 +273,60 @@
                                     </article>
                                 </section>
 
-                                <section class="nz-grid nz-grid--2 dashboard-panels">
-                                    <article class="nz-card nz-card--glass-soft chart-card chart-card--wide">
-                                        <div class="nz-card__header">
-                                            <div>
-                                                <div class="nz-card__title">Mix de generacion</div>
-                                                <div class="nz-card__meta">Con eolica marina, V2G, interconexion e hidrogeno flexible.</div>
-                                            </div>
-                                            <div class="nz-cluster">
-                                                <label class="nz-label" for="week-select">Semana</label>
-                                                <select id="week-select" class="nz-select week-select" v-model.number="semanaVista" @change="actualizarGraficos">
-                                                    <option v-for="option in WEEK_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</option>
-                                                </select>
-                                            </div>
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Mix horario de generación</div>
+                                            <div class="nz-card__meta">Semana representativa (168 horas) o agregado anual. Las áreas apiladas muestran cómo se cubre cada hora de demanda: nuclear de base, renovables, almacenamiento arbitrando valle-pico, hidráulica gestionable, interconexiones y CCGT como último recurso.</div>
                                         </div>
-                                        <div id="plot-mix" class="chart-host chart-host--lg"></div>
-                                    </article>
+                                        <div class="nz-cluster">
+                                            <label class="nz-label" for="week-select">Semana</label>
+                                            <select id="week-select" class="nz-select week-select" v-model.number="semanaVista" @change="actualizarGraficos">
+                                                <option v-for="option in WEEK_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="plot-mix" class="chart-host chart-host--xl"></div>
+                                    <div class="chart-explain nz-callout nz-callout--tip">
+                                        <span class="nz-callout__title">Cómo leerlo</span>
+                                        <div class="nz-callout__body">Si el bloque naranja (CCGT) aparece de día mientras hay excedente solar (vertidos en azul claro negativo), falta almacenamiento o interconexión. Si aparece de noche, falta despacho de baterías, bombeo o nuclear de base. El objetivo PNIEC 2030 es llevar la banda CCGT al mínimo técnico de respaldo (< 5% del mix).</div>
+                                    </div>
+                                </article>
 
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Precio mayorista spot</div>
+                                            <div class="nz-card__meta">Precio marginal horario del mercado diario. Vista semanal (serie temporal), distribución (histograma) o curva de duración (horas ordenadas de mayor a menor precio).</div>
+                                        </div>
+                                        <div class="app-tab-row app-tab-row--compact">
+                                            <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'semana' }" @click="cambiarVistaPrecios('semana')">Semana</button>
+                                            <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'anual' }" @click="cambiarVistaPrecios('anual')">Distribución</button>
+                                            <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'duracion' }" @click="cambiarVistaPrecios('duracion')">Duración</button>
+                                        </div>
+                                    </div>
+                                    <div id="plot-precios" class="chart-host chart-host--lg"></div>
+                                    <div class="metric-grid">
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Media aritmética</span><strong>{{ resultados.precioMedio.toFixed(1) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Ponderada por demanda</span><strong>{{ resultados.precioMedioPonderado.toFixed(1) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>P10</span><strong>{{ resultados.precioP10.toFixed(0) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Mediana</span><strong>{{ resultados.precioMediana.toFixed(0) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>P90</span><strong>{{ resultados.precioP90.toFixed(0) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Horas &lt; 0 €</span><strong>{{ resultados.horasPrecioNegativo }}</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Horas &gt; 150 €</span><strong>{{ resultados.horasPrecioAlto }}</strong></div>
+                                    </div>
+                                    <div class="chart-explain nz-callout nz-callout--tip">
+                                        <span class="nz-callout__title">Qué calcula</span>
+                                        <div class="nz-callout__body">Cada hora se marca el precio como el coste marginal de la última tecnología necesaria para casar la demanda. La <strong>ponderada por demanda</strong> es el precio relevante para el coste real del consumidor (pondera horas pico de 0,70 €/kWh mucho más que horas valle de 0,01 €/kWh). La diferencia con la media aritmética mide cuánto se concentra el coste en horas caras.</div>
+                                    </div>
+                                </article>
+
+                                <section class="nz-grid nz-grid--2 dashboard-panels">
                                     <article class="nz-card nz-card--glass-soft chart-card">
                                         <div class="nz-card__header">
                                             <div>
-                                                <div class="nz-card__title">Precio mayorista</div>
-                                                <div class="nz-card__meta">Pool spot, percentiles y horas de precio extremo.</div>
-                                            </div>
-                                            <div class="app-tab-row app-tab-row--compact">
-                                                <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'semana' }" @click="cambiarVistaPrecios('semana')">Semana</button>
-                                                <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'anual' }" @click="cambiarVistaPrecios('anual')">Distrib.</button>
-                                                <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'duracion' }" @click="cambiarVistaPrecios('duracion')">Duracion</button>
-                                            </div>
-                                        </div>
-                                        <div id="plot-precios" class="chart-host chart-host--md"></div>
-                                        <div class="metric-grid metric-grid--compact">
-                                            <div class="metric-pill nz-surface nz-surface--soft"><span>Media</span><strong>{{ resultados.precioMedio.toFixed(1) }}</strong></div>
-                                            <div class="metric-pill nz-surface nz-surface--soft"><span>Ponderada</span><strong>{{ resultados.precioMedioPonderado.toFixed(1) }}</strong></div>
-                                            <div class="metric-pill nz-surface nz-surface--soft"><span>P90</span><strong>{{ resultados.precioP90.toFixed(0) }}</strong></div>
-                                            <div class="metric-pill nz-surface nz-surface--soft"><span>&lt; 0€</span><strong>{{ resultados.horasPrecioNegativo }}</strong></div>
-                                            <div class="metric-pill nz-surface nz-surface--soft"><span>&gt; 150€</span><strong>{{ resultados.horasPrecioAlto }}</strong></div>
-                                        </div>
-                                    </article>
-                                </section>
-
-                                <section class="nz-grid nz-grid--2 dashboard-panels">
-                                    <article class="nz-card nz-card--glass-soft chart-card">
-                                        <div class="nz-card__header">
-                                            <div>
-                                                <div class="nz-card__title">Comparacion con 2025</div>
-                                                <div class="nz-card__meta">Cuanto cambia el sistema frente al ultimo ano de referencia.</div>
+                                                <div class="nz-card__title">Comparación con 2025</div>
+                                                <div class="nz-card__meta">Cuánto cambia el sistema frente al último año de referencia con datos REE/OMIE consolidados.</div>
                                             </div>
                                         </div>
                                         <div class="comparison-grid">
@@ -324,7 +336,7 @@
                                                 <small :class="diffClass(resultados.consumoGasTWh, datos2025.gasTWh)">{{ diffPct(resultados.consumoGasTWh, datos2025.gasTWh).toFixed(0) }}%</small>
                                             </div>
                                             <div class="comparison-card nz-surface nz-surface--soft">
-                                                <span>CO2</span>
+                                                <span>CO₂</span>
                                                 <strong>{{ datos2025.emisiones }} → {{ resultados.emisionesAnuales.toFixed(1) }} Mt</strong>
                                                 <small :class="diffClass(resultados.emisionesAnuales, datos2025.emisiones)">{{ diffPct(resultados.emisionesAnuales, datos2025.emisiones).toFixed(0) }}%</small>
                                             </div>
@@ -339,14 +351,14 @@
                                                 <small :class="diffClass(resultados.coberturaRenovable, datos2025.renovables, true)">{{ signed(resultados.coberturaRenovable - datos2025.renovables, 0, 'pp') }}</small>
                                             </div>
                                         </div>
-                                        <div id="plot-barras" class="chart-host chart-host--sm"></div>
+                                        <div id="plot-barras" class="chart-host chart-host--md"></div>
                                     </article>
 
                                     <article class="nz-card nz-card--glass-soft chart-card">
                                         <div class="nz-card__header">
                                             <div>
-                                                <div class="nz-card__title">Demanda sectorial</div>
-                                                <div class="nz-card__meta">Sectores que explican el nuevo perfil de carga y la flexibilidad estructural.</div>
+                                                <div class="nz-card__title">Demanda sectorial anual</div>
+                                                <div class="nz-card__meta">Desagregación de la demanda total en sectores con perfil horario propio: residencial y servicios (climatización), industria (base), VE (carga inteligente al valle), bombas de calor (invierno) y electrólisis H₂ (flexible según precio).</div>
                                             </div>
                                         </div>
                                         <div class="nz-table-wrap">
@@ -367,8 +379,8 @@
                                         </div>
                                         <div class="metric-grid">
                                             <div class="metric-pill nz-surface nz-surface--soft"><span>LCOE solar</span><strong>{{ resultados.lcoeSolar.toFixed(0) }} €/MWh</strong></div>
-                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOE eolica</span><strong>{{ resultados.lcoeEolica.toFixed(0) }} €/MWh</strong></div>
-                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOS baterias</span><strong>{{ resultados.lcosBaterias.toFixed(0) }} €/MWh</strong></div>
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOE eólica</span><strong>{{ resultados.lcoeEolica.toFixed(0) }} €/MWh</strong></div>
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOS baterías</span><strong>{{ resultados.lcosBaterias.toFixed(0) }} €/MWh</strong></div>
                                             <div class="metric-pill nz-surface nz-surface--soft"><span>Hidraulicidad</span><strong>{{ resultados.hidraulicidadMedia.toFixed(2) }}x</strong></div>
                                         </div>
                                     </article>
@@ -376,51 +388,57 @@
                             </template>
 
                             <template v-if="tabPrincipal === 'analisis'">
-                                <section class="nz-grid nz-grid--2 dashboard-panels">
-                                    <article class="nz-card nz-card--glass-soft chart-card chart-card--wide">
-                                        <div class="nz-card__header">
-                                            <div>
-                                                <div class="nz-card__title">Generacion mensual por tecnologia</div>
-                                                <div class="nz-card__meta">Incluye eolica marina, importaciones y almacenamiento descargado.</div>
-                                            </div>
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Generación mensual por tecnología</div>
+                                            <div class="nz-card__meta">Energía producida (TWh) mes a mes, apilada por tecnología. Incluye eólica marina, importaciones netas y descarga de almacenamiento.</div>
                                         </div>
-                                        <div id="plot-mensual" class="chart-host chart-host--lg"></div>
-                                    </article>
+                                    </div>
+                                    <div id="plot-mensual" class="chart-host chart-host--xl"></div>
+                                    <div class="chart-explain nz-callout nz-callout--tip">
+                                        <span class="nz-callout__title">Cómo leerlo</span>
+                                        <div class="nz-callout__body">Esperas ver solar alto en mayo-agosto, eólica fuerte en invierno y primavera, hidráulica concentrada en abril-junio (deshielo y lluvias). Si el gas aparece en verano con solar abundante, falta almacenamiento intradiario. Si aparece en invierno, falta respaldo síncrono o interconexión.</div>
+                                    </div>
+                                </article>
 
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Precio medio mensual</div>
+                                            <div class="nz-card__meta">Precio spot promedio por mes. Los picos se concentran cuando coinciden baja hidraulicidad, poco viento y alta carga neta de climatización.</div>
+                                        </div>
+                                    </div>
+                                    <div id="plot-precios-mensuales" class="chart-host chart-host--lg"></div>
+                                </article>
+
+                                <section class="nz-grid nz-grid--2 dashboard-panels">
                                     <article class="nz-card nz-card--glass-soft chart-card">
                                         <div class="nz-card__header">
                                             <div>
-                                                <div class="nz-card__title">Precio medio mensual</div>
-                                                <div class="nz-card__meta">Los picos se concentran cuando coinciden baja hidraulicidad, poco viento y alta carga neta.</div>
+                                                <div class="nz-card__title">Curva de duración de precios</div>
+                                                <div class="nz-card__meta">8760 horas ordenadas de mayor a menor precio. Permite leer de un vistazo cuántas horas son caras y cuántas son baratas a lo largo del año.</div>
                                             </div>
                                         </div>
-                                        <div id="plot-precios-mensuales" class="chart-host chart-host--md"></div>
-                                    </article>
-                                </section>
-
-                                <section class="nz-grid nz-grid--2 dashboard-panels">
-                                    <article class="nz-card nz-card--glass-soft chart-card">
-                                        <div class="nz-card__header">
-                                            <div>
-                                                <div class="nz-card__title">Curva de duracion de precios</div>
-                                                <div class="nz-card__meta">Cuantas horas viven cerca de cero y cuantas dependen de escasez o gas marginal.</div>
-                                            </div>
+                                        <div id="plot-duracion" class="chart-host chart-host--lg"></div>
+                                        <div class="chart-explain nz-callout nz-callout--tip">
+                                            <span class="nz-callout__title">Qué calcula</span>
+                                            <div class="nz-callout__body">El área bajo la curva es el coste total anual del sistema. El tramo horizontal cerca de 0 €/MWh son horas de excedente renovable (buenas para electrolizar H₂, cargar VE o bombeo). El tramo empinado del extremo son horas de escasez o gas marginal caro.</div>
                                         </div>
-                                        <div id="plot-duracion" class="chart-host chart-host--md"></div>
                                     </article>
 
                                     <article class="nz-card nz-card--glass-soft chart-card">
                                         <div class="nz-card__header">
                                             <div>
                                                 <div class="nz-card__title">Lectura operativa</div>
-                                                <div class="nz-card__meta">Puntos donde el sistema ya mejora respecto a 2025 y donde todavia es fragil.</div>
+                                                <div class="nz-card__meta">Patrones recurrentes que aparecen al mover los parámetros y qué diagnostican.</div>
                                             </div>
                                         </div>
                                         <div class="nz-stack nz-prose analysis-prose">
-                                            <p><strong>Si sube el porcentaje renovable pero tambien los vertidos</strong>, el cuello de botella ya no es la generacion sino la absorcion de excedentes.</p>
-                                            <p><strong>Si caen las emisiones pero no el precio ponderado</strong>, probablemente sigues comprando pocas horas muy caras por gas, importacion o falta de inercia.</p>
-                                            <p><strong>Si aparecen muchas horas sin gas</strong>, el sistema se acerca a una operacion descarbonizada, pero aun hay que vigilar la reserva rodante y las importaciones de seguridad.</p>
-                                            <p><strong>Si la hidraulicidad baja y el precio se dispara</strong>, la sequia sigue siendo una de las vulnerabilidades estructurales mas serias del mix peninsular.</p>
+                                            <p><strong>Si sube el porcentaje renovable pero también los vertidos</strong>, el cuello de botella ya no es generación sino absorción de excedentes: falta almacenamiento, interconexión o demanda flexible (H₂, VE smart charging).</p>
+                                            <p><strong>Si caen las emisiones pero no el precio ponderado</strong>, sigues comprando pocas horas muy caras por gas marginal, importación de seguridad o falta de inercia síncrona.</p>
+                                            <p><strong>Si aparecen muchas horas sin gas</strong>, el sistema se acerca a operación descarbonizada pero hay que vigilar reserva rodante y horas bajo mínimo síncrono.</p>
+                                            <p><strong>Si la hidraulicidad baja y el precio se dispara</strong>, la sequía sigue siendo una de las vulnerabilidades estructurales más serias del mix peninsular (hidráulica aporta 10-15% y regula inercia).</p>
                                         </div>
                                     </article>
                                 </section>
@@ -429,18 +447,18 @@
                             <template v-if="tabPrincipal === 'trayectoria'">
                                 <section class="nz-cluster nz-cluster--between trajectory-toolbar">
                                     <div>
-                                        <div class="nz-card__title">Trayectoria 2026-2035</div>
-                                        <div class="nz-card__meta">Capacidad, precio, emisiones y cumplimiento PNIEC anio a anio.</div>
+                                        <div class="nz-card__title">Trayectoria PNIEC 2026-2035</div>
+                                        <div class="nz-card__meta">Capacidad, precio, emisiones y cumplimiento PNIEC año a año, con rampas de inversión, calendario ENRESA y clima estocástico acumulado.</div>
                                     </div>
                                     <div class="nz-cluster">
-                                        <button class="nz-btn nz-btn--brand-mix" @click="simularTrayectoria">Recalcular trayectoria</button>
+                                        <button class="nz-btn nz-btn--brand-mix" @click="simularTrayectoria">Simular PNIEC 2035</button>
                                         <span class="nz-badge nz-badge--glass nz-badge--no-dot" v-if="trayectoriaSimulando">{{ progresoTrayectoria }}%</span>
                                     </div>
                                 </section>
 
                                 <section v-if="!trayectoria" class="nz-alert nz-alert--warning">
-                                    <div class="nz-alert__title">Aun no hay trayectoria calculada</div>
-                                    <div class="nz-alert__body">Pulsa <strong>Simular 2026-2035</strong> para construir la senda multi-anio y comparar como evolucionan el precio, el gas, la nuclear y las emisiones.</div>
+                                    <div class="nz-alert__title">Aún no hay trayectoria calculada</div>
+                                    <div class="nz-alert__body">Pulsa <strong>Simular PNIEC 2035</strong> para construir la senda multianual 2026-2035 y comparar cómo evolucionan precio, gas, nuclear y emisiones año a año.</div>
                                 </section>
 
                                 <template v-else>
@@ -451,53 +469,51 @@
                                         </article>
                                     </section>
 
-                                    <section class="nz-grid nz-grid--2 dashboard-panels">
-                                        <article class="nz-card nz-card--glass-soft chart-card chart-card--wide">
-                                            <div class="nz-card__header">
-                                                <div>
-                                                    <div class="nz-card__title">Capacidad instalada y cierres nucleares</div>
-                                                    <div class="nz-card__meta">La curva muestra como cambian renovables, CCGT y nuclear a lo largo de la senda.</div>
-                                                </div>
+                                    <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                        <div class="nz-card__header">
+                                            <div>
+                                                <div class="nz-card__title">Capacidad instalada y cierres nucleares</div>
+                                                <div class="nz-card__meta">Evolución de potencia instalada por tecnología 2026-2035. La línea nuclear refleja el calendario ENRESA (Almaraz I 2027, Almaraz II 2028, Ascó I 2030, Cofrentes 2030, Ascó II 2032, Vandellós II 2035) o la prórroga si está activa.</div>
                                             </div>
-                                            <div id="plot-trayectoria-mix" class="chart-host chart-host--lg"></div>
-                                        </article>
+                                        </div>
+                                        <div id="plot-trayectoria-mix" class="chart-host chart-host--xl"></div>
+                                    </article>
 
-                                        <article class="nz-card nz-card--glass-soft chart-card">
-                                            <div class="nz-card__header">
-                                                <div>
-                                                    <div class="nz-card__title">Precio y emisiones</div>
-                                                    <div class="nz-card__meta">Lectura simultanea de coste marginal y descarbonizacion del sistema.</div>
-                                                </div>
+                                    <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                        <div class="nz-card__header">
+                                            <div>
+                                                <div class="nz-card__title">Precio y emisiones año a año</div>
+                                                <div class="nz-card__meta">Lectura simultánea de coste marginal (€/MWh) y descarbonización (Mt CO₂) del sistema a lo largo de la década.</div>
                                             </div>
-                                            <div id="plot-trayectoria-kpis" class="chart-host chart-host--md"></div>
-                                        </article>
-                                    </section>
+                                        </div>
+                                        <div id="plot-trayectoria-kpis" class="chart-host chart-host--lg"></div>
+                                    </article>
 
                                     <section class="nz-grid nz-grid--2 dashboard-panels">
                                         <article class="nz-card nz-card--glass-soft chart-card">
                                             <div class="nz-card__header">
                                                 <div>
-                                                    <div class="nz-card__title">Heatmap PNIEC</div>
-                                                    <div class="nz-card__meta">Seguimiento de renovables, emisiones y capacidad instalada por anio.</div>
+                                                    <div class="nz-card__title">Mapa de cumplimiento PNIEC</div>
+                                                    <div class="nz-card__meta">Seguimiento anual de renovables, emisiones y capacidad instalada contra objetivos oficiales.</div>
                                                 </div>
                                             </div>
-                                            <div id="plot-trayectoria-pniec" class="chart-host chart-host--md"></div>
+                                            <div id="plot-trayectoria-pniec" class="chart-host chart-host--lg"></div>
                                         </article>
 
                                         <article class="nz-card nz-card--glass-soft chart-card">
                                             <div class="nz-card__header">
                                                 <div>
                                                     <div class="nz-card__title">Tabla de trayectoria</div>
-                                                    <div class="nz-card__meta">Resumen anual para otro agente o para documentar decisiones.</div>
+                                                    <div class="nz-card__meta">Resumen numérico año por año para documentar decisiones o alimentar otro análisis.</div>
                                                 </div>
                                             </div>
                                             <div class="nz-table-wrap">
                                                 <table class="nz-table">
                                                     <thead>
                                                         <tr>
-                                                            <th>Anio</th>
+                                                            <th>Año</th>
                                                             <th>Precio</th>
-                                                            <th>Mt CO2</th>
+                                                            <th>Mt CO₂</th>
                                                             <th>% Ren.</th>
                                                             <th>Gas</th>
                                                             <th>Nuclear</th>

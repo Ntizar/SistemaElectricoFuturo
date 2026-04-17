@@ -2,6 +2,9 @@
  * ============================================================================
  *  ESCENARIOS PREDEFINIDOS
  * ============================================================================
+ *  Cada escenario parte de SEF.PARAMS_DEFAULT y sólo sobrescribe los
+ *  parámetros relevantes. Todos los textos están en castellano con ñ y tildes.
+ * ============================================================================
  */
 
 'use strict';
@@ -24,7 +27,7 @@
             0,
             'Datos Reales 2025',
             '📅',
-            'Aproxima el sistema espanol observado en 2025 con demanda moderada, poca offshore y almacenamiento todavia limitado.',
+            'Aproxima el sistema español observado en 2025: demanda moderada, eólica marina casi inexistente y almacenamiento todavía limitado.',
             {
                 anioObjetivo: 2026,
                 nuclear: 7.0,
@@ -52,7 +55,7 @@
             1,
             'PNIEC Base 2030',
             '📊',
-            'Escenario base de despliegue renovable fuerte con cierre nuclear progresivo y almacenamiento en linea con el PNIEC.',
+            'Escenario base con despliegue renovable fuerte, cierre nuclear progresivo y almacenamiento alineado con el PNIEC.',
             {
                 anioObjetivo: 2030,
                 nuclear: 7.0,
@@ -83,9 +86,9 @@
         ),
         escenario(
             2,
-            'Prorroga Nuclear',
+            'Prórroga Nuclear',
             '⚛️',
-            'Extiende la vida util del parque nuclear y reduce la urgencia de desplegar almacenamiento y gas de respaldo.',
+            'Extiende la vida útil del parque nuclear y reduce la urgencia de desplegar almacenamiento y gas de respaldo.',
             {
                 anioObjetivo: 2032,
                 aplicarPlanNuclear: true,
@@ -106,7 +109,7 @@
             3,
             'Sin Nuclear',
             '🚀',
-            'Cierre acelerado del parque nuclear para 2028 con maxima presion sobre renovables, flexibilidad y gas de respaldo.',
+            'Cierre acelerado del parque nuclear en 2028 con máxima presión sobre renovables, flexibilidad y gas de respaldo.',
             {
                 anioObjetivo: 2030,
                 aplicarPlanNuclear: true,
@@ -134,7 +137,7 @@
             4,
             'Almacenamiento Masivo',
             '🔋',
-            'Baterias y bombeo en escala industrial para absorber vertidos y desplazar energia renovable a las horas de punta.',
+            'Baterías y bombeo a escala industrial para absorber vertidos y desplazar energía renovable a las horas punta.',
             {
                 anioObjetivo: 2032,
                 solar: 82,
@@ -156,7 +159,7 @@
             5,
             'Crisis del Gas',
             '💨',
-            'Gas y CO2 disparados, con tension estructural en el pool y fuerte incentivo para acelerar almacenamiento y electrificacion eficiente.',
+            'Gas y CO₂ disparados, con tensión estructural en el pool y fuerte incentivo para acelerar almacenamiento y electrificación eficiente.',
             {
                 anioObjetivo: 2027,
                 solar: 34,
@@ -172,9 +175,9 @@
         ),
         escenario(
             6,
-            'Hidrogeno Verde',
+            'Hidrógeno Verde',
             '🟢',
-            'Electrolizadores como demanda flexible estructural que absorbe excedentes solares y eolicos en las horas de baja señal de precio.',
+            'Electrolizadores como demanda flexible estructural que absorben excedentes solares y eólicos en las horas de baja señal de precio.',
             {
                 anioObjetivo: 2033,
                 solar: 92,
@@ -194,9 +197,9 @@
         ),
         escenario(
             7,
-            'Sequia Extrema',
+            'Sequía Extrema',
             '🏜️',
-            'Dos anos secos seguidos y baja hidraulicidad estructural que elevan la dependencia del gas y la importacion.',
+            'Dos años secos consecutivos y baja hidraulicidad estructural que elevan la dependencia del gas y de la importación.',
             {
                 anioObjetivo: 2028,
                 hidraulicidad: 0.55,
@@ -211,7 +214,7 @@
             8,
             'Cierre Nuclear ENRESA',
             '📉',
-            'Usa el calendario oficial de cierres sin prorroga para tensionar el sistema entre 2027 y 2035.',
+            'Usa el calendario oficial de cierres sin prórroga para tensionar el sistema entre 2027 y 2035.',
             {
                 anioObjetivo: 2035,
                 aplicarPlanNuclear: true,
@@ -229,9 +232,9 @@
         ),
         escenario(
             9,
-            'Prorroga 60 Anos',
+            'Prórroga 60 Años',
             '🧱',
-            'Escenario defensivo de seguridad de suministro con prorroga larga del parque nuclear y despliegue renovable menos abrupto.',
+            'Escenario defensivo de seguridad de suministro con prórroga larga del parque nuclear y despliegue renovable menos abrupto.',
             {
                 anioObjetivo: 2035,
                 prorrogaNuclear: true,
@@ -246,9 +249,9 @@
         ),
         escenario(
             10,
-            'Apagon Iberico Repetido',
+            'Apagón Ibérico Repetido',
             '🌩️',
-            'Replica una semana de estres tipo abril 2025 para forzar chequeos de inercia, reserva rodante e importaciones.',
+            'Replica una semana de estrés tipo abril 2025 para forzar chequeos de inercia, reserva rodante e importaciones.',
             {
                 anioObjetivo: 2029,
                 eventoApagonPct: 12,
@@ -262,7 +265,7 @@
             11,
             'VE Masivo 2030',
             '🚗',
-            'Penetracion masiva del vehiculo electrico con carga inteligente y una capa inicial de V2G.',
+            'Penetración masiva del vehículo eléctrico con carga inteligente y una capa inicial de V2G.',
             {
                 anioObjetivo: 2030,
                 vePorcentajeParque: 33,
@@ -278,7 +281,7 @@
             12,
             'Autoconsumo 30 GW',
             '🏠',
-            'La FV detras del contador desplaza demanda residual diurna y canibaliza precios solares de mediodia.',
+            'La FV detrás del contador desplaza demanda residual diurna y canibaliza los precios solares del mediodía.',
             {
                 anioObjetivo: 2031,
                 autoconsumoFV_GW: 30,
@@ -293,7 +296,7 @@
             13,
             'PNIEC 2030 Actualizado',
             '🧭',
-            'Version mas ambiciosa con 81 GW solares, 62 GW eolicos terrestres, 3 GW offshore y 22 GW de almacenamiento.',
+            'Versión más ambiciosa con 81 GW solares, 62 GW eólicos terrestres, 3 GW offshore y 22 GW de almacenamiento.',
             {
                 anioObjetivo: 2030,
                 solar: 81,
@@ -310,9 +313,9 @@
         ),
         escenario(
             14,
-            'Ley Climatico 2050',
+            'Ley de Cambio Climático 2050',
             '📈',
-            'Escenario de trayectoria multi-anio con senda de descarbonizacion y electrificacion acelerada hasta 2035.',
+            'Escenario de trayectoria multianual con senda de descarbonización y electrificación acelerada hasta 2035.',
             {
                 anioObjetivo: 2035,
                 leyCambioClimaticoActiva: true,
@@ -333,7 +336,7 @@
             15,
             'Ola de Calor Extrema',
             '🌡️',
-            'Dos semanas de calor severo elevan la demanda, reducen rendimiento solar y tensionan la reserva operativa.',
+            'Dos semanas de calor severo que elevan la demanda, reducen el rendimiento solar y tensionan la reserva operativa.',
             {
                 anioObjetivo: 2031,
                 olaCalorExtrema: true,
@@ -346,9 +349,9 @@
         ),
         escenario(
             16,
-            'Crisis Geopolitica Gas + CO2',
+            'Crisis Geopolítica Gas + CO₂',
             '🛢️',
-            'Escenario de shock energetico europeo con TTF 110, ETS 140 y prorroga nuclear defensiva para contener precios.',
+            'Shock energético europeo con TTF a 110 €/MWh, ETS a 140 €/t y prórroga nuclear defensiva para contener precios.',
             {
                 anioObjetivo: 2032,
                 prorrogaNuclear: true,
