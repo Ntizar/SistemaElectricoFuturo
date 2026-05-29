@@ -14,6 +14,7 @@
         { id: 'modelo', label: 'Modelo' },
         { id: 'politica', label: 'Legislación' },
         { id: 'pniec', label: 'PNIEC' },
+        { id: 'ree', label: 'Datos REE' },
         { id: 'guia', label: 'Guía' },
     ];
 
@@ -252,6 +253,13 @@
 
             const datos2025 = SEF.DATOS_2025;
             const escenarios = SEF.ESCENARIOS;
+            const reeData = ref(null);
+            const reeGeneracion = ref([]);
+            const reeNormativa = ref([]);
+            const reeInformes = ref([]);
+            const reeMercado = ref(null);
+            const reePniec = ref(null);
+            const reeOffshoreProyectos = ref([]);
 
             const nombreEscenario = computed(() => {
                 const esc = escenarios.find(item => item.id === escenarioActual.value);
@@ -598,6 +606,30 @@
             onMounted(() => {
                 SEF.Theme.init();
                 simular();
+                // Cargar datos REE
+                if (SEF.REEData) {
+                    const datos = SEF.REEData.obtenerDatosREE();
+                    reeData.value = datos.demandaActual;
+                    reeInformes.value = datos.informes;
+                    reeMercado.value = datos.mercado;
+                    reePniec.value = datos.pniec2024;
+                    reeOffshoreProyectos.value = datos.estructuraGeneracion.offshore.proyectos || [];
+
+                    // Formatear generación por tecnología
+                    const gen = datos.estructuraGeneracion;
+                    reeGeneracion.value = [
+                        { nombre: 'Nuclear', capacidad: `${gen.nuclear.capacidadGW} GW`, generacion: `${gen.nuclear.generacionTWh} TWh`, participacion: `${gen.nuclear.participacionPct}%`, tendencia: gen.nuclear.tendencia, tendenciaClass: gen.nuclear.tendencia === 'estable' ? 'nz-badge--neutral' : 'nz-badge--primary' },
+                        { nombre: 'Solar FV', capacidad: `${gen.solar.capacidadGW} GW`, generacion: `${gen.solar.generacionTWh} TWh`, participacion: `${gen.solar.participacionPct}%`, tendencia: gen.solar.tendencia, tendenciaClass: gen.solar.tendencia === 'creciente' ? 'nz-badge--success' : 'nz-badge--neutral' },
+                        { nombre: 'Eólica', capacidad: `${gen.eolica.capacidadGW} GW`, generacion: `${gen.eolica.generacionTWh} TWh`, participacion: `${gen.eolica.participacionPct}%`, tendencia: gen.eolica.tendencia, tendenciaClass: gen.eolica.tendencia === 'creciente' ? 'nz-badge--success' : 'nz-badge--neutral' },
+                        { nombre: 'Hidráulica', capacidad: `${gen.hidro.capacidadGW} GW`, generacion: `${gen.hidro.generacionTWh} TWh`, participacion: `${gen.hidro.participacionPct}%`, tendencia: gen.hidro.tendencia, tendenciaClass: gen.hidro.tendencia === 'variable' ? 'nz-badge--warning' : 'nz-badge--neutral' },
+                        { nombre: 'Gas (CCGT)', capacidad: `${gen.gas.capacidadGW} GW`, generacion: `${gen.gas.generacionTWh} TWh`, participacion: `${gen.gas.participacionPct}%`, tendencia: gen.gas.tendencia, tendenciaClass: gen.gas.tendencia === 'decreciente' ? 'nz-badge--success' : 'nz-badge--warning' },
+                        { nombre: 'Offshore', capacidad: `${gen.offshore.capacidadGW} GW`, generacion: `${gen.offshore.generacionTWh} TWh`, participacion: `${gen.offshore.participacionPct}%`, tendencia: 'En desarrollo', tendenciaClass: 'nz-badge--warning' },
+                    ];
+                    reeNormativa.value = datos.normativa.map(n => ({
+                        ...n,
+                        estadoClass: n.estado === 'Vigente' || n.estado === 'Aprobado' || n.estado === 'En vigor' ? 'nz-badge--success' : n.estado === 'En desarrollo' ? 'nz-badge--warning' : 'nz-badge--neutral',
+                    }));
+                }
             });
 
             return {
@@ -633,6 +665,13 @@
                 policyEffects,
                 trajectoryCards,
                 trajectoryRows,
+                reeData,
+                reeGeneracion,
+                reeNormativa,
+                reeInformes,
+                reeMercado,
+                reePniec,
+                reeOffshoreProyectos,
                 simular,
                 cargarEscenario,
                 resetear,

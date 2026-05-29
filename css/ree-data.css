@@ -1,0 +1,114 @@
+/**
+ * ============================================================================
+ *  ESTILOS ADICIONALES - Datos REE en Tiempo Real
+ * ============================================================================
+ *  Complementa app.css con estilos específicos para la sección de datos
+ *  REE (Red Eléctrica de España).
+ * ============================================================================
+ */
+
+/* Panel-sub para subtítulos de secciones REE */
+.panel-sub {
+    font-size: 0.8rem;
+    color: var(--nz-text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+/* Estilo para las tarjetas de generación por tecnología */
+.ree-tech-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: var(--nz-surface-soft);
+}
+
+.ree-tech-card__icon {
+    font-size: 1.5rem;
+    width: 40px;
+    text-align: center;
+}
+
+.ree-tech-card__info {
+    flex: 1;
+}
+
+.ree-tech-card__info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.ree-tech-card__info p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--nz-text-secondary);
+}
+
+/* Indicadores de tendencia */
+.ree-tendencia--creciente {
+    color: var(--nz-success);
+}
+
+.ree-tendencia--decreciente {
+    color: var(--nz-warning);
+}
+
+.ree-tendencia--estable {
+    color: var(--nz-text-secondary);
+}
+
+.ree-tendencia--variable {
+    color: var(--nz-warning);
+}
+
+.ree-tendencia--en-desarrollo {
+    color: var(--nz-primary);
+}
+
+/* Barra de progreso para indicadores PNIEC */
+.ree-progress-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--nz-surface-soft);
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.ree-progress-bar__fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.ree-progress-bar__fill--success {
+    background: var(--nz-success);
+}
+
+.ree-progress-bar__fill--warning {
+    background: var(--nz-warning);
+}
+
+.ree-progress-bar__fill--danger {
+    background: var(--nz-danger);
+}
+
+/* Fuente de datos */
+.ree-fuente {
+    font-size: 0.75rem;
+    color: var(--nz-text-tertiary);
+    font-style: italic;
+}
+
+/* Responsive para la sección REE */
+@media (max-width: 768px) {
+    .nz-grid--3 {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .nz-table-wrap {
+        overflow-x: auto;
+    }
+}

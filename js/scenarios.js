@@ -364,6 +364,37 @@
                 topeIbericoActivo: true,
             }
         ),
+        escenario(
+            17,
+            'Datos REE Real 2026',
+            '⚡',
+            'Escenario basado en datos reales de REE (Red Eléctrica de España) observados en 2026. Demanda actual ~32 GW, estructura de generación con datos oficiales.',
+            {
+                anioObjetivo: 2026,
+                nuclear: 7.0,
+                solar: 26,
+                eolica: 33,
+                eolicaOffshore: 0,
+                hidraulica: 17.5,
+                ccgt: 24.5,
+                bateriasPotencia: 3.5,
+                bateriasCapacidad: 12,
+                bombeo: 3.5,
+                bombeoCapacidad: 30,
+                precioGas: 42,
+                precioCO2: 68,
+                demandaAnual: 250,
+                crecimientoDemanda: 0.3,
+                electrificacionTWh: 1.2,
+                eficienciaDemanda: 0.25,
+                vePorcentajeParque: 3,
+                smartChargingPct: 48,
+                bombaCalorPct: 10,
+                h2ObjetivoMt: 0.08,
+                autoconsumoFV_GW: 8.5,
+                interconexion: 3.3,
+            }
+        ),
     ];
 
     SEF.getEscenario = function(id) {
