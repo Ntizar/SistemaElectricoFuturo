@@ -152,11 +152,11 @@
         },
         {
             title: 'Clima y variabilidad interanual',
-            body: 'El generador climático usa un proceso AR(1) con φ=0,55 sobre perfiles históricos de factor de capacidad solar (1935 h/año) y eólico (2450 h/año terrestre, 3800 h/año offshore). Los clusters de sequía reducen la hidraulicidad un 25% durante N años consecutivos. Las olas de calor incrementan demanda de climatización hasta +12% en julio-agosto y reducen rendimiento térmico de CCGT un 3%. La variabilidad interanual introduce ruido gaussiano σ=variabilidadInteranualPct sobre el total de recurso renovable.'
+            body: 'El generador climático genera series sintéticas de viento con autoregresión (ρ=0.94) y nubosidad aleatoria uniforme. La hidraulicidad anual sigue un proceso AR(1) con φ=0.4 sobre media 1.0, más ruido gaussiano. Las series solar y eólica son puramente sintéticas — no hay calibración contra perfiles históricos de factor de capacidad (aunque existen FC_HISTORICOS de referencia: solar 18%, eólica 24%, offshore 43%). Los clusters de sequía reducen la hidraulicidad un 18% durante N años consecutivos. Las olas de calor incrementan demanda de climatización hasta +12% en julio-agosto. La variabilidad interanual introduce ruido gaussiano σ=variabilidadInteranualPct sobre el total de recurso renovable.'
         },
         {
             title: 'Política energética y precios',
-            body: 'El tope ibérico al gas desplaza la curva de oferta CCGT restando hasta 40 €/MWh del coste marginal cuando el gas supera 55 €/MWh, con compensación financiada por consumidores. Los CfD renovables estabilizan ingresos en el strike configurado y desacoplan precio minorista del spot en la parte contratada. El pago por capacidad (€/kW-año) se suma al coste del sistema sin afectar al precio spot. La prórroga nuclear evita vertidos en horas valle y reduce precio medio hasta 9 €/MWh pero desplaza inversión en renovables y almacenamiento.'
+            body: 'El tope ibérico al gas desplaza la curva de oferta CCGT restando hasta 40 €/MWh del coste marginal cuando el gas supera 55 €/MWh, con compensación financiada por consumidores. Los CfD renovables de doble cara estabilizan ingresos en el strike configurado: cuando spot > strike, el productor devuelve la diferencia; cuando spot < strike, el consumidor paga la diferencia. El pago por capacidad (€/kW-año) se suma a la facturación mayorista sin afectar al precio spot. La prórroga nuclear evita vertidos en horas valle y reduce precio medio hasta 9 €/MWh pero desplaza inversión en renovables y almacenamiento.'
         },
         {
             title: 'Trayectoria multianual 2026-2035',
@@ -314,7 +314,7 @@
                 { label: 'Precio medio pond.', value: `${resultados.precioMedioPonderado.toFixed(1)} €/MWh`, tone: resultados.precioMedioPonderado > 85 ? 'warning' : 'neutral' },
                 { label: 'Cobertura renovable', value: `${resultados.coberturaRenovable.toFixed(0)}%`, tone: resultados.coberturaRenovable >= 75 ? 'success' : 'neutral' },
                 { label: 'Emisiones anuales', value: `${resultados.emisionesAnuales.toFixed(1)} Mt`, tone: resultados.emisionesAnuales <= 20 ? 'success' : resultados.emisionesAnuales > 30 ? 'danger' : 'warning' },
-                { label: 'Coste sistema', value: `${resultados.costeSistemaMEur.toFixed(0)} M€`, tone: 'neutral' },
+                { label: 'Facturación mayorista', value: `${resultados.costeSistemaMEur.toFixed(0)} M€`, tone: 'neutral' },
             ]));
 
             const criticalCards = computed(() => ([

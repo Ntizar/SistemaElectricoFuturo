@@ -12,8 +12,8 @@
         { id: 'almaraz2', nombre: 'Almaraz II', capacidadGW: 1.044, cierre: 2028 },
         { id: 'asco1', nombre: 'Asco I', capacidadGW: 0.995, cierre: 2030 },
         { id: 'cofrentes', nombre: 'Cofrentes', capacidadGW: 1.064, cierre: 2030 },
-        { id: 'asco2', nombre: 'Asco II', capacidadGW: 0.997, cierre: 2031 },
-        { id: 'vandellos2', nombre: 'Vandellos II', capacidadGW: 1.027, cierre: 2032 },
+        { id: 'asco2', nombre: 'Asco II', capacidadGW: 0.997, cierre: 2032 },
+        { id: 'vandellos2', nombre: 'Vandellos II', capacidadGW: 1.027, cierre: 2035 },
         { id: 'trillo', nombre: 'Trillo', capacidadGW: 1.066, cierre: 2035 },
     ]);
 

@@ -11,7 +11,7 @@
 'use strict';
 
 (function() {
-    // Datos simulados basados en observaciones REE 2025-2026
+    // Datos de referencia de REE 2025 (estáticos)
     // En producción, estos datos vendrían de la API de REE
     const REE_DATA = {
         // Demanda actual en MW (datos observados ~29/05/2026)
@@ -30,7 +30,7 @@
                 generacionTWh: 51.9,
                 participacionPct: 20.9,
                 tendencia: 'estable',
-                cierresENRESA: ['Almaraz I 2027', 'Almaraz II 2028', 'Ascó I 2030', 'Cofrentes 2030', 'Ascó II 2031', 'Vandellós II 2032', 'Trillo 2035'],
+                cierresENRESA: ['Almaraz I 2027', 'Almaraz II 2028', 'Ascó I 2030', 'Cofrentes 2030', 'Ascó II 2032', 'Vandellós II 2035', 'Trillo 2035'],
             },
             solar: {
                 capacidadGW: 24.7,
@@ -209,7 +209,7 @@
         },
     };
 
-    // Función para obtener datos de REE (simulado - en producción usaría fetch a API REE)
+    // Función para obtener datos de referencia REE (estáticos - en producción usaría fetch a API REE)
     function obtenerDatosREE() {
         return { ...REE_DATA };
     }

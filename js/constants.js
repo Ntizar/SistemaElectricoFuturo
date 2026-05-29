@@ -31,20 +31,36 @@ SEF.Utils = Object.freeze({
         for (let i = 0; i < series.length; i++) out[i] = series[i] * factor;
         return out;
     },
+    // Mulberry32 — PRNG determinista de 32 bits, rápido y bien distribuido.
+    // Sustituye al anterior SeededRNG basado en Math.sin (no uniforme, correlaciones).
+    // Referencia: https://gist.github.com/tommyettinger/46a874533244883189143505d203312c
     SeededRNG: class SeededRNG {
         constructor(seed) {
-            this.seed = Number.isFinite(seed) ? seed : 42;
+            this.state = Number.isFinite(seed) ? seed | 0 : 42;
         }
         next() {
-            this.seed = Math.sin(this.seed * 9301 + 49297) * 49271;
-            return this.seed - Math.floor(this.seed);
+            this.state |= 0;
+            this.state = (this.state + 0x6D2B79F5) | 0;
+            let t = Math.imul(this.state ^ (this.state >>> 15), 1 | this.state);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            const u = ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            return Math.max(1e-14, Math.min(1 - 1e-14, u));
         }
         gauss(mean = 0, sigma = 1) {
-            const u1 = Math.max(1e-10, this.next());
+            const u1 = this.next();
             const u2 = this.next();
             const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
             return mean + sigma * z;
         }
+    },
+    // Días acumulados por mes para calendario real (año no bisiesto).
+    DIAS_ACUM: Object.freeze([0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]),
+    // Función que devuelve el mes (0-11) a partir del día del año (0-364).
+    mesDelDia(dia) {
+        for (let m = 0; m < 12; m++) {
+            if (dia < this.DIAS_ACUM[m + 1]) return m;
+        }
+        return 11;
     },
 });
 

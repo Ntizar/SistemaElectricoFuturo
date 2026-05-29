@@ -52,12 +52,13 @@
         for (let i = 0; i < M.HORAS_ANIO; i++) {
             const dia = Math.floor(i / 24);
             const hora = i % 24;
-            const mes = Math.floor(dia / 30.5) % 12;
+            const mes = U.mesDelDia(dia);
 
             const olaCalor = params.olaCalorExtrema && dia >= 190 && dia < 204;
             const cloudiness = 0.62 + rngCloud.next() * 0.38;
             const solarPenalty = olaCalor ? 0.92 : 1;
             series.solar[i] = solarFactor(dia, hora, M.LATITUD_ESPANA, cloudiness, solarPenalty);
+            series._solarSum = (series._solarSum || 0) + series.solar[i];
 
             const baseViento = 0.29 + 0.13 * Math.cos((mes - 0.5) * Math.PI / 6);
             const diurnoViento = 1 + 0.08 * Math.sin((hora - 6) * Math.PI / 12);
@@ -66,6 +67,7 @@
                 estadoViento *= 1 - params.eventoApagonPct / 100;
             }
             series.viento[i] = U.clamp(estadoViento * diurnoViento, 0.02, 0.92);
+            series._vientoSum = (series._vientoSum || 0) + series.viento[i];
 
             const tempBase = SEF.TEMP_MENSUAL[mes] + rngTemp.gauss(0, 0.9);
             const diurnal = 4.5 * Math.sin((hora - 6) * Math.PI / 12);
@@ -80,7 +82,12 @@
             hidraulicidadAnual: hydroYear,
             olaCalor: !!params.olaCalorExtrema,
             eventoApagon: params.eventoApagonPct > 0,
+            cfSolarMedio: (series._solarSum || 0) / M.HORAS_ANIO,
+            cfEolicoMedio: (series._vientoSum || 0) / M.HORAS_ANIO,
         };
+        // Limpiar acumuladores temporales
+        delete series._solarSum;
+        delete series._vientoSum;
 
         return series;
     }

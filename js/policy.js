@@ -18,8 +18,11 @@
 
     function aplicarTopeIberico(precioMarginal, contexto, params) {
         if (!params.topeIbericoActivo) return { precioSpot: precioMarginal, compensacion: 0 };
-        const techo = 65 + contexto.yearIndex * 6;
+        // Tope al gas: mecanismo hipotético tipo RDL 10/2022 (expirado dic 2024).
+        // Modelo simplificado: tope = 65 + 6*(yearIndex) €/MWh, compensación al 72%.
+        // Advertencia: no reproduce la fórmula exacta del RDL (40→70 €/MWh con escalón mensual).
         if (contexto.genGasGW <= 0.2) return { precioSpot: precioMarginal, compensacion: 0 };
+        const techo = 65 + contexto.yearIndex * 6;
         const precioSpot = Math.min(precioMarginal, techo);
         const compensacion = Math.max(0, precioMarginal - precioSpot) * 0.72;
         return { precioSpot, compensacion };
@@ -40,8 +43,10 @@
         }
         const strikeBase = params.cfdRenovables_strike || 58;
         const strike = tecnologia === 'offshore' ? strikeBase + 18 : strikeBase;
-        const ingresoProductor = Math.max(precioSpot, strike);
-        const ajusteConsumidor = ingresoProductor - precioSpot;
+        // CfD de doble cara: cuando spot > strike, el productor devuelve la diferencia.
+        // Cuando spot < strike, el consumidor paga la diferencia.
+        const ingresoProductor = strike; // siempre recibe el strike
+        const ajusteConsumidor = strike - precioSpot; // signo: positivo si spot < strike, negativo si spot > strike
         return { strike, ajusteConsumidor, ingresoProductor };
     }
 
@@ -55,7 +60,7 @@
         }
 
         return {
-            precioFinal: Math.min(500, Math.max(-25, precio)),
+            precioFinal: Math.min(3000, Math.max(-50, precio)),
             compensacion: capped.compensacion,
             peaje,
         };

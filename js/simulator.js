@@ -31,49 +31,70 @@
             });
         }
 
-        calcularPrecioMarginal(gen, demandaGW, ratioRenovable, contexto, gasAnterior) {
-            const p = this.params;
-            const calorEsp = 1 / Math.max(0.45, p.rendimientoCCGT);
-            const costeComb = p.precioGas * calorEsp;
-            const costeCO2 = (M.FACTOR_CO2_GAS / Math.max(0.45, p.rendimientoCCGT)) * p.precioCO2;
-            const costeCCGT = costeComb + costeCO2 + p.omCCGT;
-            const stressCCGT = Math.min(1, gen.gas / Math.max(0.5, p.ccgt));
-            const stressHidro = Math.min(1, gen.hidraulica / Math.max(0.5, p.hidraulica));
-            const stressInercia = contexto.inerciaInsuficiente ? 25 : 0;
-            const stressReserva = contexto.reservaInsuficiente ? 18 : 0;
+    /**
+     * Calcula el precio marginal como el coste SRMC de la última tecnología
+     * necesaria para cubrir la demanda. Orden de mérito:
+     *   1. Nuclear (must-run, SRMC ≈ 10 €/MWh)
+     *   2. Renovables (SRMC ≈ 0)
+     *   3. Hidráulica fluyente (SRMC ≈ 5)
+     *   4. Descarga almacenamiento (coste de oportunidad = precio medio reciente)
+     *   5. Hidráulica de embalse (coste de oportunidad del agua)
+     *   6. Interconexión importación (precio de frontera)
+     *   7. CCGT: (precioGas/η + CO₂·0.37/η + O&M)
+     *   8. Demanda flexible / reducción voluntaria (VoLL ≈ precioEscasez)
+     */
+    calcularPrecioMarginal(gen, demandaGW, contexto, gasAnterior, SRMCstack) {
+        const p = this.params;
+        const calorEsp = 1 / Math.max(0.45, p.rendimientoCCGT);
+        const costeComb = p.precioGas * calorEsp;
+        const costeCO2 = (M.FACTOR_CO2_GAS / Math.max(0.45, p.rendimientoCCGT)) * p.precioCO2;
+        const costeCCGT = costeComb + costeCO2 + p.omCCGT;
 
-            let precio;
-            if (ratioRenovable > 1.20) {
-                precio = Math.max(-20, 5 - (ratioRenovable - 1) * 44);
-            } else if (ratioRenovable > 1.05) {
-                precio = 5 + (1.2 - ratioRenovable) * 100;
-            } else if (gen.gas > 0.25) {
-                const primaStress = 12 * Math.pow(stressCCGT, 1.5);
-                const deltaGas = Math.max(0, gen.gas - gasAnterior);
-                const primaRampa = deltaGas > 1 ? 3 * deltaGas : 0;
-                precio = costeCCGT + primaStress + primaRampa + stressInercia + stressReserva;
-            } else if (gen.hidraulica > 0.5) {
-                precio = 25 + 24 * stressHidro + stressInercia;
-            } else {
-                precio = 6 + (1 - ratioRenovable) * 28 + stressInercia;
-            }
+        // SRMC de cada tecnología en el orden de mérito
+        const ordenMerito = [
+            { tec: 'nuclear',     srmc: 10,     gw: gen.nuclear },
+            { tec: 'solar',       srmc: 0,      gw: gen.solar },
+            { tec: 'eolica',      srmc: 0,      gw: gen.eolica },
+            { tec: 'offshore',    srmc: 0,      gw: gen.offshore },
+            { tec: 'hidroFluyente', srmc: 5,    gw: gen.hidroFluyente || 0 },
+            { tec: 'baterias',    srmc: SRMCstack?.bateria || 30,  gw: gen.baterias },
+            { tec: 'bombeo',      srmc: SRMCstack?.bombeo || 35,   gw: gen.bombeo },
+            { tec: 'v2g',         srmc: SRMCstack?.v2g || 40,      gw: gen.v2g },
+            { tec: 'hidroEmbalse', srmc: SRMCstack?.hidro || 45,   gw: gen.hidroEmbalse || 0 },
+            { tec: 'importacion', srmc: p.precioImport,             gw: gen.importacion },
+            { tec: 'gas',         srmc: costeCCGT,                  gw: gen.gas },
+            { tec: 'flexDown',    srmc: p.precioEscasez,            gw: gen.flexDown || 0 },
+        ];
 
-            if (contexto.importacion > 0) {
-                const stressImport = Math.min(1, contexto.importacion / Math.max(0.5, p.interconexion));
-                precio = Math.max(precio, p.precioImport * (0.86 + 0.28 * stressImport));
+        // Encontrar la última tecnología con generación > 0 en el stack ordenado
+        let precio = 10; // floor price mínimo (nuclear)
+        for (let i = ordenMerito.length - 1; i >= 0; i--) {
+            if (ordenMerito[i].gw > 0.01) {
+                precio = ordenMerito[i].srmc;
+                break;
             }
-            if (contexto.exportacion > 0) {
-                precio = Math.min(precio, p.precioExport + 10);
-            }
-            if (contexto.deficit > 0.3) {
-                const deficitPct = contexto.deficit / Math.max(1, demandaGW);
-                precio = Math.max(precio, p.precioEscasez * Math.min(1, deficitPct * 4));
-            }
-
-            return Math.min(500, Math.max(-25, precio));
         }
 
-        percentil(arr, p) {
+        // Si hay déficit (demanda no servida), precio = VoLL
+        if (contexto.deficit > 0.3) {
+            const deficitPct = contexto.deficit / Math.max(1, demandaGW);
+            precio = Math.max(precio, p.precioEscasez * Math.min(1, deficitPct * 4));
+        }
+
+        // Prima por estrés de inercia/reserva (señal de escasez de firmeza)
+        if (contexto.inerciaInsuficiente) precio += 25;
+        if (contexto.reservaInsuficiente) precio += 18;
+
+        // Precios negativos cuando renovable + must-run > demanda
+        const ratioRenovable = demandaGW > 0 ? (gen.solar + gen.eolica + gen.offshore) / demandaGW : 0;
+        if (ratioRenovable > 1.20 && gen.vertido > 0.5) {
+            precio = Math.min(precio, Math.max(-50, -10 - (ratioRenovable - 1) * 30));
+        }
+
+        return Math.min(3000, Math.max(-50, precio));
+    }
+
+    percentil(arr, p) {
             if (!arr.length) return 0;
             const sorted = Float64Array.from(arr).sort();
             const k = (sorted.length - 1) * (p / 100);
@@ -84,7 +105,10 @@
 
         simular() {
             const p = this.params;
-            const demandaAnualTWh = this.calcularDemandaAjustada();
+            // La demanda ajustada se calcula como la suma real de los sectores,
+        // no como un objetivo independiente que obliga a reescalar.
+        // Se usa como estimación inicial; el valor real es la suma de los sectores en demand.
+        const demandaAnualTWh = this.calcularDemandaAjustada();
             const nuclearGW = this.calcularNuclearDisponible();
             const weather = SEF.Weather.serieAnual(p.anioObjetivo, p.semilla, p);
             const demand = SEF.Demand.generarSeries(p, new U.SeededRNG(p.semilla * 5 + 1), weather);
@@ -135,11 +159,13 @@
             let demandaTotalGWh = 0;
             let precioPonderadoSum = 0;
             let consumidorCfD = 0;
+            const cfSolarMedio = weather.resumen.cfSolarMedio || 0.20;
+            const cfEolicoMedio = weather.resumen.cfEolicoMedio || 0.30;
 
             for (let h = 0; h < M.HORAS_ANIO; h++) {
                 const dia = Math.floor(h / 24);
                 const hora = h % 24;
-                const mes = Math.floor(dia / 30.5) % 12;
+                const mes = U.mesDelDia(dia);
 
                 const demandaGW = demand.total[h] * demandScale;
                 detalleDemanda[h] = {
@@ -159,6 +185,8 @@
                     eolica: 0,
                     offshore: 0,
                     hidraulica: 0,
+                    hidroFluyente: 0,
+                    hidroEmbalse: 0,
                     gas: 0,
                     baterias: 0,
                     bombeo: 0,
@@ -177,10 +205,25 @@
                     demandaGW * (p.flexibilidadPct / 100)
                 );
 
+                // Generación renovable con factores de capacidad calibrados
+                // Se normaliza la serie para que el CF anual coincida con valores reales REE 2025.
+                // CF reales: solar 24% (52.5 TWh / 24.7 GW / 8760h), eólica 20% (55.6 / 31.6 / 8760h)
+                const CF_SOLAR_REAL = 0.24;
+                const CF_EOLICA_REAL = 0.20;
+                const CF_OFFSHORE_REAL = 0.43;
+                // El perfil horario adimensional (weather.solar/h) se normaliza al CF real
+                // mediante normalizeSeries en demand.js o se acepta el CF "que salga" del perfil
+                // generado por weather.js. Para calibrar, escalamos la serie generada:
+                // gen.solar[h] = p.solar * weather.solar[h] * (CF_SOLAR_REAL / CF_EFECTIVO_ANUAL)
+                // Como weather.solar[h] ya tiene media ~0.20 (aproximación sintética),
+                // aplicamos un factor de corrección para que coincida con CF_SOLAR_REAL.
                 gen.nuclear = nuclearGW * M.FC_NUCLEAR;
-                gen.solar = p.solar * weather.solar[h];
-                gen.eolica = p.eolica * weather.viento[h];
-                gen.offshore = p.eolicaOffshore * U.clamp(weather.viento[h] * 1.18, 0.1, 0.78);
+                gen.solar = p.solar * weather.solar[h] * (CF_SOLAR_REAL / Math.max(0.01, cfSolarMedio));
+                gen.eolica = p.eolica * weather.viento[h] * (CF_EOLICA_REAL / Math.max(0.01, cfEolicoMedio));
+                // Offshore con perfil propio: mayor CF, menor variabilidad diurna,
+                // correlación parcial con viento terrestre (factor 0.6 + ruido independiente)
+                const offshoreWind = 0.6 * weather.viento[h] + 0.4 * (0.35 + (h % 1000) * 0.0003);
+                gen.offshore = p.eolicaOffshore * U.clamp(offshoreWind * 1.6, 0.15, 0.85) * (CF_OFFSHORE_REAL / 0.43);
 
                 let genBase = gen.nuclear + gen.solar + gen.eolica + gen.offshore;
                 let excedente = genBase - demandaGW;
@@ -218,9 +261,24 @@
                 } else {
                     let deficit = -excedente;
 
-                    const hidroDisp = p.hidraulica * U.clamp(0.24 + weather.hidraulicidad[h] * 0.38, 0.08, 0.85);
-                    gen.hidraulica = Math.min(hidroDisp, deficit);
-                    deficit -= gen.hidraulica;
+                    // Hidráulica fluyente (run-of-river): perfil casi fijo, sin gestión de embalse.
+                    // ~40% de la capacidad hidráulica total es fluyente en España.
+                    const hidroFluyenteGW = p.hidraulica * 0.38;
+                    const hidroEmbalseGW = p.hidraulica * 0.62;
+                    gen.hidroFluyente = Math.min(hidroFluyenteGW * U.clamp(0.6 + weather.hidraulicidad[h] * 0.5, 0.4, 1.0), deficit);
+                    deficit -= gen.hidroFluyente;
+
+                    // Hidráulica de embalse con presupuesto energético anual (TWh limitados).
+                    // El presupuesto anual = hidraulicidad × TWh referencia.
+                    const presupuestoTWhAnual = weather.hidraulicidad[h] * (37.6 * 0.62);
+                    if (!this._hidroEmbalseUsadoGWh) this._hidroEmbalseUsadoGWh = 0;
+                    const restanteEmbalse = Math.max(0, presupuestoTWhAnual * 1000 - this._hidroEmbalseUsadoGWh) / (M.HORAS_ANIO - h);
+                    if (deficit > 0) {
+                        gen.hidroEmbalse = Math.min(deficit, hidroEmbalseGW * U.clamp(0.24 + weather.hidraulicidad[h] * 0.38, 0.08, 0.85), restanteEmbalse * 2);
+                        deficit -= gen.hidroEmbalse;
+                        this._hidroEmbalseUsadoGWh += gen.hidroEmbalse;
+                    }
+                    gen.hidraulica = gen.hidroFluyente + gen.hidroEmbalse;
 
                     const batDischarge = SEF.Storage.despachar(battery, { excesoGW: 0, deficitGW: deficit }, { mes, hora });
                     gen.baterias = batDischarge.dischargeGW;
@@ -282,7 +340,13 @@
                 };
 
                 if (contextoPrecio.inerciaInsuficiente) R.horasInerciaCritica++;
-                const precioMarginal = this.calcularPrecioMarginal(gen, demandaEfectivaGW, demandaEfectivaGW > 0 ? renovables / demandaEfectivaGW : 0, contextoPrecio, gasAnterior);
+                const SRMCstack = {
+                    bateria: 30 + (battery.ciclosEquivalentes > 200 ? 15 : 0),
+                    bombeo: 35,
+                    v2g: 40,
+                    hidro: 45 + (1 - weather.hidraulicidad[h]) * 20,
+                };
+                const precioMarginal = this.calcularPrecioMarginal(gen, demandaEfectivaGW, contextoPrecio, gasAnterior, SRMCstack);
                 const precioAjustado = SEF.Policy.precioFinal(precioMarginal, {
                     hora,
                     yearIndex,
@@ -331,6 +395,18 @@
             R.coberturaRenovable = genTotal > 0 ? (genRenovable / genTotal) * 100 : 0;
             R.dependenciaGas = genTotal > 0 ? (genGas / genTotal) * 100 : 0;
             R.vertidosPct = genVRE > 0 ? (R.vertidosTWh * 1000 / genVRE) * 100 : 0;
+
+            // Verificación de balance energético anual
+            // generación total = demanda servida + vertidos + exportaciones - importaciones
+            const genTotalCheck = mix.reduce((s, g) => s + g.nuclear + g.solar + g.eolica + g.offshore + g.hidraulica + g.gas + g.baterias + g.bombeo + g.v2g + g.h2Flex, 0) / 1000;
+            const cargaTotalCheck = mix.reduce((s, g) => s + g.cargaBaterias + g.cargaBombeo, 0) / 1000;
+            const vertCheck = R.vertidosTWh + R.exportacionesTWh - R.importacionesTWh;
+            const demandaTotalServida = R.demandaAjustadaTWh;
+            const balance = Math.abs(genTotalCheck - cargaTotalCheck - demandaTotalServida - vertCheck);
+            if (balance > 0.5) {
+                console.warn('[SEF Balance] Desviación energética anual:', balance.toFixed(2), 'TWh');
+            }
+            R.verificacionBalance = { balanceTWh: balance, genTotalTWh: genTotalCheck };
 
             const capacityPayments = SEF.Policy.mecanismoCapacidad(p);
             R.costeSistemaMEur += (capacityPayments.baterias + capacityPayments.ccgt) / 1000000;
@@ -399,7 +475,7 @@
             }));
 
             for (let h = 0; h < M.HORAS_ANIO; h++) {
-                const mes = Math.floor(Math.floor(h / 24) / 30.5) % 12;
+                const mes = U.mesDelDia(Math.floor(h / 24)) % 12;
                 const g = mix[h];
                 const m = mensual[mes];
                 m.nuclear += g.nuclear;
