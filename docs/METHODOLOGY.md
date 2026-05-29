@@ -1,170 +1,234 @@
-# Metodología del Simulador v3
+# Metodología del modelo — Sistema Eléctrico Futuro
 
-## Alcance
+> Documento técnico que describe las hipótesis, fuentes y algoritmos del simulador.
+> Versión: v3.2 · Última actualización: mayo 2026
 
-El simulador modela el sistema eléctrico peninsular español como una herramienta exploratoria y comparativa. No pretende reemplazar modelos operativos oficiales de REE, ESIOS o MITECO.
+---
 
-La v3 introduce dos modos:
+## 1. Despacho por orden de mérito (SRMC stack)
 
-- simulación anual de 8.760 horas para un año objetivo concreto
-- trayectoria 2026-2035 con estado persistente entre años
+Cada hora (8760 h/año) el simulador resuelve el equilibrio oferta-demanda ordenando las tecnologías por **coste marginal de corto plazo (SRMC)**:
 
-## 1. Producción renovable y clima
+| Orden | Tecnología | SRMC (€/MWh) | Notas |
+|-------|-----------|-------------|-------|
+| 1 | Nuclear | 8–12 | Must-run, coste variable bajo (combustible + O&M) |
+| 2 | Solar FV | 0 | Coste marginal nulo; vertido si excede demanda |
+| 3 | Eólica terrestre | 0 | Ídem |
+| 4 | Eólica marina | 0 | Ídem |
+| 5 | Hidráulica fluyente | 5 | Run-of-river, perfil casi fijo |
+| 6 | Baterías | 30–45 | Coste de oportunidad = precio medio reciente + degradación |
+| 7 | Bombeo | 35 | Coste de oportunidad estacional |
+| 8 | V2G | 40 | Descarga nocturna desde baterías de VE |
+| 9 | Hidráulica embalse | 45–65 | Coste de oportunidad del agua (water value) |
+| 10 | Importación | `precioImport` | Precio de frontera con Francia/Portugal |
+| 11 | CCGT | `precioGas/η + CO₂·0.37/η + O&M` | Último recurso firme |
+| 12 | Flex down / déficit | `precioEscasez` (~450–600) | Demanda flexible o VOLL |
 
-### Solar FV
+**Precio marginal = SRMC de la última tecnología necesaria para casar la demanda.**
 
-La generación solar se calcula a partir de geometría solar real:
+Fuente: metodología estándar de mercado eléctrico (OMIE, ENTSO-E).
 
-- declinación solar de Cooper: `δ = 23,45° · sin(360/365 · (284 + día))`
-- ángulo horario por hora del día: `H = 15° · (hora − 12)`
-- elevación solar para latitud representativa de 40,4 °N:
-  `sin(α) = sin(φ)·sin(δ) + cos(φ)·cos(δ)·cos(H)`
-- transmitancia atmosférica simplificada en función de la masa de aire
-- nubosidad estocástica horaria con correlación temporal
+---
 
-La irradiancia efectiva se multiplica por la potencia instalada y por un factor de rendimiento de panel que puede degradarse en olas de calor extremo (coeficiente de temperatura típico −0,4 %/°C sobre 25 °C de referencia).
+## 2. Generación renovable y calibración
 
-### Eólica
+### Factores de capacidad reales (REE 2025)
 
-La eólica terrestre usa persistencia horaria con autocorrelación AR(1) y modulación estacional (mayor factor en invierno, mínimo en verano). La eólica marina reutiliza la serie del viento pero con mayor factor de capacidad y menor variabilidad.
+| Tecnología | Capacidad (GW) | Generación (TWh) | CF real | CF en simulación |
+|-----------|-------|-------|-------|---------|
+| Solar FV | 24,7 | 52,5 | 24,3% | Normalizado a 24% |
+| Eólica terrestre | 31,6 | 55,6 | 20,1% | Normalizado a 20% |
+| Eólica marina | 0 | 0 | — | Normalizado a 43% |
 
-### Clima multianual
+**Fuente:** REE — Informe del Sistema Eléctrico Español 2025
+([ree.es/es/datos/publicaciones](https://www.ree.es/es/datos/publicaciones/informe-del-sistema-electrico-espanol))
 
-`weather.js` genera variabilidad interanual:
+### Calibración
 
-- hidraulicidad anual con proceso AR(1) en torno a la media histórica
-- clústeres de sequía configurables (varios años secos consecutivos)
-- perturbación meteorológica anual reproducible por semilla
-- shock de inestabilidad tipo apagón ibérico
+Las series climáticas sintéticas (solar, viento) se normalizan para que el CF anual coincida con los valores reales observados:
 
-## 2. Demanda sectorial
+```
+gen.solar[h] = p.solar * weather.solar[h] * (CF_SOLAR_REAL / CF_medio_anual)
+```
 
-La demanda ya no es una única curva agregada. La v3 la descompone por sectores:
+Eólica marina: correlación parcial (0,6) con viento terrestre + componente independiente para reflejar la diferente geografía.
 
-- residencial
-- servicios
-- industrial
-- vehículo eléctrico
-- bombas de calor
-- electrólisis de H₂ verde
-- autoconsumo FV detrás del contador
+---
 
-Cada sector tiene un perfil horario propio y se normaliza a su energía anual objetivo mediante `normalizeSeries(perfil, energia_GWh)`.
+## 3. PRNG — Mulberry32
 
-El autoconsumo se modela como reducción de demanda neta, no como generación de mercado:
+Sustituye al anterior generador basado en `Math.sin` (no uniforme, correlaciones).
 
-`E_autoconsumo_TWh = P_instalada_GW · FC_solar · 8760 h / 1000 · η`
+```
+Referencia: Tommy Ettinger — https://gist.github.com/tommyettinger/46a874533244883189143505d203312c
+```
 
-con `η = 0,88` (pérdidas inversor, orientación, suciedad, sombreado). El residuo nunca se fuerza por debajo de cero.
+- 32 bits, distribución uniforme, periodo largo
+- Determinista: misma semilla → misma secuencia
+- Box-Muller para generar normales sobre Mulberry32
 
-## 3. Calendario nuclear
+---
 
-La disponibilidad nuclear delega en `nuclear.js` y usa el calendario ENRESA como referencia:
+## 4. Calendario nuclear ENRESA
 
-- Almaraz I 2027
-- Almaraz II 2028
-- Ascó I 2030
-- Cofrentes 2030
-- Ascó II 2031
-- Vandellós II 2032
-- Trillo 2035
+Protocolo oficial de cierre programado (fuente: ENRESA 2019):
 
-La UI permite activar prórrogas globales para explorar escenarios alternativos (10, 12 o 20 años adicionales).
+| Reactor | Cierre | Potencia (MW) |
+|---------|--------|---------------|
+| Almaraz I | noviembre 2027 | 1.011 |
+| Almaraz II | octubre 2028 | 1.011 |
+| Ascó I | octubre 2030 | 1.032 |
+| Cofrentes | noviembre 2030 | 1.102 |
+| Ascó II | septiembre 2032 | 1.032 |
+| Vandellós II | febrero 2035 | 1.087 |
+| Trillo | mayo 2035 | 1.066 |
 
-## 4. Despacho horario
+**Fuente:** ENRESA — Plan de Desmantelamiento
+([enresa.es](https://www.enresa.es/esp/gestion_combustible/ciclo-combustible/plan-de-desmantelamiento/))
 
-El orden de despacho base por orden de mérito es:
+La función `SEF.Nuclear.disponibleEnAnio()` calcula los GW disponibles según el calendario, prórrogas y cierres acelerados.
 
-1. nuclear
-2. solar FV
-3. eólica terrestre
-4. eólica marina
-5. carga de almacenamiento y absorción flexible si hay excedente
-6. hidráulica gestionable si hay déficit
-7. descarga de baterías y bombeo
-8. V2G nocturno
-9. reducción flexible de demanda
-10. importaciones
-11. gas CCGT
+---
 
-Restricciones operativas incorporadas:
+## 5. Hidráulica: fluyente + embalse
 
-- rampa máxima de CCGT entre horas
-- mínimo síncrono de inercia en GW
-- reserva rodante como porcentaje de la demanda efectiva
+Separación basada en la composición real del parque hidráulico español:
 
-## 5. Almacenamiento y V2G
+| Tipo | % capacidad | Perfil | Presupuesto |
+|------|-------------|--------|-------------|
+| Fluyente (run-of-river) | ~38% | Casi fijo, siguiendo hidraulicidad horaria | Sin límite anual |
+| Embalse (gestionable) | ~62% | Despachado según water value | Anual: hidraulicidad × 37,6 TWh × 0,62 |
 
-`storage.js` modela:
+**Fuente:** REE — Estadísticas hidráulicas
+([ree.es/es/datos/generacion](https://www.ree.es/es/datos/generacion/hidraulica))
 
-- **Eficiencia round-trip dependiente del C-rate**:
-  `η = 0,94 − 0,07 · (1/duración_h)`
-  → 4 h: 92,5 % | 2 h: 90,5 % | 1 h: 87,0 %
-- **Degradación**: `SoH = 1 − ciclos · 0,02/365` (pérdida del 2 % cada 365 ciclos equivalentes).
-- **SoC máximo utilizable**: baterías 95 %, bombeo 100 % (el embalse sí puede llenarse por completo).
-- **Bombeo con reserva estacional** para cubrir la punta seca de verano:
-  abr-jun 60 %, sep-oct 55 %, jul-ago 28 %, ene-feb 35 %, resto 45 %.
-- **V2G**: descarga nocturna proporcional al parque VE conectado y al porcentaje de participación configurado.
+Presupuesto de embalse: capacidad máxima ~8.000 GWh de almacenamiento. Se optimiza para verter en horas de precio bajo y generar en horas de precio alto.
 
-Las baterías cargan con excedentes renovables y descargan antes que el gas, manteniendo una reserva mínima de estado de carga del 10 %.
+---
 
-## 6. Precio y política energética
+## 6. CfD (Contratos por Diferencias) — doble cara
 
-La base del precio sigue siendo marginalista. El coste variable del ciclo combinado marca precio cuando es la tecnología marginal:
+Implementación correcta del mecanismo de doble cara:
 
-`coste_CCGT (€/MWh) = precio_gas / η_CCGT + precio_CO2 · 0,35 / η_CCGT + O&M_variable`
+```js
+ingresoProductor = strike  // siempre recibe el strike
+ajusteConsumidor = strike - precioSpot  // con signo
+```
 
-Sobre el precio marginal se aplican capas políticas desde `policy.js`:
+- Si `precioSpot < strike`: consumidor paga extra (diferencia positiva)
+- Si `precioSpot > strike`: consumidor ahorra (diferencia negativa)
 
-- tope ibérico al gas cuando el precio del gas supera el umbral
-- peajes dinámicos P1/P2/P3 según franja horaria
-- PVPC y ajustes regulados
-- pagos por capacidad
-- CfDs renovables con strike específico para eólica marina
+Esto refleja el efecto estabilizador real de los CfD, a diferencia de la versión anterior que sólo encarecía al consumidor.
 
-El resultado final se usa para:
+---
 
-- precio medio simple y ponderado por demanda servida
-- percentiles P10, P50 y P90
-- curva de duración
-- coste agregado anual del sistema
+## 7. Tope ibérico al gas
 
-## 7. Trayectoria 2026-2035
+**Documentado como mecanismo hipotético.** No reproduce la fórmula exacta del RDL 10/2022 (expirado en diciembre de 2024), que tenía:
 
-`trajectory.js` recalcula parámetros año a año partiendo del estado del año anterior:
+- Precio de referencia: 40 €/MWh de media el primer semestre
+- Incremento mensual de 5 €/MWh hasta ~70 €/MWh
+- Compensación financiada por consumidores con contrato indexado
 
-- rampas anuales de solar, eólica terrestre y marina, baterías e interconexión
-- crecimiento del parque VE y bombas de calor
-- acumulación del objetivo anual de H₂ verde
-- degradación acumulada de almacenamiento entre años
-- disponibilidad nuclear según calendario real o prórroga activa
+El modelo usa parámetros configurables por el usuario (tope, compensación) para explorar escenarios "qué pasaría si".
 
-La simulación se trocea por año con `setTimeout(0)` para no bloquear la UI.
+---
 
-## 8. Indicadores calculados
+## 8. Precios: clamp y VOLL
 
-- precio medio simple y ponderado por demanda
-- percentiles P10, P50 y P90
-- cobertura renovable primaria
-- dependencia del gas sobre generación primaria
-- emisiones anuales de CO₂
-- vertidos renovables y su porcentaje sobre VRE
-- horas de déficit
-- horas sin gas
-- horas con inercia crítica
-- coste total del sistema
-- LCOE y LCOS aproximados
+- Rango de precios: [-50, 3000] €/MWh
+- Precio mínimo: -50 €/MWh (excedente renovable extremo)
+- Precio máximo: 3.000 €/MWh (aproximación al Value of Lost Loss)
+- En horas con déficit > 0,3 GW, el precio escala hacia `precioEscasez` en función del porcentaje de demanda no servida
 
-## 9. Limitaciones conocidas
+**Fuente VOLL:** CNMC — Valor de la energía no suministrada
+([cnmc.es](https://www.cnmc.es/ambitos-de-actuacion/energia/calidad-del-suministro-electrico))
 
-- no modela red nodal ni congestiones internas por zonas
-- no replica el mercado de servicios de ajuste con detalle reglamentario
-- usa hipótesis sintéticas para autoconsumo, VE y H₂
-- no sustituye series oficiales ni previsiones regulatorias
+---
 
-## 10. Verificación recomendada
+## 9. Demanda sectorial
 
-- comparar `Datos Reales 2025` con magnitudes observadas de REE y OMIE
-- revisar `Autoconsumo 30 GW` para confirmar que la demanda neta nunca baja de cero
-- revisar `Hidrógeno Verde` para validar absorción de excedentes
-- revisar `Cierre Nuclear ENRESA` y `Ley de Cambio Climático 2050` para confirmar la senda 2026-2035
+La demanda anual en TWh se desagrega en perfiles horarios normalizados:
+
+| Sector | Perfil | Fuente |
+|--------|--------|--------|
+| Residencial | Curva diaria estacional (invierno/verano) | REE perfiles de consumo |
+| Servicios | Similar a residencial con pico matinal | REE / IDAE |
+| Industrial | Base plana con reducción fin de semana | REE — gran consumo |
+| VE | Carga inteligente al valle (06-08h, 13-16h) | IDAE — movilidad eléctrica |
+| Bombas de calor | Invierno (alta), verano (baja) | IDAE — climatización |
+| H₂ flexible | Electrólisis en horas de excedente renovable | Estrategia H₂ MITECO |
+| Autoconsumo FV | Restado de demanda residencial/servicios | REE — FV distribuida |
+
+**Fuentes:** REE, IDAE, MITECO, PNIEC 2024.
+
+---
+
+## 10. Almacenamiento
+
+### Baterías
+- Eficiencia round-trip: 92% (4h), 90% (2h), 87% (1h)
+- Degradación: 2% lineal por cada 365 ciclos equivalentes
+- SoC operativo: 10%–95%
+- Autodescarga: 0,1%/hora
+
+### Bombeo
+- Eficiencia: 75% round-trip
+- Reserva estacional: embalse lleno en abril/octubre, mínimo en agosto/febrero
+- Sólo bombea si precio < percentil 30; turbina si precio > percentil 70
+
+### V2G
+- Disponible en horas pico (19-22h)
+- Eficiencia: 85% ida, 85% vuelta
+- Capacidad ligada al parque VE (7 kW/vehículo, 60% participación)
+
+**Fuentes:** IRENA, IEA, especificaciones técnicas de fabricantes.
+
+---
+
+## 11. Monte Carlo y bandas de incertidumbre
+
+- Se ejecutan 9 semillas climáticas: [1, 42, 100, 500, 1000, 2000, 5000, 7777, 9999]
+- Cada semilla genera una climatología diferente (viento, nubes, hidraulicidad)
+- Para cada KPI se calculan percentiles P5, P50, P95
+- Las bandas representan incertidumbre puramente climática (no económica o de políticas)
+
+---
+
+## 12. Verificación de balance energético
+
+Al final de cada simulación se verifica:
+
+```
+generación_total - carga_almacenamiento - demanda_servida - vertidos - exportaciones + importaciones ≈ 0
+```
+
+Si la desviación supera 0,5 TWh, se emite una advertencia en consola.
+
+---
+
+## 13. Limitaciones del modelo
+
+- **No modela restricciones nodales ni flujos AC**: balance agregado peninsular
+- **No resuelve óptimo estocástico multi-etapa**: es un despacho heurístico con reglas
+- **LCOE indicativos**: no incluyen coste de capital detallado, riesgo regulatorio ni tasa de descuento específica
+- **Sin mercado intradiario ni de ajuste**: sólo mercado diario
+- **Perfiles climáticos sintéticos**: no calibrados contra series históricas de CF (aunque normalizados a CF reales)
+- **Sin paradas de recarga nuclear**: modelado como baseload plano (FC 0,90 constante)
+- **Sin ciclo combinado con captura de CO₂ ni hidrógeno como combustible**
+- **Herramienta exploratoria**: no sustituye a modelos oficiales de REE, MITECO o ENTSO-E
+
+---
+
+## 14. Enlaces oficiales
+
+| Organismo | Enlace | Contenido |
+|-----------|--------|-----------|
+| REE | [ree.es/es/datos](https://www.ree.es/es/datos) | Demanda, generación, emisiones en tiempo real |
+| OMIE | [omie.es](https://www.omie.es/) | Precios mercado diario e intradiario |
+| MITECO | [miteco.gob.es/energia](https://www.miteco.gob.es/es/energia/temas/planificacion/plan-nacional-integrado-energia-clima.html) | PNIEC 2024 |
+| CNMC | [cnmc.es/energia](https://www.cnmc.es/ambitos-de-actuacion/energia/peajes-y-cargos) | Peajes, cargos, supervisión |
+| ENRESA | [enresa.es](https://www.enresa.es/esp/gestion_combustible/ciclo-combustible/plan-de-desmantelamiento/) | Plan de desmantelamiento nuclear |
+| ENTSO-E | [transparency.entsoe.eu](https://transparency.entsoe.eu/) | Datos de sistema europeos |
+| EU ETS | [climate.ec.europa.eu](https://climate.ec.europa.eu/eu-action/eu-emissions-trading-system-eu-ets_es) | Precio CO₂ y subastas |
+| IDAE | [idae.es](https://www.idae.es/) | Eficiencia, renovables, movilidad |

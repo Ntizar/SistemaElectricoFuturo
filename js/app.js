@@ -16,6 +16,7 @@
         { id: 'pniec', label: 'PNIEC' },
         { id: 'ree', label: 'Datos REE' },
         { id: 'guia', label: 'Guía' },
+        { id: 'info', label: 'Información' },
     ];
 
     const MAIN_TABS = [
@@ -170,17 +171,133 @@
 
     const SOURCES = [
         { label: 'REE - Sistema eléctrico', href: 'https://www.ree.es/es/datos' },
+        { label: 'REE - Demanda en tiempo real', href: 'https://demanda.ree.es/' },
+        { label: 'REE - Informe del Sistema Eléctrico', href: 'https://www.ree.es/es/datos/publicaciones/informe-del-sistema-electrico-espanol' },
         { label: 'OMIE - Mercado diario', href: 'https://www.omie.es/' },
         { label: 'MITECO - PNIEC', href: 'https://www.miteco.gob.es/es/energia/temas/planificacion/plan-nacional-integrado-energia-clima.html' },
+        { label: 'MITECO - Ley de Cambio Climático', href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2021-8447' },
         { label: 'CNMC - Peajes y cargos', href: 'https://www.cnmc.es/ambitos-de-actuacion/energia/peajes-y-cargos' },
+        { label: 'CNMC - Supervisión eléctrica', href: 'https://www.cnmc.es/ambitos-de-actuacion/energia' },
+        { label: 'ENRESA - Plan de desmantelamiento', href: 'https://www.enresa.es/esp/gestion_combustible/ciclo-combustible/plan-de-desmantelamiento/' },
         { label: 'ENTSO-E - Transparency', href: 'https://transparency.entsoe.eu/' },
         { label: 'EU ETS - Precio CO₂', href: 'https://climate.ec.europa.eu/eu-action/eu-emissions-trading-system-eu-ets_es' },
+        { label: 'IDAE - Eficiencia y renovables', href: 'https://www.idae.es/' },
+        { label: 'BOE - Real Decreto Ley 10/2022 (tope gas)', href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2022-8918' },
+        { label: 'BOE - Ley 7/2021 de Cambio Climático', href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2021-8447' },
+        { label: 'RDL 17/2021 - Medidas eléctricas', href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2021-15535' },
+        { label: 'REE - Operación del sistema', href: 'https://www.ree.es/es/actividades/operacion-del-sistema-electrico' },
+    ];
+
+    const INFO_LEYES = [
+        {
+            titulo: 'Ley 24/2013 del Sector Eléctrico',
+            tipo: 'Ley',
+            fecha: 'Diciembre 2013',
+            href: 'https://www.boe.es/buscar/act.php?id=BOE-A-2013-13645',
+            descripcion: 'Marco regulatorio fundamental del sector eléctrico español. Define la separación de actividades reguladas y liberalizadas, el régimen retributivo de renovables y el papel del operador del sistema (REE).',
+        },
+        {
+            titulo: 'Ley 7/2021 de Cambio Climático y Transición Energética',
+            tipo: 'Ley',
+            fecha: 'Mayo 2021',
+            href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2021-8447',
+            descripcion: 'Fija los objetivos de descarbonización a 2030 (23% reducción emisiones respecto 1990) y 2050 (neutralidad climática). Prohíbe nuevas prospecciones de hidrocarburos y establece los porcentajes mínimos de renovables.',
+        },
+        {
+            titulo: 'Real Decreto Ley 10/2022 (Excepción ibérica — tope al gas)',
+            tipo: 'RDL',
+            fecha: 'Mayo 2022',
+            href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2022-8918',
+            descripcion: 'Mecanismo temporal de ajuste del coste de generación por el que se limita el precio del gas para la generación eléctrica. Expiró en diciembre de 2024. En el modelo se reproduce como mecanismo hipotético configurable.',
+        },
+        {
+            titulo: 'Real Decreto Ley 17/2021 (Medidas urgentes del sector eléctrico)',
+            tipo: 'RDL',
+            fecha: 'Septiembre 2021',
+            href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2021-15535',
+            descripcion: 'Medidas de protección al consumidor, revisión de peajes, cargos del sistema y reducción de beneficios caídos del cielo (inframarginales).',
+        },
+        {
+            titulo: 'Real Decreto 960/2020 (Peajes de acceso)',
+            tipo: 'RD',
+            fecha: 'Noviembre 2020',
+            href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2020-14004',
+            descripcion: 'Nueva estructura de peajes de acceso con discriminación horaria (P1, P2, P3) para incentivar el consumo eficiente y el desplazamiento de demanda a horas valle.',
+        },
+        {
+            titulo: 'Plan Nacional Integrado de Energía y Clima (PNIEC) 2023-2030',
+            tipo: 'Plan',
+            fecha: 'Actualizado 2024',
+            href: 'https://www.miteco.gob.es/es/energia/temas/planificacion/plan-nacional-integrado-energia-clima.html',
+            descripcion: 'Hoja de ruta del Gobierno para alcanzar los objetivos climáticos. Incluye 81 GW solares, 62 GW eólicos, 22 GW almacenamiento y 81% renovables en generación para 2030.',
+        },
+        {
+            titulo: 'Real Decreto 1183/2020 (Acceso y conexión a red)',
+            tipo: 'RD',
+            fecha: 'Diciembre 2020',
+            href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2020-16619',
+            descripcion: 'Regula el acceso y conexión de nuevas instalaciones de generación a la red eléctrica, incluyendo los nudos de conexión y los requisitos de capacidad.',
+        },
+        {
+            titulo: 'Real Decreto 244/2019 (Autoconsumo)',
+            tipo: 'RD',
+            fecha: 'Abril 2019',
+            href: 'https://www.boe.es/buscar/doc.php?id=BOE-A-2019-5089',
+            descripcion: 'Regulación del autoconsumo de energía eléctrica. Elimina el "impuesto al sol" y simplifica los trámites para instalaciones de hasta 15 kW.',
+        },
+        {
+            titulo: 'Directiva UE 2019/944 (Mercado interior de la electricidad)',
+            tipo: 'Directiva UE',
+            fecha: 'Junio 2019',
+            href: 'https://eur-lex.europa.eu/eli/dir/2019/944/oj',
+            descripcion: 'Directiva europea que establece normas comunes para el mercado interior de la electricidad, protección del consumidor, agregación de demanda y gestión de la flexibilidad.',
+        },
+        {
+            titulo: 'Acuerdo nuclear ENRESA (Plan General de Residuos)',
+            tipo: 'Convenio',
+            fecha: 'Actualizado 2019',
+            href: 'https://www.enresa.es/esp/gestion_combustible/ciclo-combustible/plan-de-desmantelamiento/',
+            descripcion: 'Calendario oficial de cierre programado del parque nuclear español. Establece las fechas de cese de explotación y el plan de desmantelamiento de cada reactor.',
+        },
+    ];
+
+    const INFO_ORGANISMOS = [
+        { nombre: 'Red Eléctrica de España (REE)', href: 'https://www.ree.es/', descripcion: 'Operador del sistema eléctrico español (transporte, operación, datos en tiempo real).' },
+        { nombre: 'Operador del Mercado Ibérico (OMIE)', href: 'https://www.omie.es/', descripcion: 'Gestiona el mercado diario e intradiario de electricidad en España y Portugal.' },
+        { nombre: 'Comisión Nacional de los Mercados y la Competencia (CNMC)', href: 'https://www.cnmc.es/', descripcion: 'Organismo regulador multisectorial. Supervisa precios, peajes, calidad y competencia.' },
+        { nombre: 'Ministerio para la Transición Ecológica (MITECO)', href: 'https://www.miteco.gob.es/', descripcion: 'Responsable de la política energética, PNIEC, regulación y planificación.' },
+        { nombre: 'IDAE', href: 'https://www.idae.es/', descripcion: 'Instituto para la Diversificación y Ahorro de la Energía. Eficiencia, renovables y movilidad.' },
+        { nombre: 'ENRESA', href: 'https://www.enresa.es/', descripcion: 'Empresa Nacional de Residuos Radiactivos. Gestión del combustible nuclear y desmantelamiento.' },
+        { nombre: 'ENTSO-E', href: 'https://www.entsoe.eu/', descripcion: 'Red Europea de Gestores de Redes de Transporte. Datos de sistema a nivel europeo.' },
+        { nombre: 'Agencia Internacional de la Energía (IEA)', href: 'https://www.iea.org/', descripcion: 'Organización internacional de referencia en datos y proyecciones energéticas globales.' },
+        { nombre: 'IRENA', href: 'https://www.irena.org/', descripcion: 'Agencia Internacional de Energías Renovables. Datos de costes LCOE y capacidad renovable.' },
+    ];
+
+    const INFO_GLOSARIO = [
+        { term: 'SRMC (Short Run Marginal Cost)', def: 'Coste marginal de corto plazo de generar un MWh adicional. Para renovables es ~0 €/MWh, para CCGT incluye gas, CO₂ y O&M.' },
+        { term: 'Orden de mérito', def: 'Jerarquía de tecnologías ordenadas por SRMC ascendente para casar oferta y demanda hora a hora. El precio lo fija la última necesaria.' },
+        { term: 'Precio marginalista', def: 'Todas las tecnologías reciben el mismo precio (= el de la última unidad necesaria), no su coste individual. Así se incentiva la eficiencia.' },
+        { term: 'CfD (Contrato por Diferencias)', def: 'Acuerdo bilateral que garantiza al productor un precio fijo (strike). Si el mercado paga menos, el consumidor complementa; si paga más, el productor devuelve la diferencia.' },
+        { term: 'Tope ibérico (excepción ibérica)', def: 'Mecanismo temporal (mayo 2022 — diciembre 2024) que limitó el precio del gas usado para generar electricidad, reduciendo el precio marginal del pool.' },
+        { term: 'VOLL (Value of Lost Load)', def: 'Valor económico de la energía no suministrada. En España la CNMC lo estima en ~3.000 €/MWh. Es el precio máximo que pagarían los consumidores por evitar un corte.' },
+        { term: 'LOLE (Loss of Load Expectation)', def: 'Número esperado de horas al año con déficit de generación. Es la métrica estándar de seguridad de suministro (objetivo < 3 h/año en UK).' },
+        { term: 'ENS (Energy Not Supplied)', def: 'Energía total no suministrada en un año por falta de capacidad de generación. Se mide en MWh o TWh.' },
+        { term: 'LCOE (Levelized Cost of Energy)', def: 'Coste nivelado de la energía: incluye CAPEX, OPEX, combustible y factor de capacidad para comparar tecnologías en igualdad de condiciones.' },
+        { term: 'LCOS (Levelized Cost of Storage)', def: 'Análogo al LCOE pero para almacenamiento. Incluye coste de carga, eficiencia round-trip, degradación y ciclos anuales.' },
+        { term: 'Vertido renovable (curtailment)', def: 'Energía renovable que no puede integrarse en la red porque supera la demanda en tiempo real y no hay suficiente almacenamiento o interconexión.' },
+        { term: 'Inercia síncrona', def: 'Energía cinética almacenada en los rotores de generadores síncronos (nuclear, hidráulica, gas). Es esencial para la estabilidad de frecuencia ante perturbaciones.' },
+        { term: 'Mínimo síncrono', def: 'Nivel mínimo de generación síncrona necesario para mantener la estabilidad del sistema. Por debajo, el riesgo de apagón aumenta significativamente.' },
+        { term: 'Reserva rodante', def: 'Capacidad de generación sincronizada a la red que puede aumentar su potencia en segundos para cubrir desbalances entre oferta y demanda.' },
+        { term: 'FC (Factor de Capacidad)', def: 'Porcentaje de la potencia instalada que realmente se genera en un año. Solar ~24%, eólica ~20%, nuclear ~90%.' },
+        { term: 'V2G (Vehicle-to-Grid)', def: 'Tecnología que permite a los vehículos eléctricos devolver energía a la red en horas punta, funcionando como almacenamiento distribuido.' },
+        { term: 'Hidraulicidad', def: 'Índice que mide la cantidad de recurso hidráulico disponible en un año respecto a la media histórica (1.0 = año normal, >1 = húmedo, <1 = seco).' },
+        { term: 'Rampa de capacidad', def: 'Velocidad anual de despliegue de nueva capacidad renovable o almacenamiento. Ej: 4.5 GW/año para solar en el PNIEC.' },
     ];
 
     const RESULT_KEYS = [
         'precioMedio', 'precioMedioPonderado', 'precioP10', 'precioMediana', 'precioP90', 'precioMin', 'precioMax',
         'emisionesAnuales', 'coberturaRenovable', 'dependenciaGas', 'consumoGasTWh', 'vertidosTWh', 'vertidosPct',
-        'horasGas', 'horasVertido', 'horasDeficit', 'maxDeficit', 'horasPrecioNegativo', 'horasPrecioAlto',
+        'horasGas', 'horasVertido', 'horasDeficit', 'maxDeficit', 'ensTWh', 'horasPrecioNegativo', 'horasPrecioAlto',
         'importacionesTWh', 'exportacionesTWh', 'demandaFlexTWh', 'demandaReducidaTWh', 'horasImportacion', 'horasExportacion', 'horasFlex',
         'demandaAjustadaTWh', 'nuclearEfectivaGW', 'costeSistemaMEur', 'lcoeSolar', 'lcoeEolica', 'lcoeGas', 'lcosBaterias',
         'horasSinGas', 'horasInerciaCritica', 'hidraulicidadMedia',
@@ -205,6 +322,7 @@
             horasVertido: 0,
             horasDeficit: 0,
             maxDeficit: 0,
+            ensTWh: 0,
             horasPrecioNegativo: 0,
             horasPrecioAlto: 0,
             importacionesTWh: 0,
@@ -331,10 +449,10 @@
                     tone: resultados.vertidosPct > 10 ? 'warning' : 'success',
                 },
                 {
-                    label: 'Déficit y escasez',
-                    value: `${resultados.horasDeficit.toFixed(0)} h`,
-                    sub: `Pico ${resultados.maxDeficit.toFixed(1)} GW`,
-                    tone: resultados.horasDeficit > 30 ? 'danger' : resultados.horasDeficit > 0 ? 'warning' : 'success',
+                    label: 'Energía no suministrada (ENS)',
+                    value: `${resultados.ensTWh.toFixed(2)} TWh`,
+                    sub: `Pico ${resultados.maxDeficit.toFixed(1)} GW · ${resultados.horasDeficit.toFixed(0)} h`,
+                    tone: resultados.ensTWh > 0.5 ? 'danger' : resultados.ensTWh > 0.05 ? 'warning' : 'success',
                 },
                 {
                     label: 'Horas sin gas',
@@ -353,6 +471,12 @@
                     value: `${resultados.horasInerciaCritica.toFixed(0)} h`,
                     sub: 'Horas por debajo del mínimo síncrono.',
                     tone: resultados.horasInerciaCritica > 10 ? 'danger' : resultados.horasInerciaCritica > 0 ? 'warning' : 'success',
+                },
+                {
+                    label: 'LOLE (Horas de déficit)',
+                    value: `${resultados.horasDeficit.toFixed(0)} h/año`,
+                    sub: `ENS acumulada: ${resultados.ensTWh.toFixed(2)} TWh · Pico: ${resultados.maxDeficit.toFixed(1)} GW`,
+                    tone: resultados.horasDeficit > 30 ? 'danger' : resultados.horasDeficit > 0 ? 'warning' : 'success',
                 },
             ]));
 
@@ -641,6 +765,9 @@
                 POLICY_GROUPS,
                 GUIDE_BLOCKS,
                 SOURCES,
+                INFO_LEYES,
+                INFO_ORGANISMOS,
+                INFO_GLOSARIO,
                 params,
                 resultados,
                 datos2025,

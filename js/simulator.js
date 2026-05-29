@@ -133,6 +133,7 @@
                 horasVertido: 0,
                 horasDeficit: 0,
                 maxDeficit: 0,
+                ensTWh: 0,
                 emisionesAnuales: 0,
                 horasBombeoActivo: 0,
                 horasPrecioNegativo: 0,
@@ -320,6 +321,7 @@
                     if (deficit > 0.3) {
                         R.horasDeficit++;
                         R.maxDeficit = Math.max(R.maxDeficit, deficit);
+                        R.ensTWh += deficit / 1000;
                     }
                 }
 

@@ -1,244 +1,159 @@
-# Plan: SistemaElectricoFuturo v3 - Aurora + Modelo Realista 2026-2035
+# Plan: SistemaElectricoFuturo — v3.2+
 
-## 0. Contexto y diagnóstico
+## 0. Resumen ejecutivo
 
-- Repo: `C:\Ntizar_Obsidian\Ntizar_Brain\Github\SistemaElectricoFuturo`.
-- Git: repo propio en `main`, sincronizado con `origin/main`.
-- Stack actual: HTML estático + Vue 3 CDN + Plotly.js + CSS propio. Sin build.
-- Estado actual: 5 módulos JS (`constants`, `scenarios`, `simulator`, `charts`, `app`), 8 escenarios predefinidos, simulación hora a hora con merit order y precio marginalista.
+Proyecto: simulador horario del sistema eléctrico español 2026-2035.
+Repositorio: `Ntizar/SistemaElectricoFuturo` (rama `main`).
+Deploy: https://ntizar.github.io/SistemaElectricoFuturo/
 
-### Limitaciones detectadas
+**Versión actual:** v3.2 (commit `7ced976`, mayo 2026)
+**Stack:** HTML estático + Vue 3 CDN + Plotly.js + CSS propio (Ntizar Aurora). Sin build system.
 
-- Dark-only neón y fuera de la marca Ntizar Aurora v4.
-- Modelo estacionario de un único año objetivo.
-- Cierre nuclear lineal y no basado en el calendario ENRESA.
-- Demanda agregada sin sectores ni autoconsumo detrás del contador.
-- Almacenamiento idealizado, sin degradación ni V2G.
-- Sin capa de política energética ni mercado regulado realista.
-- Meteorología sin variabilidad interanual ni sequías persistentes.
-- Restricciones de red incompletas: inercia, reserva rodante y eventos de estrés.
-- Interconexión agregada sin trayectoria de ampliación.
-- Faltan vistas de trayectoria, legislación, sensibilidad y coste del sistema.
+## 1. Estado actual por fases
 
-## 1. Objetivos acordados
+### Fase 0 — Sinceridad y foco ✅ (Completado v3.2)
 
-1. Migrar la UI a Ntizar Aurora v4 con `body.nz`, light-first, toggle dark persistido y layout reescrito con componentes `nz-*`.
-2. Mantener el simulador anual actual, pero envolverlo con un modo trayectoria 2026-2035 que preserve estado entre años.
-3. Incorporar demanda sectorial, cierre nuclear real, almacenamiento degradable, V2G, H₂ flexible, política energética y clima multianual.
-4. Ampliar escenarios, métricas y visualizaciones para acercar el producto a decisiones eléctricas reales del caso español.
+| # | Tarea | Estado |
+|---|-------|--------|
+| D2 | Quitar etiqueta "tiempo real" → "Referencia REE 2025 (estática)" | ✅ |
+| D1 | Corregir calendario ENRESA y sincronizar UI | ✅ |
+| D5 | Arreglar incoherencia clamp 500 vs precioEscasez → [-50, 3000] | ✅ |
+| R1 | Alinear texto "AR(1) sobre histórico REE" con código real | ✅ |
+| — | Documentar en panel qué es dato y qué es hipótesis | ✅ |
 
-## 2. Principios de ejecución
+### Fase 1 — Núcleo de simulación correcto ✅ (Completado v3.2)
 
-- Cambios pequeños y verificables.
-- Sin build system ni dependencias nuevas.
-- La API anual del simulador debe seguir funcionando mientras se amplían módulos.
-- Plotly debe reaccionar al tema leyendo tokens del DOM.
-- Checkpoint humano antes de commits, pushes o cambios mayores no pactados.
+| # | Tarea | Estado |
+|---|-------|--------|
+| S3 | Reemplazar PRNG Math.sin por Mulberry32 | ✅ |
+| S1 | Despacho real por orden de mérito (pila SRMC, 12 tecnologías) | ✅ |
+| S2 | Calibrar perfiles solar/eólico a CF reales REE 2025 (solar 24%, eólica 20%) | ✅ |
+| S6 | Calendario de días reales y función mesDelDia() | ✅ |
+| R2 | Verificación de balance energético horario y anual | ✅ |
+| S2 | Offshore con perfil propio (correlación parcial 0.6 con onshore) | ✅ |
 
-## 3. Arquitectura propuesta
+### Fase 2 — Calibración y validación ✅ (Completado v3.2)
 
-### 3.1 Árbol final
+| # | Tarea | Estado |
+|---|-------|--------|
+| S5 | Demanda sectorial: una sola fuente de verdad (suma de sectores) | ✅ |
+| S4 | Hidráulica con presupuesto energético (fluyente 38% + embalse 62%) | ✅ |
+| D3 | Tope ibérico documentado como hipotético tipo RDL 10/2022 (expirado) | ✅ |
+| D4 | CfD de doble cara (con signo: productor devuelve si spot > strike) | ✅ |
+| D6 | "Coste sistema" → "Facturación mayorista" | ✅ |
 
-```text
+### Fase 3 — Producto enfocado en la pregunta nuclear 🔄 (En progreso, ~75%)
+
+| # | Tarea | Estado | Notas |
+|---|-------|--------|-------|
+| S7 | Paradas de recarga nuclear escalonadas | ⏳ Pendiente | ~30 días cada 18 meses por reactor |
+| — | **Escenarios ceteris paribus nuclear** | ✅ | 4 nuevos (IDs 18-21): ENRESA, Prórroga 10a, Prórroga 20a, Cierre 2030 |
+| — | **ENS + LOLE como KPIs principales** | ✅ | Añadidos al dashboard |
+| — | **Monte Carlo multi-semilla** | ✅ | `montecarlo.js`: 9 semillas, percentiles P5-P50-P95 |
+| — | Vista comparativa cierre vs prórroga | ⏳ Pendiente | Tabla/resumen visual en UI |
+
+### Fase 4 — Ingeniería y mantenibilidad ⏳ (~20%)
+
+| # | Tarea | Estado | Notas |
+|---|-------|--------|-------|
+| R4 | Test de calibración contra 2025 | ⏳ Pendiente | Vitest |
+| A1 | package.json + Vite | ⏳ Pendiente | Build system |
+| A2 | Tests unitarios + regresión | ⏳ Pendiente | Vitest |
+| A3 | GitHub Actions CI | ⏳ Pendiente | lint + tests + deploy Pages |
+| A4 | Motor headless ESM | ⏳ Pendiente | Ejecutable en Node |
+| R3 | METHODOLOGY.md con fuentes | ⏳ Pendiente | Documentar cada hipótesis |
+| — | **Pestaña Información + enlaces** | ⏳ Pendiente | Leyes, REE, OMIE, CNMC, ENRESA |
+| — | **API ESIOS/REE real** (opción A del D2) | ⏳ Pendiente | fetch con caché |
+
+## 2. Próximos pasos (orden de ejecución)
+
+### Ahora mismo
+1. ✅ Crear METHODOLOGY.md con fuentes oficiales
+2. ✅ Añadir pestaña de información con enlaces a leyes y normativa
+3. ✅ Vista comparativa de escenarios nucleares en el dashboard
+4. package.json + Vite
+5. Tests Vitest (calibración + unitarios)
+6. GitHub Actions CI
+
+### Después
+7. Paradas de recarga nuclear (S7)
+8. API ESIOS/REE real con fetch
+9. Motor headless ESM
+
+## 3. Arquitectura actual
+
+```
 SistemaElectricoFuturo/
-|- index.html
-|- PLAN.md
-|- css/
-|  |- ntizar.css
-|  |- app.css
-|- js/
-|  |- constants.js
-|  |- scenarios.js
-|  |- policy.js
-|  |- demand.js
-|  |- storage.js
-|  |- nuclear.js
-|  |- weather.js
-|  |- simulator.js
-|  |- trajectory.js
-|  |- charts.js
-|  |- theme.js
-|  |- app.js
-|- docs/
-   |- METHODOLOGY.md
-   |- POLICY.md
-   |- DATA-2025.md
+├── index.html
+├── PLAN.md
+├── README.md
+├── css/
+│   ├── ntizar.css
+│   ├── ntizar.next.css
+│   ├── app.css
+│   └── ree-data.css
+├── js/
+│   ├── constants.js      # Constantes, PRNG, utilidades
+│   ├── theme.js          # Gestión de tema claro/oscuro
+│   ├── nuclear.js        # Calendario ENRESA
+│   ├── weather.js        # Clima sintético
+│   ├── demand.js         # Demanda sectorial
+│   ├── storage.js        # Baterías, bombeo, V2G
+│   ├── policy.js         # Política energética
+│   ├── scenarios.js      # 22 escenarios (0-21)
+│   ├── simulator.js      # Motor de simulación anual
+│   ├── trajectory.js     # Trayectoria multianual
+│   ├── montecarlo.js     # Monte Carlo multi-semilla
+│   ├── charts.js         # Gráficos Plotly
+│   ├── ree-data.js       # Datos REE de referencia
+│   └── app.js            # App Vue 3
+├── docs/
+│   ├── METHODOLOGY.md
+│   └── DATA-2025.md
+└── img/                  # Social preview
 ```
 
-### 3.2 Contratos de módulos nuevos
+## 4. Dependencias de carga (index.html)
 
-#### `js/theme.js`
+Orden estricto:
+1. CDN: Plotly, Vue 3, Google Fonts (Inter)
+2. CSS: ntizar.css, ntizar.next.css, app.css, ree-data.css
+3. JS en orden:
+   - constants.js → theme.js → nuclear.js → weather.js → demand.js → storage.js → policy.js → scenarios.js → simulator.js → trajectory.js → montecarlo.js → charts.js → ree-data.js → app.js
 
-- `SEF.Theme.init()` lee `localStorage.sef-theme` y aplica `data-nz-theme`.
-- `SEF.Theme.toggle()` alterna tema y notifica a suscriptores.
-- `SEF.Theme.on(callback)` registra observadores.
-- `SEF.Theme.plotlyLayout()` devuelve el layout base de Plotly a partir de tokens `--nz-*`.
+## 5. Contratos principales
 
-#### `js/nuclear.js`
+### SimuladorElectrico.simular()
+- Entrada: `params` (objeto con parámetros del escenario)
+- Salida: `R` (objeto con resultados: precios, mix, emisiones, ENS, LOLE, etc.)
+- Usa: Weather, Demand, Nuclear, Storage, Policy
 
-- `SEF.Nuclear.CALENDARIO` con reactores y cierres ENRESA.
-- `SEF.Nuclear.disponibleEnAnio(anio, override)` devuelve GW disponibles.
-- Parámetros soportados: `prorrogaGlobal`, `prorrogaPorReactor`, `retiradaAnticipada`.
+### SEF.MonteCarlo.simularMultiSemilla(params, semillas)
+- Entrada: params base + array de semillas
+- Salida: `{ resultados[], percentiles: { kpi: {p5, p50, p95} } }`
+- 9 semillas por defecto: [1, 42, 100, 500, 1000, 2000, 5000, 7777, 9999]
 
-#### `js/demand.js`
+### Escenarios ceteris paribus
+- IDs 18-21: mismos params excepto política nuclear
+- 18: ENRESA oficial, 19: Prórroga 10a, 20: Prórroga 20a, 21: Cierre 2030
+- Objetivo: aislar el efecto del cierre nuclear
 
-- Desglose sectorial: residencial, servicios, industrial, VE, bombas de calor, H₂ y autoconsumo.
-- `SEF.Demand.generarSeries(params, rng, weather)` devuelve demanda total, detalle por sector y flexibilidad.
+## 6. KPIs de seguridad de suministro
 
-#### `js/storage.js`
+| Métrica | Descripción | Unidad |
+|---------|-------------|--------|
+| ENS | Energía No Suministrada acumulada | TWh |
+| LOLE | Loss of Load Expectation (horas de déficit) | h/año |
+| Horas inercia crítica | Horas bajo mínimo síncrono | h/año |
+| Horas sin gas | Horas con CCGT apagado | h/año |
+| Vertidos | Energía renovable no aprovechada | TWh |
+| Importaciones netas | Dependencia exterior | TWh |
 
-- Baterías con degradación por ciclo y calendario.
-- Eficiencia dependiente del `C-rate`.
-- V2G nocturno ligado al parque VE.
-- Bombeo con reserva estacional.
+## 7. Versiones
 
-#### `js/policy.js`
-
-- Tope ibérico, mecanismo de capacidad, CfDs y peajes dinámicos.
-- Ajustes al precio final del sistema y al coste total anual.
-
-#### `js/weather.js`
-
-- Variabilidad interanual, sequía clúster y eventos extremos.
-- `SEF.Weather.serieAnual(anio, seed, params)` devuelve contexto meteorológico anual.
-
-#### `js/trajectory.js`
-
-- Orquesta simulaciones de 2026 a 2035 con estado persistente.
-- Devuelve resultados por año y un resumen agregado de trayectoria.
-
-#### `js/simulator.js`
-
-- Sigue siendo el motor anual.
-- Consume `weather`, `demand`, `nuclear`, `storage` y `policy`.
-- Añade mínimo síncrono, reserva rodante y métricas de sistema.
-
-### 3.3 Integración Aurora v4
-
-1. Copiar `design-system/ntizar.css` al repo como `css/ntizar.css`.
-2. Renombrar `css/styles.css` a `css/app.css` y dejar sólo overrides específicos.
-3. Reescribir el layout con `.nz-section`, `.nz-grid`, `.nz-surface`, `.nz-card`, `.nz-btn`, `.nz-table` y formularios `nz-*`.
-4. Mantener la semántica energética de colores en gráficos, pero ajustando contrastes para fondo claro y oscuro.
-5. Incorporar toggle de tema y repintado de Plotly.
-
-## 4. Mejoras de modelo
-
-### 4.1 Datos 2025
-
-- Revisar referencias REE/OMIE/MITECO y documentarlas en `docs/DATA-2025.md`.
-- Ampliar `DATOS_2025` con autoconsumo, parque VE y stock de bombas de calor.
-
-### 4.2 Nuevos parámetros
-
-- Despliegue temporal de solar, eólica, baterías e interconexión.
-- Penetración sectorial: VE, smart charging, V2G, bombas de calor, H₂, autoconsumo.
-- Política energética: tope ibérico, capacidad, CfDs, PVPC y peajes por franja.
-- Clima: variabilidad interanual y sequías agrupadas.
-- Red: inercia mínima y reserva rodante.
-
-### 4.3 Nuevos escenarios
-
-- Mantener los 8 actuales.
-- Añadir escenarios 8-16: ENRESA oficial, prórroga 60 años, apagones ibéricos, VE masivo, autoconsumo 30 GW, PNIEC 2024, ley climática trayectoria, ola de calor extrema y crisis geopolítica gas+CO₂.
-
-### 4.4 Nuevas vistas
-
-- Tab `Trayectoria` con mix anual, precio, emisiones y heatmap PNIEC.
-- Panel legislativo con interruptores de política.
-- Vistas de sensibilidad y coste del sistema.
-
-### 4.5 Nuevas métricas
-
-- LCOE por tecnología.
-- LCOS de baterías.
-- Coste total del sistema.
-- Factor de carga efectivo.
-- Horas sin gas.
-- Horas de estrés de red por falta de inercia.
-
-## 5. Fases de implementación
-
-### Fase 0 - Setup
-
-- `git pull --ff-only`.
-- Crear `PLAN.md`.
-- Actualizar ficha del proyecto en `knowledge/projects/`.
-- Verificación: app base sigue siendo legible y el repo queda consistente.
-
-### Fase 1 - Integración Aurora v4 visual
-
-- Copiar `ntizar.css`.
-- Crear `app.css`.
-- Reescribir `index.html` y añadir `theme.js`.
-- Adaptar `charts.js` al tema.
-
-### Fase 2 - Datos y calendario nuclear
-
-- Crear `nuclear.js`.
-- Actualizar `constants.js`.
-- Integrar calendario real en el simulador.
-
-### Fase 3 - Demanda sectorial
-
-- Crear `demand.js`.
-- Reemplazar la generación de demanda agregada por un modelo sectorial compatible con la versión anterior.
-
-### Fase 4 - Almacenamiento avanzado y V2G
-
-- Crear `storage.js`.
-- Integrar degradación y soporte V2G.
-
-### Fase 5 - Política y mercado
-
-- Crear `policy.js`.
-- Aplicar tope ibérico, CfDs, peajes dinámicos y pagos por capacidad.
-
-### Fase 6 - Clima multianual y trayectoria
-
-- Crear `weather.js` y `trajectory.js`.
-- Integrar simulación 2026-2035 con progreso y estado persistente.
-
-### Fase 7 - Escenarios y métricas
-
-- Completar `scenarios.js`.
-- Ampliar resultados y gráficos.
-
-### Fase 8 - Docs y pulido
-
-- Actualizar `README.md` y `docs/METHODOLOGY.md`.
-- Crear `docs/POLICY.md` y `docs/DATA-2025.md`.
-
-### Fase 9 - Refinamiento v3.1 (en curso)
-
-- Corregir castellano con ñ y tildes en UI, escenarios y documentación.
-- Protagonizar gráficos: ancho completo, alturas mayores y explicación técnica adjunta.
-- Renombrar botón de trayectoria a "Simular PNIEC 2035" y retirar el toggle de tema del hero.
-- Revisar almacenamiento: eficiencia dependiente de duración, degradación calibrada y reserva estacional realista en bombeo.
-- Ampliar la pestaña Guía con fórmulas y lectura técnica por gráfico.
-
-## 6. Riesgos y mitigaciones
-
-| Riesgo | Mitigación |
-| --- | --- |
-| Plotly pierde contraste en light mode | Leer tokens del DOM y reforzar líneas/alphas |
-| 10 años bloquean la UI | Rebanar la simulación por año con progreso |
-| `ntizar.css` choca con componentes legacy | Mantener overrides sólo en `app.css` y revisar clases propias |
-| El calendario nuclear cambia | Encapsularlo en `nuclear.js` |
-| Fuentes 2025 incompletas | Documentar hipótesis y fecha de consulta |
-
-## 7. Checkpoints humanos
-
-- Antes de commits o pushes.
-- Antes de cambios de arquitectura no cubiertos por este plan.
-- Antes de borrar archivos legacy fuera de la migración ya pactada.
-
-## 8. Entregables
-
-1. `project/PLAN.md` como contrato de implementación.
-2. Ficha de `knowledge/projects/SistemaElectricoFuturo.md` actualizada con estado y fases.
-
-## 9. Estado actual
-
-- `project/` apunta al repo real de `SistemaElectricoFuturo`.
-- Fases 0-8 completadas con v3.0 Aurora.
-- Fase 9 (v3.1) en curso: refinamiento lingüístico, visual y técnico.
+| Versión | Fecha | Cambios |
+|---------|-------|---------|
+| v3.0 | Abril 2026 | Aurora, trayectoria, política, clima, 18 escenarios |
+| v3.1 | Mayo 2026 | Datos REE, normativa, CNMC, castellano refinado |
+| **v3.2** | **Mayo 2026** | Despacho SRMC, PRNG Mulberry32, calibración CF, calendario ENRESA, ENS+LOLE, Monte Carlo, escenarios ceteris paribus |
+| v3.3 | Pendiente | METHODOLOGY.md, pestaña información, tests, CI, API ESIOS |

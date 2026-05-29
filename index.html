@@ -364,6 +364,58 @@
                                     </div>
                                 </section>
                             </div>
+
+                            <div class="nz-stack" v-show="tabActual === 'info'">
+                                <section class="nz-surface nz-surface--soft nz-stack">
+                                    <h3 class="panel-title">📚 Marco legal y regulatorio</h3>
+                                    <p class="panel-sub">Leyes, reales decretos y directivas europeas que definen el sistema eléctrico español.</p>
+                                    <div class="nz-stack">
+                                        <article class="nz-card nz-card--glass-soft" v-for="item in INFO_LEYES" :key="item.titulo">
+                                            <div class="nz-card__header">
+                                                <div>
+                                                    <div class="nz-card__title">{{ item.titulo }}</div>
+                                                    <div class="nz-card__meta">{{ item.tipo }} · {{ item.fecha }}</div>
+                                                </div>
+                                                <a class="nz-badge nz-badge--primary" :href="item.href" target="_blank" rel="noopener">Ver →</a>
+                                            </div>
+                                            <div class="nz-card__body">{{ item.descripcion }}</div>
+                                        </article>
+                                    </div>
+                                </section>
+
+                                <section class="nz-surface nz-surface--soft nz-stack">
+                                    <h3 class="panel-title">🏭 Organismos del sector</h3>
+                                    <p class="panel-sub">Entidades reguladoras, operadores y organismos internacionales.</p>
+                                    <div class="nz-stack">
+                                        <a v-for="org in INFO_ORGANISMOS" :key="org.nombre" class="source-link" :href="org.href" target="_blank" rel="noopener"><strong>{{ org.nombre }}</strong> — {{ org.descripcion }}</a>
+                                    </div>
+                                </section>
+
+                                <section class="nz-surface nz-surface--soft nz-stack">
+                                    <h3 class="panel-title">📖 Diccionario del sector</h3>
+                                    <p class="panel-sub">Términos clave para entender el modelo y los resultados.</p>
+                                    <div class="nz-table-wrap">
+                                        <table class="nz-table">
+                                            <thead>
+                                                <tr><th>Término</th><th>Significado</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="term in INFO_GLOSARIO" :key="term.term">
+                                                    <td><strong>{{ term.term }}</strong></td>
+                                                    <td>{{ term.def }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </section>
+
+                                <section class="nz-surface nz-surface--soft nz-stack">
+                                    <h3 class="panel-title">🔗 Enlaces rápidos</h3>
+                                    <div class="sources-list nz-stack">
+                                        <a v-for="source in SOURCES" :key="source.href" class="source-link" :href="source.href" target="_blank" rel="noopener">{{ source.label }}</a>
+                                    </div>
+                                </section>
+                            </div>
                         </section>
                     </aside>
 
@@ -675,6 +727,7 @@
     <script src="js/policy.js"></script>
     <script src="js/scenarios.js"></script>
     <script src="js/simulator.js"></script>
+    <script src="js/montecarlo.js"></script>
     <script src="js/trajectory.js"></script>
     <script src="js/charts.js"></script>
     <script src="js/ree-data.js"></script>
