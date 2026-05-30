@@ -398,6 +398,14 @@
             R.dependenciaGas = genTotal > 0 ? (genGas / genTotal) * 100 : 0;
             R.vertidosPct = genVRE > 0 ? (R.vertidosTWh * 1000 / genVRE) * 100 : 0;
 
+            // Intensidad de carbono: gCO2 por kWh generado
+            // emisionesAnuales está en megatoneladas (Mt) = 10^12 g
+            // demandaTotalGWh está en GWh = 10^9 Wh = 10^6 kWh
+            // gCO2/kWh = (Mt * 10^12 g) / (GWh * 10^6 kWh) = Mt/GWh * 10^6
+            R.intensidadCarbona = demandaTotalGWh > 0
+                ? (R.emisionesAnuales * 1e12) / (demandaTotalGWh * 1e6)
+                : 0;
+
             // Verificación de balance energético anual
             // generación total = demanda servida + vertidos + exportaciones - importaciones
             const genTotalCheck = mix.reduce((s, g) => s + g.nuclear + g.solar + g.eolica + g.offshore + g.hidraulica + g.gas + g.baterias + g.bombeo + g.v2g + g.h2Flex, 0) / 1000;

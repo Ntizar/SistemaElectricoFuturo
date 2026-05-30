@@ -296,7 +296,7 @@
 
     const RESULT_KEYS = [
         'precioMedio', 'precioMedioPonderado', 'precioP10', 'precioMediana', 'precioP90', 'precioMin', 'precioMax',
-        'emisionesAnuales', 'coberturaRenovable', 'dependenciaGas', 'consumoGasTWh', 'vertidosTWh', 'vertidosPct',
+        'emisionesAnuales', 'intensidadCarbona', 'coberturaRenovable', 'dependenciaGas', 'consumoGasTWh', 'vertidosTWh', 'vertidosPct',
         'horasGas', 'horasVertido', 'horasDeficit', 'maxDeficit', 'ensTWh', 'horasPrecioNegativo', 'horasPrecioAlto',
         'importacionesTWh', 'exportacionesTWh', 'demandaFlexTWh', 'demandaReducidaTWh', 'horasImportacion', 'horasExportacion', 'horasFlex',
         'demandaAjustadaTWh', 'nuclearEfectivaGW', 'costeSistemaMEur', 'lcoeSolar', 'lcoeEolica', 'lcoeGas', 'lcosBaterias',
@@ -313,6 +313,7 @@
             precioMin: 0,
             precioMax: 0,
             emisionesAnuales: 0,
+            intensidadCarbona: 0,
             coberturaRenovable: 0,
             dependenciaGas: 0,
             consumoGasTWh: 0,
@@ -347,6 +348,13 @@
             policySnapshot: {},
             detalleDemanda: [],
         };
+    }
+
+    function intensidadCarbonaTone(value) {
+        if (value < 100) return 'success';
+        if (value < 200) return 'neutral';
+        if (value < 300) return 'warning';
+        return 'danger';
     }
 
     createApp({
@@ -432,6 +440,7 @@
                 { label: 'Precio medio pond.', value: `${resultados.precioMedioPonderado.toFixed(1)} €/MWh`, tone: resultados.precioMedioPonderado > 85 ? 'warning' : 'neutral' },
                 { label: 'Cobertura renovable', value: `${resultados.coberturaRenovable.toFixed(0)}%`, tone: resultados.coberturaRenovable >= 75 ? 'success' : 'neutral' },
                 { label: 'Emisiones anuales', value: `${resultados.emisionesAnuales.toFixed(1)} Mt`, tone: resultados.emisionesAnuales <= 20 ? 'success' : resultados.emisionesAnuales > 30 ? 'danger' : 'warning' },
+                { label: 'Intensidad CO2', value: `${resultados.intensidadCarbona.toFixed(0)} g/kWh`, tone: intensidadCarbonaTone(resultados.intensidadCarbona) },
                 { label: 'Facturación mayorista', value: `${resultados.costeSistemaMEur.toFixed(0)} M€`, tone: 'neutral' },
             ]));
 
