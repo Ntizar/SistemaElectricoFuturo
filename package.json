@@ -1,0 +1,39 @@
+{
+  "name": "sistema-electrico-futuro",
+  "version": "3.2.0",
+  "description": "Simulador interactivo del sistema eléctrico español 2026-2035 con trayectoria multianual, política energética y escenarios realistas",
+  "author": "David Antizar",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint js/ --ext .js",
+    "lint:fix": "eslint js/ --ext .js --fix"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "plotly.js-dist-min": "^2.27.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vitest": "^1.6.0",
+    "@vitest/browser": "^1.6.0",
+    "eslint": "^8.57.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "electricidad",
+    "españa",
+    "simulador",
+    "energía",
+    "nuclear",
+    "renovable",
+    "península"
+  ]
+}
