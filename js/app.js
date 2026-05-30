@@ -696,6 +696,40 @@
                 renderizarGraficos();
             }
 
+            function exportarCSV() {
+                if (!mixSimulado || !mixSimulado.length) return;
+                const columnas = [
+                    'hora', 'demanda', 'nuclear', 'solar', 'eolica', 'offshore',
+                    'hidraulica', 'baterias', 'bombeo', 'v2g', 'cargaBaterias',
+                    'cargaBombeo', 'importacion', 'exportacion', 'gas',
+                    'vertido', 'h2Flex', 'flexDown', 'precio',
+                ];
+                let csv = columnas.join(',') + '\n';
+                mixSimulado.forEach((gen, i) => {
+                    const demanda = gen.nuclear + gen.solar + gen.eolica + gen.offshore +
+                        gen.hidraulica + gen.baterias + gen.bombeo + gen.v2g +
+                        gen.importacion - gen.exportacion + gen.vertido;
+                    const fila = columnas.map(col => {
+                        if (col === 'hora') return i;
+                        if (col === 'demanda') return demanda.toFixed(4);
+                        if (col === 'precio') return preciosSimulados ? preciosSimulados[i].toFixed(4) : 0;
+                        const val = gen[col] !== undefined ? gen[col] : 0;
+                        return Number.isFinite(val) ? parseFloat(val.toFixed(4)) : 0;
+                    });
+                    csv += fila.join(',') + '\n';
+                });
+                const fecha = new Date();
+                const nombre = `simulacion_${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}.csv`;
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = nombre;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
             function actualizarGraficos() {
                 renderizarGraficos();
             }
@@ -809,6 +843,7 @@
                 cambiarVistaPrecios,
                 cambiarTabPrincipal,
                 actualizarGraficos,
+                exportarCSV,
                 formatControlValue,
                 diffPct,
                 diffClass,

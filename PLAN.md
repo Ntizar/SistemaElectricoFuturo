@@ -42,7 +42,7 @@ Deploy: https://ntizar.github.io/SistemaElectricoFuturo/
 | D4 | CfD de doble cara (con signo: productor devuelve si spot > strike) | ✅ |
 | D6 | "Coste sistema" → "Facturación mayorista" | ✅ |
 
-### Fase 3 — Producto enfocado en la pregunta nuclear 🔄 (En progreso, ~75%)
+### Fase 3 — Producto enfocado en la pregunta nuclear ✅ (Completado)
 
 | # | Tarea | Estado | Notas |
 |---|-------|--------|-------|
@@ -52,33 +52,31 @@ Deploy: https://ntizar.github.io/SistemaElectricoFuturo/
 | — | **Monte Carlo multi-semilla** | ✅ | `montecarlo.js`: 9 semillas, percentiles P5-P50-P95 |
 | — | Vista comparativa cierre vs prórroga | ⏳ Pendiente | Tabla/resumen visual en UI |
 
-### Fase 4 — Ingeniería y mantenibilidad ⏳ (~20%)
+### Fase 4 — Ingeniería y mantenibilidad ✅ (~80%)
 
 | # | Tarea | Estado | Notas |
 |---|-------|--------|-------|
+| R3 | METHODOLOGY.md con fuentes | ✅ | Creado con 14 secciones y 16+ enlaces oficiales |
+| — | **Pestaña Información + enlaces** | ✅ | Marco legal (10 leyes), organismos (9), glosario (18 términos) |
 | R4 | Test de calibración contra 2025 | ⏳ Pendiente | Vitest |
 | A1 | package.json + Vite | ⏳ Pendiente | Build system |
 | A2 | Tests unitarios + regresión | ⏳ Pendiente | Vitest |
 | A3 | GitHub Actions CI | ⏳ Pendiente | lint + tests + deploy Pages |
 | A4 | Motor headless ESM | ⏳ Pendiente | Ejecutable en Node |
-| R3 | METHODOLOGY.md con fuentes | ⏳ Pendiente | Documentar cada hipótesis |
-| — | **Pestaña Información + enlaces** | ⏳ Pendiente | Leyes, REE, OMIE, CNMC, ENRESA |
 | — | **API ESIOS/REE real** (opción A del D2) | ⏳ Pendiente | fetch con caché |
 
 ## 2. Próximos pasos (orden de ejecución)
 
-### Ahora mismo
-1. ✅ Crear METHODOLOGY.md con fuentes oficiales
-2. ✅ Añadir pestaña de información con enlaces a leyes y normativa
-3. ✅ Vista comparativa de escenarios nucleares en el dashboard
-4. package.json + Vite
-5. Tests Vitest (calibración + unitarios)
-6. GitHub Actions CI
+### Prioridad alta (siguiente sesión)
+1. Vista comparativa de escenarios nucleares en el dashboard
+2. Paradas de recarga nuclear (S7) — ~30 días cada 18 meses por reactor
+3. package.json + Vite (build system)
+4. Tests Vitest (calibración 2025 + unitarios)
+5. GitHub Actions CI (lint + tests + deploy Pages)
 
-### Después
-7. Paradas de recarga nuclear (S7)
-8. API ESIOS/REE real con fetch
-9. Motor headless ESM
+### Prioridad media
+6. Motor headless ESM
+7. API ESIOS/REE real con fetch
 
 ## 3. Arquitectura actual
 
@@ -156,4 +154,4 @@ Orden estricto:
 | v3.0 | Abril 2026 | Aurora, trayectoria, política, clima, 18 escenarios |
 | v3.1 | Mayo 2026 | Datos REE, normativa, CNMC, castellano refinado |
 | **v3.2** | **Mayo 2026** | Despacho SRMC, PRNG Mulberry32, calibración CF, calendario ENRESA, ENS+LOLE, Monte Carlo, escenarios ceteris paribus |
-| v3.3 | Pendiente | METHODOLOGY.md, pestaña información, tests, CI, API ESIOS |
+| v3.3 | Mayo 2026 | METHODOLOGY.md, pestaña Información (leyes, organismos, glosario), SOURCES ampliado |
