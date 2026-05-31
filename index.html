@@ -437,6 +437,7 @@
                                     <span class="nz-badge nz-badge--glass nz-badge--no-dot">Demanda {{ resultados.demandaAjustadaTWh.toFixed(0) }} TWh</span>
                                     <span class="nz-badge nz-badge--glass nz-badge--no-dot">Nuclear {{ resultados.nuclearEfectivaGW.toFixed(1) }} GW</span>
                                     <button class="nz-btn nz-btn--secondary nz-btn--sm" @click="toggleVistaAnual">{{ vistaAnual ? 'Vista semanal' : 'Vista anual' }}</button>
+                                    <button class="nz-btn nz-btn--secondary nz-btn--sm" @click="togglePresentacion" :class="{ 'nz-btn--brand-mix': modoPresentacion }">{{ modoPresentacion ? 'Salir presentación' : 'Modo presentación' }}</button>
                                     <button class="nz-btn nz-btn--secondary nz-btn--sm" @click="exportarCSV" :disabled="!mixSimulado">Exportar CSV</button>
                                 </div>
                             </div>
@@ -718,6 +719,10 @@
             </div>
         </section>
     </div>
+
+    <!-- Indicador de modo presentación -->
+    <div class="presentation-indicator">MODO PRESENTACIÓN</div>
+    <div class="presentation-exit-hint">Pulsa ESC para salir</div>
 
     <script src="js/constants.js"></script>
     <script src="js/theme.js"></script>

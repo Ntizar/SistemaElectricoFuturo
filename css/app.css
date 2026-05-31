@@ -588,6 +588,143 @@ nz-stack[nv-show] {
     transform: translateY(-1px);
 }
 
+/* ==========================================================================
+   Modo presentación — Mejora 9009 #5
+   ========================================================================== */
+
+body.presentation-mode .app-shell {
+    max-width: 100%;
+}
+
+/* Ocultar sidebar en modo presentación */
+body.presentation-mode .app-sidebar {
+    display: none !important;
+}
+
+/* Centrar y expandir el main */
+body.presentation-mode .app-main {
+    flex: 1 1 100%;
+    max-width: 100%;
+}
+
+/* Ocultar elementos no esenciales en modo presentación */
+body.presentation-mode .hero-note,
+body.presentation-mode .hero-meta__top,
+body.presentation-mode .app-main__actions .nz-badge,
+body.presentation-mode .chart-explain,
+body.presentation-mode .trajectory-toolbar {
+    display: none !important;
+}
+
+/* KPIs grandes en modo presentación */
+body.presentation-mode .hero-kpis__value,
+body.presentation-mode .kpi-card__value {
+    font-size: 2.8rem;
+    font-weight: 900;
+}
+
+body.presentation-mode .hero-kpis .nz-card {
+    padding: 1.5rem 2rem;
+    min-width: 200px;
+}
+
+body.presentation-mode .nz-card__meta {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Hero expandido en presentación */
+body.presentation-mode .hero-shell {
+    grid-template-columns: 1fr;
+    padding: 2rem 3rem;
+}
+
+body.presentation-mode .hero-headline h1 {
+    font-size: 3.5rem;
+}
+
+body.presentation-mode .hero-subtitle {
+    font-size: 1.2rem;
+}
+
+/* Gráficos en ancho completo */
+body.presentation-mode .chart-card {
+    margin: 1rem 0;
+}
+
+body.presentation-mode .chart-host--xl {
+    min-height: 520px;
+}
+
+body.presentation-mode .chart-host--lg {
+    min-height: 440px;
+}
+
+body.presentation-mode .chart-host--md {
+    min-height: 360px;
+}
+
+/* KPIs críticos más grandes en presentación */
+body.presentation-mode .kpi-grid {
+    gap: 1.5rem;
+}
+
+body.presentation-mode .kpi-card {
+    padding: 1.5rem 2rem;
+    min-width: 220px;
+}
+
+body.presentation-mode .kpi-card .nz-card__body {
+    font-size: 1rem;
+}
+
+/* Indicador de modo presentación */
+.presentation-indicator {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: var(--nz-gradient-brand);
+    color: #fff;
+    font-size: var(--nz-text-sm);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    box-shadow: var(--nz-shadow-brand);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 220ms ease;
+}
+
+body.presentation-mode .presentation-indicator {
+    opacity: 1;
+}
+
+/* Botón de salida de presentación */
+.presentation-exit-hint {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 0.5rem 1.2rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: var(--nz-text-xs);
+    letter-spacing: 0.05em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 220ms ease;
+}
+
+body.presentation-mode .presentation-exit-hint {
+    opacity: 1;
+}
+
 @media (max-width: 1100px) {
     .hero-shell {
         grid-template-columns: 1fr;

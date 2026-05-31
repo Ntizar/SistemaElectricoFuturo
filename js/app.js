@@ -373,6 +373,7 @@
             const trayectoriaSimulando = ref(false);
             const progresoTrayectoria = ref(0);
             const trayectoria = ref(null);
+            const modoPresentacion = ref(false);
 
             let mixSimulado = null;
             let preciosSimulados = null;
@@ -695,6 +696,15 @@
                 renderizarGraficos();
             }
 
+            function togglePresentacion() {
+                modoPresentacion.value = !modoPresentacion.value;
+                if (modoPresentacion.value) {
+                    document.body.classList.add('presentation-mode');
+                } else {
+                    document.body.classList.remove('presentation-mode');
+                }
+            }
+
             function cambiarVistaPrecios(vista) {
                 vistaPrecios.value = vista;
                 renderizarGraficos();
@@ -812,6 +822,19 @@
                         estadoClass: n.estado === 'Vigente' || n.estado === 'Aprobado' || n.estado === 'En vigor' ? 'nz-badge--success' : n.estado === 'En desarrollo' ? 'nz-badge--warning' : 'nz-badge--neutral',
                     }));
                 }
+
+                // Tecla P: activar/desactivar modo presentación
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'p' || e.key === 'P') {
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+                        e.preventDefault();
+                        togglePresentacion();
+                    }
+                    if (e.key === 'Escape' && modoPresentacion.value) {
+                        modoPresentacion.value = false;
+                        document.body.classList.remove('presentation-mode');
+                    }
+                });
             });
 
             return {
@@ -841,6 +864,7 @@
                 trayectoriaSimulando,
                 progresoTrayectoria,
                 trayectoria,
+                modoPresentacion,
                 nombreEscenario,
                 descripcionEscenario,
                 pniecStatus,
@@ -864,6 +888,7 @@
                 randomizarSemilla,
                 copiarConfig,
                 toggleVistaAnual,
+                togglePresentacion,
                 cambiarVistaPrecios,
                 cambiarTabPrincipal,
                 actualizarGraficos,
