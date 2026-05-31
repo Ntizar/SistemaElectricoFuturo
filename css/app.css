@@ -396,6 +396,198 @@
     }
 }
 
+/* ==========================================================================
+   Microanimaciones de transición — Mejora 9009 #10
+   ========================================================================== */
+
+/* Transición suave para todos los componentes interactivos */
+.nz-card,
+.kpi-card,
+.scenario-card,
+.chart-card,
+.metric-pill,
+.nz-callout,
+.nz-alert,
+.control-section,
+.toggle-row {
+    transition: opacity 220ms ease, transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+}
+
+/* Transición para las tabs */
+.app-tab-row .nz-btn {
+    transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.app-tab-row .nz-btn:not(.is-active):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.app-tab-row .nz-btn.is-active {
+    transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+/* Animación de KPIs al cambiar valor */
+.hero-kpis__value,
+.kpi-card__value {
+    transition: color 220ms ease, transform 220ms ease;
+}
+
+/* Efecto de pulso suave cuando cambia un KPI */
+@keyframes kpi-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+.kpi-animate {
+    animation: kpi-pulse 300ms ease;
+}
+
+/* Transición suave para las cards de escenario */
+.scenario-card {
+    transition: opacity 220ms ease, transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+}
+
+.scenario-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+}
+
+/* Transición para los controles de escenario */
+.app-range {
+    transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.app-range:focus {
+    border-color: var(--nz-color-brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--nz-color-brand) 20%, transparent);
+}
+
+/* Transición para los botones principales */
+.nz-btn {
+    transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.nz-btn:active {
+    transform: scale(0.98);
+}
+
+/* Transición para badges */
+.nz-badge {
+    transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease;
+}
+
+/* Transición para los gráficos Plotly */
+.chart-host {
+    transition: min-height 300ms ease, opacity 220ms ease;
+}
+
+/* Transición para el loading */
+.app-loading {
+    transition: opacity 300ms ease;
+}
+
+.app-loading__spinner {
+    transition: transform 300ms linear;
+}
+
+/* Transición suave para las métricas */
+.metric-pill {
+    transition: background-color 220ms ease, transform 220ms ease;
+}
+
+.metric-pill:hover {
+    transform: translateY(-1px);
+}
+
+/* Transición para las tablas */
+.nz-table {
+    transition: opacity 220ms ease;
+}
+
+.nz-table tr {
+    transition: background-color 220ms ease;
+}
+
+.nz-table tbody tr:hover {
+    background-color: color-mix(in srgb, var(--nz-color-brand) 5%, transparent);
+}
+
+/* Transición para los selects */
+.nz-select {
+    transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.nz-select:focus {
+    border-color: var(--nz-color-brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--nz-color-brand) 20%, transparent);
+}
+
+/* Transición para los inputs */
+.nz-input {
+    transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.nz-input:focus {
+    border-color: var(--nz-color-brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--nz-color-brand) 20%, transparent);
+}
+
+/* Transición para los tooggles */
+.toggle-row input[type="checkbox"] {
+    transition: transform 220ms ease;
+}
+
+.toggle-row input[type="checkbox"]:checked {
+    transform: scale(1.1);
+}
+
+/* Transición para los paneles de la sidebar */
+nz-stack[nv-show] {
+    transition: opacity 220ms ease, max-height 220ms ease;
+}
+
+/* Transición para el hero shell */
+.hero-shell {
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+
+/* Transición para la barra de acciones */
+.app-main__actions {
+    transition: opacity 220ms ease;
+}
+
+/* Transición para los paneles de comparación */
+.comparison-card {
+    transition: background-color 220ms ease, transform 220ms ease;
+}
+
+/* Transición para las alertas */
+.nz-alert {
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+
+/* Transición para el banner de copia */
+.copy-banner {
+    transition: opacity 220ms ease, color 220ms ease;
+}
+
+/* Transición suave para la vista semanal/anual */
+.chart-host--xl,
+.chart-host--lg {
+    transition: min-height 300ms ease;
+}
+
+/* Transición para las tarjetas de trayectoria */
+.trajectory-card {
+    transition: opacity 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+}
+
+.trajectory-card:hover {
+    transform: translateY(-1px);
+}
+
 @media (max-width: 1100px) {
     .hero-shell {
         grid-template-columns: 1fr;

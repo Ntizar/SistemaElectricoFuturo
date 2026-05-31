@@ -770,6 +770,21 @@
 
             watch(tabPrincipal, () => nextTick(renderizarGraficos));
 
+            // Animación de pulso en KPIs cuando cambian los resultados
+            watch(resultados, () => {
+                nextTick(() => {
+                    const kpis = document.querySelectorAll('.hero-kpis__value, .kpi-card__value');
+                    kpis.forEach(el => {
+                        el.classList.remove('kpi-animate');
+                        // Forzar reflow para reiniciar la animación
+                        void el.offsetWidth;
+                        el.classList.add('kpi-animate');
+                        // Quitar la clase después de la animación
+                        setTimeout(() => el.classList.remove('kpi-animate'), 300);
+                    });
+                });
+            }, { deep: true });
+
             onMounted(() => {
                 SEF.Theme.init();
                 simular();
