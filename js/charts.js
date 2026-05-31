@@ -300,6 +300,32 @@
         plotOrReact(divId, traces, lyt);
     }
 
+    function renderSparkline(divId, values, color, label) {
+        if (!values || values.length < 2) return;
+        const trace = {
+            x: values.map((_, i) => i),
+            y: values,
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: color, width: 1.8, shape: 'spline' },
+            fill: 'tozeroy',
+            fillcolor: markerColor(color, 0.10),
+            hovertemplate: `${label}: %{y:.1f}<extra></extra>`,
+            showlegend: false,
+        };
+        const lyt = layout({
+            margin: { t: 2, r: 4, b: 2, l: 4 },
+            xaxis: { visible: false, range: [-0.5, values.length - 0.5] },
+            yaxis: { visible: false, range: [Math.min(0, Math.min(...values) * 0.95), Math.max(...values) * 1.05] },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            shapes: [],
+            annotations: [],
+            hovermode: false,
+        });
+        plotOrReact(divId, [trace], lyt);
+    }
+
     function vline(xval, color, dash) {
         return {
             type: 'line',

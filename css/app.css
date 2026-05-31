@@ -764,3 +764,35 @@ body.presentation-mode .presentation-exit-hint {
         flex-direction: column;
     }
 }
+
+/* ==========================================================================
+   Mini sparklines en KPIs — Mejora 9009 #6
+   ========================================================================== */
+
+.sparkline-container {
+    width: 100%;
+    height: 28px;
+    margin-top: 0.25rem;
+    opacity: 0.85;
+    transition: opacity 220ms ease;
+}
+
+.sparkline-container:hover {
+    opacity: 1;
+}
+
+/* Sparkline dentro de kpi-card (critical cards) */
+.kpi-card .sparkline-container {
+    height: 24px;
+}
+
+/* Sparkline dentro de hero-kpi (summary stats) */
+.hero-kpis .sparkline-container {
+    height: 26px;
+}
+
+@media (max-width: 860px) {
+    .sparkline-container {
+        height: 22px;
+    }
+}

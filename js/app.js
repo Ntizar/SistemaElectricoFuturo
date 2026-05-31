@@ -437,6 +437,44 @@
                 ];
             });
 
+            // Mapeo de claves de resultados a datos horarios para sparklines
+            const SPARKLINE_KEYS = {
+                'precioMedioPonderado': { key: 'precio', color: C.precio.line, label: 'Precio' },
+                'coberturaRenovable': { key: 'renovable', color: '#16a34a', label: 'Renovable' },
+                'emisionesAnuales': { key: 'emision', color: '#dc2626', label: 'Emisión' },
+                'intensidadCarbona': { key: 'carbono', color: '#f59e0b', label: 'CO2' },
+                'costeSistemaMEur': { key: 'coste', color: '#2563eb', label: 'Coste' },
+            };
+
+            function extraerSparklineData() {
+                if (!mixSimulado || !preciosSimulados || !mixSimulado.length) return {};
+                const ultimas = 7; // últimas 7 horas
+                const inicio = mixSimulado.length - ultimas;
+                const data = mixSimulado.slice(inicio);
+                const precios = preciosSimulados.slice(inicio);
+                const sparklines = {};
+
+                // Precio horario
+                sparklines['precioMedioPonderado'] = precios.map(p => p);
+
+                // Cobertura renovable por hora (nuclear+solar+eolica+offshore+hidraulica+baterias+bombeo+v2g) / demanda total
+                const renovable = data.map(g => g.nuclear + g.solar + g.eolica + (g.offshore || 0) + g.hidraulica + g.baterias + g.bombeo + (g.v2g || 0));
+                const demanda = data.map(g => g.nuclear + g.solar + g.eolica + (g.offshore || 0) + g.hidraulica + g.baterias + g.bombeo + (g.v2g || 0) + g.importacion - g.exportacion + g.vertido);
+                sparklines['coberturaRenovable'] = demanda.map((d, i) => d > 0 ? renovable[i] / d * 100 : 0);
+
+                // Emisiones por hora (gas * 0.202 * 1000 para kg/MWh → g/kWh)
+                const co2 = data.map(g => (g.gas || 0) * 0.202 * 1000);
+                sparklines['emisionesAnuales'] = co2.map(e => e);
+
+                // Intensidad de carbono por hora
+                sparklines['intensidadCarbona'] = demanda.map((d, i) => d > 0 ? co2[i] / d : 0);
+
+                // Coste del sistema por hora (precio * demanda)
+                sparklines['costeSistemaMEur'] = demanda.map((d, i) => precios[i] * d / 1000);
+
+                return sparklines;
+            }
+
             const summaryStats = computed(() => ([
                 { label: 'Precio medio pond.', value: `${resultados.precioMedioPonderado.toFixed(1)} €/MWh`, tone: resultados.precioMedioPonderado > 85 ? 'warning' : 'neutral' },
                 { label: 'Cobertura renovable', value: `${resultados.coberturaRenovable.toFixed(0)}%`, tone: resultados.coberturaRenovable >= 75 ? 'success' : 'neutral' },
@@ -623,6 +661,69 @@
                         SEF.Charts.plotPreciosMensuales('plot-precios-mensuales', resultados.mensual);
                     }
                     renderizarTrayectoria();
+                    renderizarSparklines();
+                });
+            }
+
+            function renderizarSparklines() {
+                nextTick(() => {
+                    if (!mixSimulado || !preciosSimulados) return;
+                    const datos = extraerSparklineData();
+
+                    // Sparklines para summaryStats (hero KPIs)
+                    const heroMap = {
+                        'Precio medio pond.': 'sparkline-precio',
+                        'Cobertura renovable': 'sparkline-renovable',
+                        'Emisiones anuales': 'sparkline-emisiones',
+                        'Intensidad CO2': 'sparkline-carbono',
+                        'Facturación mayorista': 'sparkline-coste',
+                    };
+                    for (const [label, divId] of Object.entries(heroMap)) {
+                        const el = document.getElementById(divId);
+                        if (!el) continue;
+                        const keyMap = {
+                            'sparkline-precio': 'precioMedioPonderado',
+                            'sparkline-renovable': 'coberturaRenovable',
+                            'sparkline-emisiones': 'emisionesAnuales',
+                            'sparkline-carbono': 'intensidadCarbona',
+                            'sparkline-coste': 'costeSistemaMEur',
+                        };
+                        const key = keyMap[divId];
+                        const valores = datos[key];
+                        const colores = {
+                            'sparkline-precio': '#2563eb',
+                            'sparkline-renovable': '#16a34a',
+                            'sparkline-emisiones': '#dc2626',
+                            'sparkline-carbono': '#f59e0b',
+                            'sparkline-coste': '#2563eb',
+                        };
+                        if (valores && valores.length >= 2) {
+                            SEF.Charts.renderSparkline(divId, valores, colores[divId], label);
+                        } else {
+                            el.innerHTML = '';
+                        }
+                    }
+
+                    // Sparklines para criticalCards
+                    const criticalMap = {
+                        'sparkline-gas': { key: 'precioMedioPonderado', color: '#f59e0b' },
+                        'sparkline-vertidos': { key: 'vertidosPct', color: '#f97316' },
+                        'sparkline-ens': { key: 'ensTWh', color: '#dc2626' },
+                        'sparkline-sin-gas': { key: 'horasSinGas', color: '#16a34a' },
+                        'sparkline-import': { key: 'precioMedioPonderado', color: '#06b6d4' },
+                        'sparkline-estres': { key: 'horasInerciaCritica', color: '#dc2626' },
+                        'sparkline-lole': { key: 'horasDeficit', color: '#dc2626' },
+                    };
+                    for (const [divId, cfg] of Object.entries(criticalMap)) {
+                        const el = document.getElementById(divId);
+                        if (!el) continue;
+                        const valores = datos[cfg.key];
+                        if (valores && valores.length >= 2) {
+                            SEF.Charts.renderSparkline(divId, valores, cfg.color, cfg.key);
+                        } else {
+                            el.innerHTML = '';
+                        }
+                    }
                 });
             }
 
@@ -769,6 +870,41 @@
                 return 'No cumple';
             }
 
+            function getSparklineId(label) {
+                const map = {
+                    'Precio medio pond.': 'precio',
+                    'Cobertura renovable': 'renovable',
+                    'Emisiones anuales': 'emisiones',
+                    'Intensidad CO2': 'carbono',
+                    'Facturación mayorista': 'coste',
+                };
+                return map[label] || '';
+            }
+
+            function getCriticalSparklineId(label) {
+                const map = {
+                    'Consumo gas anual': 'gas',
+                    'Vertidos renovables': 'vertidos',
+                    'Energía no suministrada (ENS)': 'ens',
+                    'Horas sin gas': 'sin-gas',
+                    'Importaciones netas': 'import',
+                    'Estrés de red': 'estres',
+                    'LOLE (Horas de déficit)': 'lole',
+                };
+                return map[label] || '';
+            }
+
+            function getSparklineId(label) {
+                const map = {
+                    'Precio medio pond.': 'precio',
+                    'Cobertura renovable': 'renovable',
+                    'Emisiones anuales': 'emisiones',
+                    'Intensidad CO2': 'carbono',
+                    'Facturación mayorista': 'coste',
+                };
+                return map[label] || '';
+            }
+
             function toneClass(tone) {
                 return tone ? `is-${tone}` : '';
             }
@@ -898,6 +1034,8 @@
                 diffClass,
                 statusLabel,
                 toneClass,
+                getSparklineId,
+                getCriticalSparklineId,
                 signed,
             };
         },
