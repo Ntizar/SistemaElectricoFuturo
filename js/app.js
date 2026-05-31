@@ -376,6 +376,75 @@
             const modoPresentacion = ref(false);
             const modoComparacion = ref(false);
             const escenarioComparacion = ref(0);
+
+            // Service Worker — estado de conexión y persistencia offline
+            const isOnline = ref(navigator.onLine !== false);
+            const connectionVisible = ref(false);
+            const simulationSavedVisible = ref(false);
+            let savedTimeout = null;
+            const SIMULATION_STORAGE_KEY = 'sef_last_simulation';
+
+            function guardarSimulacionLocal() {
+                if (!mixSimulado || !preciosSimulados) return;
+                try {
+                    const datos = {
+                        timestamp: Date.now(),
+                        params: { ...params },
+                        resultados: { ...resultados },
+                        mix: mixSimulado.slice(0, 168), // primeras 168h (1 semana) como muestra
+                        precios: preciosSimulados.slice(0, 168),
+                        sankey: sankeyData,
+                    };
+                    localStorage.setItem(SIMULATION_STORAGE_KEY, JSON.stringify(datos));
+                    // Mostrar indicador de guardado
+                    simulationSavedVisible.value = true;
+                    clearTimeout(savedTimeout);
+                    savedTimeout = setTimeout(() => {
+                        simulationSavedVisible.value = false;
+                    }, 3000);
+                } catch (e) {
+                    console.warn('[SEF] No se pudo guardar simulación local:', e);
+                }
+            }
+
+            function cargarSimulacionLocal() {
+                try {
+                    const raw = localStorage.getItem(SIMULATION_STORAGE_KEY);
+                    if (!raw) return null;
+                    const datos = JSON.parse(raw);
+                    if (!datos.resultados || !datos.params) return null;
+                    // Restaurar params
+                    Object.assign(params, datos.params);
+                    // Restaurar resultados
+                    RESULT_KEYS.forEach(key => {
+                        if (datos.resultados[key] !== undefined) {
+                            resultados[key] = datos.resultados[key];
+                        }
+                    });
+                    resultados.mensual = datos.resultados.mensual || null;
+                    resultados.capacidades = datos.resultados.capacidades || {};
+                    resultados.policySnapshot = datos.resultados.policySnapshot || {};
+                    resultados.detalleDemanda = datos.resultados.detalleDemanda || [];
+                    mixSimulado = datos.mix || null;
+                    preciosSimulados = datos.precios || null;
+                    sankeyData = datos.sankey || null;
+                    return datos;
+                } catch (e) {
+                    console.warn('[SEF] No se pudo cargar simulación local:', e);
+                    return null;
+                }
+            }
+
+            function actualizarEstadoConexion() {
+                isOnline.value = navigator.onLine !== false;
+                connectionVisible.value = true;
+                // Ocultar después de 4 segundos si no cambia
+                clearTimeout(savedTimeout);
+                savedTimeout = setTimeout(() => {
+                    connectionVisible.value = false;
+                }, 4000);
+            }
+
             let mixSimulado = null;
             let preciosSimulados = null;
             let sankeyData = null;
@@ -1272,7 +1341,40 @@
 
             onMounted(() => {
                 SEF.Theme.init();
-                simular();
+
+                // Registrar service worker para modo offline
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then((reg) => {
+                            console.log('[SEF] Service Worker registrado:', reg.scope);
+                            // Guardar simulación actual tras primer registro
+                            guardarSimulacionLocal();
+                        })
+                        .catch((err) => {
+                            console.warn('[SEF] Service Worker no registrado:', err);
+                        });
+
+                    // Escuchar cambios de estado del SW
+                    navigator.serviceWorker.addEventListener('controllerchange', () => {
+                        console.log('[SEF] Service Worker actualizado');
+                    });
+                }
+
+                // Detectar cambios de conexión (online/offline)
+                window.addEventListener('online', actualizarEstadoConexion);
+                window.addEventListener('offline', actualizarEstadoConexion);
+
+                // Cargar simulación guardada si no hay resultados
+                const datosGuardados = cargarSimulacionLocal();
+                if (datosGuardados && resultados.precioMedioPonderado === 0) {
+                    console.log('[SEF] Simulación restaurada desde caché local');
+                    // Renderizar gráficos con datos restaurados
+                    nextTick(() => {
+                        renderizarGraficos();
+                    });
+                } else {
+                    simular();
+                }
                 // Cargar datos REE
                 if (SEF.REEData) {
                     const datos = SEF.REEData.obtenerDatosREE();
@@ -1391,6 +1493,12 @@
                 getSparklineId,
                 getCriticalSparklineId,
                 signed,
+                guardarSimulacionLocal,
+                cargarSimulacionLocal,
+                actualizarEstadoConexion,
+                isOnline,
+                connectionVisible,
+                simulationSavedVisible,
             };
         },
     }).mount('#app');

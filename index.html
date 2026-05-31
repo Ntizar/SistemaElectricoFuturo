@@ -1022,6 +1022,16 @@
     <div class="presentation-indicator">MODO PRESENTACIÓN</div>
     <div class="presentation-exit-hint">Pulsa ESC para salir</div>
 
+    <!-- Indicador de estado de conexión -->
+    <div class="connection-status" :class="{ visible: connectionVisible, online: isOnline, offline: !isOnline }">
+        <span class="status-dot"></span>
+        <span>{{ isOnline ? 'En línea' : 'Sin conexión' }}</span>
+    </div>
+    <div class="simulation-saved-badge" :class="{ visible: simulationSavedVisible }">
+        <span>💾</span>
+        <span>Simulación guardada localmente</span>
+    </div>
+
     <script src="js/constants.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/nuclear.js"></script>
