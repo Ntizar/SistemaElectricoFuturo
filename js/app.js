@@ -378,6 +378,7 @@
             const escenarioComparacion = ref(0);
             let mixSimulado = null;
             let preciosSimulados = null;
+            let sankeyData = null;
             let mixComparacion = null;
             let preciosComparacion = null;
 
@@ -779,6 +780,16 @@
                 resultados.detalleDemanda = res.detalleDemanda || [];
                 mixSimulado = res.mix;
                 preciosSimulados = res.precios;
+                // Calcular datos Sankey
+                try {
+                    const sim = new SEF.SimuladorElectrico({ ...params });
+                    sim._ultimoMix = res.mix;
+                    sim._ultimoDetalleDemanda = res.detalleDemanda;
+                    sankeyData = sim.calcularFlujosSankey();
+                } catch (e) {
+                    console.warn('[SEF Sankey] Error calculando flujos:', e);
+                    sankeyData = null;
+                }
             }
 
             function renderizarGraficos() {
@@ -789,6 +800,9 @@
                     if (preciosSimulados) {
                         SEF.Charts.plotPrecios('plot-precios', preciosSimulados, resultados, { vista: vistaPrecios.value, semana: semanaVista.value });
                         SEF.Charts.plotPrecios('plot-duracion', preciosSimulados, resultados, { vista: 'duracion' });
+                    }
+                    if (sankeyData) {
+                        SEF.Charts.plotSankey('plot-sankey', sankeyData);
                     }
                     if (resultados.mensual) {
                         SEF.Charts.plotBarras('plot-barras', params, resultados);

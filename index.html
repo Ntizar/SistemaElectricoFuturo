@@ -904,6 +904,20 @@
                                         </div>
                                     </article>
                                 </section>
+
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Flujo energético — Gráfico Sankey</div>
+                                            <div class="nz-card__meta">Visualización de cómo la energía fluye desde las fuentes de generación hasta los sectores de demanda. Cada banda representa un flujo proporcional: más ancha = más energía.</div>
+                                        </div>
+                                    </div>
+                                    <div id="plot-sankey" class="chart-host chart-host--xl"></div>
+                                    <div class="chart-explain nz-callout nz-callout--tip">
+                                        <span class="nz-callout__title">Cómo leerlo</span>
+                                        <div class="nz-callout__body">Las tecnologías de la izquierda (nuclear, solar, eólica…) alimentan los sectores de la derecha (residencial, industria, VE…). Las bandas más anchas indican mayor flujo. Si los vertidos son una banda visible, hay excedente renovable que no se absorbe: es señal de necesidad de almacenamiento o demanda flexible.</div>
+                                    </div>
+                                </article>
                             </template>
 
                             <template v-if="tabPrincipal === 'trayectoria'">

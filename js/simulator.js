@@ -431,6 +431,8 @@
             R.precios = precioArr;
             R.demandaHoraria = demandaHorariaGW;
             R.detalleDemanda = detalleDemanda;
+            this._ultimoMix = mix;
+            this._ultimoDetalleDemanda = detalleDemanda;
             R.capacidades = {
                 nuclear: nuclearGW,
                 solar: p.solar,
@@ -521,6 +523,224 @@
             }
 
             return mensual;
+        }
+
+        /**
+         * Calcula los flujos de energía para un gráfico Sankey.
+         * Fuentes → Sectores de demanda, mostrando cómo la energía
+         * fluye desde las tecnologías hasta los consumidores finales.
+         */
+        calcularFlujosSankey() {
+            const mix = this._ultimoMix;
+            if (!mix || !mix.length) return null;
+
+            // Sumar generación por tecnología (GWh)
+            const gen = {
+                nuclear: 0, solar: 0, eolica: 0, offshore: 0,
+                hidraulica: 0, gas: 0, baterias: 0, bombeo: 0, v2g: 0,
+                importacion: 0, exportacion: 0, vertido: 0,
+                h2Flex: 0, flexDown: 0,
+            };
+            for (let h = 0; h < mix.length; h++) {
+                const g = mix[h];
+                gen.nuclear += g.nuclear || 0;
+                gen.solar += g.solar || 0;
+                gen.eolica += g.eolica || 0;
+                gen.offshore += g.offshore || 0;
+                gen.hidraulica += g.hidraulica || 0;
+                gen.gas += g.gas || 0;
+                gen.baterias += g.baterias || 0;
+                gen.bombeo += g.bombeo || 0;
+                gen.v2g += g.v2g || 0;
+                gen.importacion += g.importacion || 0;
+                gen.exportacion += g.exportacion || 0;
+                gen.vertido += g.vertido || 0;
+                gen.h2Flex += g.h2Flex || 0;
+                gen.flexDown += g.flexDown || 0;
+            }
+
+            // Sumar demanda por sector (GWh)
+            const dem = {
+                residencial: 0, servicios: 0, industrial: 0,
+                ve: 0, bombasCalor: 0, h2: 0,
+            };
+            const detalle = this._ultimoDetalleDemanda;
+            if (detalle) {
+                for (let h = 0; h < detalle.length; h++) {
+                    const d = detalle[h];
+                    dem.residencial += d.residencial || 0;
+                    dem.servicios += d.servicios || 0;
+                    dem.industrial += d.industrial || 0;
+                    dem.ve += d.ve || 0;
+                    dem.bombasCalor += d.bombasCalor || 0;
+                    dem.h2 += (d.h2 || 0) + (d.h2Flexible || 0);
+                }
+            }
+
+            // Construir nodos y enlaces
+            // Nodos fuente (generación)
+            const fuentes = [];
+            const enlaces = [];
+            let nodoIdx = 0;
+
+            const fuentesArr = [
+                { key: 'nuclear', label: 'Nuclear', val: gen.nuclear },
+                { key: 'solar', label: 'Solar FV', val: gen.solar },
+                { key: 'eolica', label: 'Eólica terrestre', val: gen.eolica },
+                { key: 'offshore', label: 'Eólica marina', val: gen.offshore },
+                { key: 'hidraulica', label: 'Hidráulica', val: gen.hidraulica },
+                { key: 'gas', label: 'Gas CCGT', val: gen.gas },
+                { key: 'importacion', label: 'Importaciones', val: gen.importacion },
+                { key: 'vertido', label: 'Vertidos', val: gen.vertido },
+            ];
+
+            for (const f of fuentesArr) {
+                if (f.val > 0.01) {
+                    fuentes.push(f.label);
+                    enlaces.push({ source: nodoIdx, value: f.val });
+                    nodoIdx++;
+                }
+            }
+
+            // Nodos intermedios: almacenamiento (neto)
+            const batNeto = Math.max(0, gen.baterias - gen.bombeo);
+            const batCarga = gen.cargaBaterias || gen.baterias * 0.3;
+            const bombeoCarga = gen.cargaBombeo || gen.bombeo * 0.4;
+
+            // Nodos de demanda
+            const sectores = [
+                { key: 'residencial', label: 'Residencial', val: dem.residencial },
+                { key: 'servicios', label: 'Servicios', val: dem.servicios },
+                { key: 'industrial', label: 'Industria', val: dem.industrial },
+                { key: 've', label: 'Vehículos eléctricos', val: dem.ve },
+                { key: 'bombasCalor', label: 'Bombas de calor', val: dem.bombasCalor },
+                { key: 'h2', label: 'H₂ flexible', val: dem.h2 },
+            ];
+
+            // Añadir nodos de almacenamiento como intermedios
+            if (batNeto > 0.01) {
+                fuentes.push('Baterías (descarga)');
+                enlaces.push({ source: nodoIdx, value: batNeto });
+                nodoIdx++;
+            }
+            if (gen.bombeo > 0.01) {
+                fuentes.push('Bombeo (descarga)');
+                enlaces.push({ source: nodoIdx, value: gen.bombeo });
+                nodoIdx++;
+            }
+            if (gen.v2g > 0.01) {
+                fuentes.push('V2G (descarga)');
+                enlaces.push({ source: nodoIdx, value: gen.v2g });
+                nodoIdx++;
+            }
+
+            // Añadir nodos de demanda
+            for (const s of sectores) {
+                if (s.val > 0.01) {
+                    fuentes.push(s.label);
+                    nodoIdx++;
+                }
+            }
+
+            // Añadir vertido como nodo sink
+            if (gen.vertido > 0.01) {
+                fuentes.push('Vertido (pérdida)');
+                nodoIdx++;
+            }
+
+            // Construir enlaces: cada fuente → todos los sectores (proporcional)
+            const genTotal = fuentesArr.reduce((s, f) => s + f.val, 0);
+            const sectoresActivos = sectores.filter(s => s.val > 0.01);
+
+            // Enlaces de generación → sectores (distribución proporcional)
+            for (let i = 0; i < fuentesArr.length; i++) {
+                const f = fuentesArr[i];
+                if (f.val <= 0.01) continue;
+                for (let j = 0; j < sectoresActivos.length; j++) {
+                    const s = sectoresActivos[j];
+                    const demandaTotalSectores = sectoresActivos.reduce((sum, sec) => sum + sec.val, 0);
+                    const flujo = (s.val / Math.max(1, demandaTotalSectores)) * f.val;
+                    if (flujo > 0.01) {
+                        enlaces.push({
+                            source: i,
+                            target: fuentesArr.length + j,
+                            value: flujo,
+                        });
+                    }
+                }
+            }
+
+            // Enlaces de almacenamiento → sectores
+            let storageIdx = fuentesArr.length;
+            if (batNeto > 0.01) {
+                for (let j = 0; j < sectoresActivos.length; j++) {
+                    const s = sectoresActivos[j];
+                    const demandaTotalSectores = sectoresActivos.reduce((sum, sec) => sum + sec.val, 0);
+                    const flujo = (s.val / Math.max(1, demandaTotalSectores)) * batNeto;
+                    if (flujo > 0.01) {
+                        enlaces.push({
+                            source: storageIdx,
+                            target: fuentesArr.length + j,
+                            value: flujo,
+                        });
+                    }
+                }
+                storageIdx++;
+            }
+            if (gen.bombeo > 0.01) {
+                for (let j = 0; j < sectoresActivos.length; j++) {
+                    const s = sectoresActivos[j];
+                    const demandaTotalSectores = sectoresActivos.reduce((sum, sec) => sum + sec.val, 0);
+                    const flujo = (s.val / Math.max(1, demandaTotalSectores)) * gen.bombeo;
+                    if (flujo > 0.01) {
+                        enlaces.push({
+                            source: storageIdx,
+                            target: fuentesArr.length + j,
+                            value: flujo,
+                        });
+                    }
+                }
+                storageIdx++;
+            }
+            if (gen.v2g > 0.01) {
+                for (let j = 0; j < sectoresActivos.length; j++) {
+                    const s = sectoresActivos[j];
+                    const demandaTotalSectores = sectoresActivos.reduce((sum, sec) => sum + sec.val, 0);
+                    const flujo = (s.val / Math.max(1, demandaTotalSectores)) * gen.v2g;
+                    if (flujo > 0.01) {
+                        enlaces.push({
+                            source: storageIdx,
+                            target: fuentesArr.length + j,
+                            value: flujo,
+                        });
+                    }
+                }
+                storageIdx++;
+            }
+
+            // Enlace de vertido (pérdida)
+            if (gen.vertido > 0.01) {
+                enlaces.push({
+                    source: storageIdx,
+                    target: storageIdx, // auto-loop para pérdidas
+                    value: gen.vertido,
+                });
+            }
+
+            return {
+                nodos: fuentes,
+                enlaces,
+                generacionTotal: genTotal,
+                demandaTotal: sectoresActivos.reduce((s, sec) => s + sec.val, 0),
+                porTecnologia: fuentesArr.filter(f => f.val > 0.01).map(f => ({
+                    nombre: f.label,
+                    valor: parseFloat(f.val.toFixed(2)),
+                })),
+                porSector: sectoresActivos.map(s => ({
+                    nombre: s.label,
+                    valor: parseFloat(s.val.toFixed(2)),
+                })),
+            };
         }
     }
 

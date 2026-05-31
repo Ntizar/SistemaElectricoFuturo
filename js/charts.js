@@ -488,6 +488,90 @@
         plotOrReact(divId, traces, lyt);
     }
 
+    function plotSankey(divId, sankeyData) {
+        if (!sankeyData || !sankeyData.nodos.length) return;
+
+        const { nodos, enlaces, generacionTotal, demandaTotal, porTecnologia, porSector } = sankeyData;
+
+        // Colores para nodos: tecnologías en colores, sectores en gris suave
+        const coloresTec = {
+            'Nuclear': '#ef4444',
+            'Solar FV': '#f59e0b',
+            'Eólica terrestre': '#22c55e',
+            'Eólica marina': '#14b8a6',
+            'Hidráulica': '#2563eb',
+            'Gas CCGT': '#64748b',
+            'Importaciones': '#06b6d4',
+            'Vertidos': '#fb923c',
+            'Baterías (descarga)': '#8b5cf6',
+            'Bombeo (descarga)': '#60a5fa',
+            'V2G (descarga)': '#a78bfa',
+        };
+        const coloresSectores = {
+            'Residencial': '#94a3b8',
+            'Servicios': '#64748b',
+            'Industria': '#475569',
+            'Vehículos eléctricos': '#3b82f6',
+            'Bombas de calor': '#0ea5e9',
+            'H₂ flexible': '#f97316',
+        };
+
+        const nodeColors = nodos.map(n => coloresTec[n] || coloresSectores[n] || '#94a3b8');
+        const nodeLabels = nodos;
+
+        // Calcular totales por nodo (input = output)
+        const inputByNode = new Array(nodos.length).fill(0);
+        const outputByNode = new Array(nodos.length).fill(0);
+        for (const enlace of enlaces) {
+            inputByNode[enlace.target] = (inputByNode[enlace.target] || 0) + enlace.value;
+            outputByNode[enlace.source] = (outputByNode[enlace.source] || 0) + enlace.value;
+        }
+
+        const trace = {
+            type: 'sankey',
+            orientation: 'h',
+            direction: 'left',
+            node: {
+                pad: 12,
+                thickness: 18,
+                line: { color: 'rgba(148,163,184,0.2)', width: 0.5 },
+                label: nodeLabels,
+                color: nodeColors.map(c => c + 'cc'),
+                hovertemplate: '<b>%{label}</b><br>Total: %{customdata:.0f} GWh<extra></extra>',
+                customdata: inputByNode.map((v, i) => Math.max(v, outputByNode[i])),
+            },
+            link: {
+                source: enlaces.map(e => e.source),
+                target: enlaces.map(e => e.target),
+                value: enlaces.map(e => e.value),
+                color: enlaces.map((e, i) => {
+                    const srcIdx = e.source;
+                    const color = nodeColors[srcIdx] || '#94a3b8';
+                    return color + '55';
+                }),
+                hovertemplate: '%{source.label} → %{target.label}<br>Flujo: %{value:.0f} GWh<extra></extra>',
+            },
+        };
+
+        const lyt = layout({
+            margin: { t: 10, r: 10, b: 10, l: 10 },
+            height: 420,
+            annotations: [
+                {
+                    x: 0.5,
+                    y: 1.08,
+                    xref: 'paper',
+                    yref: 'paper',
+                    text: `Flujo energético anual · Gen: ${generacionTotal.toFixed(0)} GWh · Demanda: ${demandaTotal.toFixed(0)} GWh`,
+                    showarrow: false,
+                    font: { size: 11, color: '#475569' },
+                },
+            ],
+        });
+
+        plotOrReact(divId, [trace], lyt);
+    }
+
     function plotTrajectoryKPIs(divId, trayectoria) {
         if (!trayectoria?.resumen?.years?.length) return;
         const years = trayectoria.resumen.years;
