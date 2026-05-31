@@ -59,6 +59,26 @@
         };
     }
 
+    function totalStackY(data) {
+        if (!data || !data.length) return [];
+        const totals = data.map((_, i) => data.reduce((s, d) => s + (d.nuclear || 0) + (d.solar || 0) + (d.eolica || 0) + (d.offshore || 0) + (d.hidraulica || 0) + (d.baterias || 0) + (d.bombeo || 0) + (d.v2g || 0) + (d.importacion || 0) + (d.gas || 0), 0));
+        return totals;
+    }
+
+    function pctTrace(x, y, name, color, totalY, group = 'one') {
+        return {
+            x,
+            y,
+            name,
+            type: 'scatter',
+            stackgroup: group,
+            fillcolor: color.fill,
+            line: { width: 0.8, color: color.line },
+            hovertemplate: `${name}: %{y:.1f} GW (%{customdata:.1f}% del total)<extra></extra>`,
+            customdata: totalY.map((t, i) => t > 0 ? (y[i] / t) * 100 : 0),
+        };
+    }
+
     function plotMix(divId, mix, opts = {}) {
         if (!mix || !mix.length) return;
         if (opts.vistaAnual) {
@@ -72,16 +92,17 @@
         const inicio = 168 * semana;
         const data = mix.slice(inicio, inicio + 168);
         const x = data.map((_, i) => i);
+        const totalY = totalStackY(data);
         const traces = [
-            stackTrace(x, data.map(g => g.nuclear), 'Nuclear', C.nuclear),
-            stackTrace(x, data.map(g => g.solar), 'Solar FV', C.solar),
-            stackTrace(x, data.map(g => g.eolica), 'Eolica', C.eolica),
-            stackTrace(x, data.map(g => g.offshore || 0), 'Eolica marina', C.offshore),
-            stackTrace(x, data.map(g => g.hidraulica), 'Hidraulica', C.hidro),
-            stackTrace(x, data.map(g => g.baterias + g.bombeo + g.v2g), 'Almacen. descarga', C.baterias),
-            stackTrace(x, data.map(g => g.importacion), 'Importacion', C.importar),
-            stackTrace(x, data.map(g => g.gas), 'Gas CCGT', C.gas),
-            stackTrace(x, data.map(g => -(g.cargaBaterias + g.cargaBombeo)), 'Almacen. carga', C.bombeo, 'two'),
+            pctTrace(x, data.map(g => g.nuclear), 'Nuclear', C.nuclear, totalY),
+            pctTrace(x, data.map(g => g.solar), 'Solar FV', C.solar, totalY),
+            pctTrace(x, data.map(g => g.eolica), 'Eolica', C.eolica, totalY),
+            pctTrace(x, data.map(g => g.offshore || 0), 'Eolica marina', C.offshore, totalY),
+            pctTrace(x, data.map(g => g.hidraulica), 'Hidraulica', C.hidro, totalY),
+            pctTrace(x, data.map(g => g.baterias + g.bombeo + g.v2g), 'Almacen. descarga', C.baterias, totalY),
+            pctTrace(x, data.map(g => g.importacion), 'Importacion', C.importar, totalY),
+            pctTrace(x, data.map(g => g.gas), 'Gas CCGT', C.gas, totalY),
+            pctTrace(x, data.map(g => -(g.cargaBaterias + g.cargaBombeo)), 'Almacen. carga', C.bombeo, totalY, 'two'),
         ];
 
         const lyt = layout({
@@ -150,6 +171,9 @@
         const data = precios.slice(inicio, inicio + 168);
         const max = Math.max(...data);
         const min = Math.min(...data);
+        const media = data.reduce((s, v) => s + v, 0) / data.length;
+        const horasNegativas = data.filter(v => v < 0).length;
+        const horasAlto = data.filter(v => v > 120).length;
 
         const traces = [
             {
@@ -160,7 +184,8 @@
                 fill: 'tozeroy',
                 fillcolor: C.precio.fill,
                 line: { color: C.precio.line, width: 1.8 },
-                hovertemplate: '%{y:.1f} €/MWh<extra></extra>',
+                hovertemplate: 'Hora %{x}: %{y:.1f} €/MWh<br><span style="font-size:10px">Media semana: %{customdata[0]:.1f} €/MWh · Neg: %{customdata[1]}h · Alto: %{customdata[2]}h</span><extra></extra>',
+                customdata: [[media, horasNegativas, horasAlto], Array(data.length).fill([media, horasNegativas, horasAlto])],
             },
             {
                 x: data.map((_, i) => i),
@@ -168,7 +193,7 @@
                 name: 'Media 2025',
                 type: 'scatter',
                 line: { color: C.ref2025.line, width: 2, dash: 'dash' },
-                hovertemplate: '%{y:.0f} €/MWh<extra>2025</extra>',
+                hovertemplate: '%{y:.0f} €/MWh<extra>Media REE 2025</extra>',
             },
         ];
 
@@ -198,7 +223,8 @@
                 color: markerColor(C.precio.line, 0.28),
                 line: { color: C.precio.line, width: 0.6 },
             },
-            hovertemplate: '€%{x:.0f}<br>Horas: %{y}<extra></extra>',
+            hovertemplate: 'Rango: €%{x:.0f}<br>Horas: %{y}<br>% del total: %{customdata:.1f}%<extra></extra>',
+            customdata: precios.map(() => 100 / precios.length),
         }];
 
         const lyt = layout({
@@ -228,6 +254,10 @@
 
     function plotPreciosDuracion(divId, precios, R) {
         const sorted = [...precios].sort((a, b) => b - a);
+        const media = precios.reduce((s, v) => s + v, 0) / precios.length;
+        const horasNeg = precios.filter(v => v < 0).length;
+        const horasAlto = precios.filter(v => v > 120).length;
+        const precioMedioPond = R.precioMedioPonderado || media;
         const traces = [
             {
                 x: sorted.map((_, i) => i),
@@ -237,7 +267,8 @@
                 fill: 'tozeroy',
                 fillcolor: markerColor(C.precio.line, 0.14),
                 line: { color: C.precio.line, width: 1.8 },
-                hovertemplate: 'Hora %{x}: %{y:.1f} €/MWh<extra></extra>',
+                hovertemplate: 'Hora ordenada: %{x}<br>Precio: %{y:.1f} €/MWh<br><span style="font-size:10px">Ponderado: %{customdata[0]:.1f} €/MWh · Neg: %{customdata[1]}h · Alto: %{customdata[2]}h</span><extra></extra>',
+                customdata: [[precioMedioPond, horasNeg, horasAlto], Array(sorted.length).fill([precioMedioPond, horasNeg, horasAlto])],
             },
             {
                 x: sorted.map((_, i) => i),
@@ -355,7 +386,8 @@
             name: t.name,
             type: 'bar',
             marker: { color: t.color.fill, line: { color: t.color.line, width: 0.6 } },
-            hovertemplate: `${t.name}: %{y:.1f} TWh<extra></extra>`,
+            hovertemplate: `${t.name}: %{y:.1f} TWh (%{customdata:.1f}% de la demanda)<extra></extra>`,
+            customdata: mensual.map(m => m.demanda > 0 ? ((m[t.key] || 0) / m.demanda) * 100 : 0),
         }));
 
         traces.push({
@@ -366,7 +398,8 @@
             mode: 'lines+markers',
             line: { color: SEF.Theme.token('--nz-text-strong', '#0f172a'), width: 2, dash: 'dot' },
             marker: { size: 4, color: SEF.Theme.token('--nz-text-strong', '#0f172a') },
-            hovertemplate: 'Demanda: %{y:.1f} TWh<extra></extra>',
+            hovertemplate: 'Demanda: %{y:.1f} TWh · % de gen: %{customdata:.1f}%<extra></extra>',
+            customdata: mensual.map(m => m.demanda > 0 ? (m.demanda / m.demanda) * 100 : 0),
         });
 
         const lyt = layout({
@@ -494,7 +527,7 @@
                 [0.75, '#fbbf24'],
                 [1, '#2563eb'],
             ],
-            hovertemplate: '%{y} · %{x}: %{z:.1f}<extra></extra>',
+            hovertemplate: '%{y} · %{x}: %{z:.1f}<br><span style="font-size:10px">Objetivo 2030: % Renovable 74%, Solar 81 GW, Eolica 57 GW, Almacenamiento 22 GW</span><extra></extra>',
         }];
 
         const lyt = layout({ margin: { t: 12, r: 10, b: 42, l: 100 } });
