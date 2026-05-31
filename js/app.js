@@ -374,9 +374,12 @@
             const progresoTrayectoria = ref(0);
             const trayectoria = ref(null);
             const modoPresentacion = ref(false);
-
+            const modoComparacion = ref(false);
+            const escenarioComparacion = ref(0);
             let mixSimulado = null;
             let preciosSimulados = null;
+            let mixComparacion = null;
+            let preciosComparacion = null;
 
             const datos2025 = SEF.DATOS_2025;
             const escenarios = SEF.ESCENARIOS;
@@ -396,6 +399,11 @@
             const descripcionEscenario = computed(() => {
                 const esc = escenarios.find(item => item.id === escenarioActual.value);
                 return esc ? esc.descripcion : 'Configuración personalizada sobre la base de Aurora y del nuevo motor multianual.';
+            });
+
+            const nombreEscenarioComparacion = computed(() => {
+                const esc = escenarios.find(item => item.id === escenarioComparacion.value);
+                return esc ? esc.nombre : 'Seleccionar escenario';
             });
 
             const pniecStatus = computed(() => {
@@ -539,6 +547,121 @@
                     h2: 0,
                 };
                 resultados.detalleDemanda.forEach(hour => {
+                    totals.residencial += hour.residencial || 0;
+                    totals.servicios += hour.servicios || 0;
+                    totals.industrial += hour.industrial || 0;
+                    totals.ve += hour.ve || 0;
+                    totals.bombasCalor += hour.bombasCalor || 0;
+                    totals.h2 += (hour.h2 || 0) + (hour.h2Flexible || 0);
+                });
+                return [
+                    ['Residencial', totals.residencial / 1000],
+                    ['Servicios', totals.servicios / 1000],
+                    ['Industria', totals.industrial / 1000],
+                    ['VE', totals.ve / 1000],
+                    ['Bombas de calor', totals.bombasCalor / 1000],
+                    ['H₂ flexible', totals.h2 / 1000],
+                ].map(([label, value]) => ({ label, value }));
+            });
+
+            // Propiedades para el panel de comparación
+            function buildComparacionResultados() {
+                if (!mixComparacion || !preciosComparacion) return null;
+                const res = {
+                    precioMedio: 0, precioMedioPonderado: 0, precioP10: 0, precioMediana: 0, precioP90: 0,
+                    precioMin: 0, precioMax: 0, emisionesAnuales: 0, intensidadCarbona: 0,
+                    coberturaRenovable: 0, dependenciaGas: 0, consumoGasTWh: 0, vertidosTWh: 0, vertidosPct: 0,
+                    horasGas: 0, horasVertido: 0, horasDeficit: 0, maxDeficit: 0, ensTWh: 0,
+                    horasPrecioNegativo: 0, horasPrecioAlto: 0, importacionesTWh: 0, exportacionesTWh: 0,
+                    demandaFlexTWh: 0, demandaReducidaTWh: 0, horasImportacion: 0, horasExportacion: 0, horasFlex: 0,
+                    demandaAjustadaTWh: 0, nuclearEfectivaGW: 0, costeSistemaMEur: 0,
+                    lcoeSolar: 0, lcoeEolica: 0, lcoeGas: 0, lcosBaterias: 0,
+                    horasSinGas: 0, horasInerciaCritica: 0, hidraulicidadMedia: 0,
+                    mensual: null, capacidades: {}, policySnapshot: {}, detalleDemanda: [],
+                };
+                // Calcular métricas desde mixComparacion y preciosComparacion
+                let demandaTotal = 0, emisionTotal = 0, precioTotal = 0, precioDemandaTotal = 0;
+                let renovableTotal = 0, gasTotal = 0, vertidoTotal = 0, vreTotal = 0;
+                let horasGas = 0, horasVertido = 0, horasDeficit = 0, maxDeficit = 0;
+                let horasPrecioNegativo = 0, horasPrecioAlto = 0;
+                let importTotal = 0, exportTotal = 0;
+                let ensTotal = 0;
+                const preciosArr = [];
+
+                for (let i = 0; i < mixComparacion.length; i++) {
+                    const g = mixComparacion[i];
+                    const p = preciosComparacion[i];
+                    const demanda = g.nuclear + g.solar + g.eolica + (g.offshore || 0) + g.hidraulica + g.baterias + g.bombeo + (g.v2g || 0) + g.importacion - g.exportacion + g.vertido;
+                    const renovable = g.nuclear + g.solar + g.eolica + (g.offshore || 0) + g.hidraulica + g.baterias + g.bombeo + (g.v2g || 0);
+                    const emision = (g.gas || 0) * 0.202;
+                    demandaTotal += demanda;
+                    emisionTotal += emision;
+                    precioTotal += p;
+                    precioDemandaTotal += p * demanda;
+                    renovableTotal += renovable;
+                    gasTotal += (g.gas || 0);
+                    vertidoTotal += (g.vertido || 0);
+                    vreTotal += (g.solar || 0) + (g.eolica || 0) + (g.offshore || 0);
+                    if ((g.gas || 0) > 0.1) horasGas++;
+                    if ((g.vertido || 0) > 0.1) horasVertido++;
+                    if (demanda < (renovable + g.importacion)) { horasDeficit++; const def = demanda - renovable; if (def > maxDeficit) maxDeficit = def; ensTotal += Math.max(0, def); }
+                    if (p < 0) horasPrecioNegativo++;
+                    if (p > 150) horasPrecioAlto++;
+                    importTotal += (g.importacion || 0);
+                    exportTotal += (g.exportacion || 0);
+                    preciosArr.push(p);
+                }
+
+                res.demandaAjustadaTWh = demandaTotal / 1000;
+                res.nuclearEfectivaGW = (mixComparacion[0]?.nuclear || 0);
+                res.precioMedio = precioTotal / 8760;
+                res.precioMedioPonderado = precioDemandaTotal / (demandaTotal || 1);
+                res.precioP10 = preciosArr.sort((a,b) => a-b)[Math.floor(8760 * 0.1)];
+                res.precioMediana = preciosArr.sort((a,b) => a-b)[Math.floor(8760 * 0.5)];
+                res.precioP90 = preciosArr.sort((a,b) => a-b)[Math.floor(8760 * 0.9)];
+                res.emisionesAnuales = emisionTotal * 1000 / 1000; // Mt
+                res.intensidadCarbona = demandaTotal > 0 ? (emisionTotal * 1000) / (demandaTotal / 1000) : 0; // gCO2/kWh
+                res.coberturaRenovable = demandaTotal > 0 ? (renovableTotal / demandaTotal) * 100 : 0;
+                res.dependenciaGas = demandaTotal > 0 ? (gasTotal / demandaTotal) * 100 : 0;
+                res.consumoGasTWh = gasTotal / 1000;
+                res.vertidosTWh = vertidoTotal / 1000;
+                res.vertidosPct = vreTotal > 0 ? (vertidoTotal / vreTotal) * 100 : 0;
+                res.horasGas = horasGas;
+                res.horasVertido = horasVertido;
+                res.horasDeficit = horasDeficit;
+                res.maxDeficit = maxDeficit;
+                res.ensTWh = ensTotal / 1000;
+                res.horasPrecioNegativo = horasPrecioNegativo;
+                res.horasPrecioAlto = horasPrecioAlto;
+                res.importacionesTWh = importTotal / 1000;
+                res.exportacionesTWh = exportTotal / 1000;
+                res.costeSistemaMEur = precioDemandaTotal / 1000;
+                res.horasSinGas = 8760 - horasGas;
+
+                return res;
+            }
+
+            const comparacionResultados = computed(() => {
+                return buildComparacionResultados() || emptyResults();
+            });
+
+            const comparacionCriticalCards = computed(() => {
+                const r = comparacionResultados.value;
+                return [
+                    { label: 'Consumo gas anual', value: `${r.consumoGasTWh.toFixed(1)} TWh`, sub: `${r.horasGas.toFixed(0)} h con gas · ${r.dependenciaGas.toFixed(1)}% del mix`, tone: r.consumoGasTWh > 45 ? 'danger' : r.consumoGasTWh > 25 ? 'warning' : 'success' },
+                    { label: 'Vertidos renovables', value: `${r.vertidosTWh.toFixed(1)} TWh`, sub: `${r.horasVertido.toFixed(0)} h · ${r.vertidosPct.toFixed(1)}% de VRE`, tone: r.vertidosPct > 10 ? 'warning' : 'success' },
+                    { label: 'Energía no suministrada (ENS)', value: `${r.ensTWh.toFixed(2)} TWh`, sub: `Pico ${r.maxDeficit.toFixed(1)} GW · ${r.horasDeficit.toFixed(0)} h`, tone: r.ensTWh > 0.5 ? 'danger' : r.ensTWh > 0.05 ? 'warning' : 'success' },
+                    { label: 'Horas sin gas', value: `${r.horasSinGas.toFixed(0)} h`, sub: 'Mide cuántas horas el sistema evita CCGT.', tone: r.horasSinGas > 4000 ? 'success' : 'neutral' },
+                    { label: 'Importaciones netas', value: `${(r.importacionesTWh - r.exportacionesTWh).toFixed(1)} TWh`, sub: `Imp ${r.importacionesTWh.toFixed(1)} · Exp ${r.exportacionesTWh.toFixed(1)}`, tone: r.importacionesTWh > 18 ? 'warning' : 'neutral' },
+                    { label: 'Estrés de red', value: `${r.horasInerciaCritica.toFixed(0)} h`, sub: 'Horas por debajo del mínimo síncrono.', tone: r.horasInerciaCritica > 10 ? 'danger' : r.horasInerciaCritica > 0 ? 'warning' : 'success' },
+                    { label: 'LOLE (Horas de déficit)', value: `${r.horasDeficit.toFixed(0)} h/año`, sub: `ENS acumulada: ${r.ensTWh.toFixed(2)} TWh · Pico: ${r.maxDeficit.toFixed(1)} GW`, tone: r.horasDeficit > 30 ? 'danger' : r.horasDeficit > 0 ? 'warning' : 'success' },
+                ];
+            });
+
+            const comparacionSectorDemandRows = computed(() => {
+                if (!comparacionResultados.value.detalleDemanda || !comparacionResultados.value.detalleDemanda.length) return [];
+                const totals = { residencial: 0, servicios: 0, industrial: 0, ve: 0, bombasCalor: 0, h2: 0 };
+                comparacionResultados.value.detalleDemanda.forEach(hour => {
                     totals.residencial += hour.residencial || 0;
                     totals.servicios += hour.servicios || 0;
                     totals.industrial += hour.industrial || 0;
@@ -806,6 +929,38 @@
                 }
             }
 
+            function toggleComparacion() {
+                modoComparacion.value = !modoComparacion.value;
+                if (modoComparacion.value && !mixComparacion) {
+                    // Simular el segundo escenario automáticamente
+                    simularComparacion();
+                }
+                if (!modoComparacion.value) {
+                    mixComparacion = null;
+                    preciosComparacion = null;
+                }
+            }
+
+            function simularComparacion() {
+                const esc = SEF.getEscenario(escenarioComparacion.value);
+                if (!esc) return;
+                const res = new SEF.SimuladorElectrico({ ...esc.params }).simular();
+                mixComparacion = res.mix;
+                preciosComparacion = res.precios;
+                // No llamar a setResults(res) para no sobrescribir los resultados principales
+            }
+
+            function seleccionarEscenarioComparacion(id) {
+                escenarioComparacion.value = id;
+                simularComparacion();
+            }
+
+            function cancelarComparacion() {
+                modoComparacion.value = false;
+                mixComparacion = null;
+                preciosComparacion = null;
+            }
+
             function cambiarVistaPrecios(vista) {
                 vistaPrecios.value = vista;
                 renderizarGraficos();
@@ -1003,10 +1158,16 @@
                 modoPresentacion,
                 nombreEscenario,
                 descripcionEscenario,
+                nombreEscenarioComparacion,
+                modoComparacion,
+                escenarioComparacion,
                 pniecStatus,
                 summaryStats,
                 criticalCards,
                 sectorDemandRows,
+                comparacionCriticalCards,
+                comparacionSectorDemandRows,
+                comparacionResultados,
                 policyEffects,
                 trajectoryCards,
                 trajectoryRows,
@@ -1025,6 +1186,9 @@
                 copiarConfig,
                 toggleVistaAnual,
                 togglePresentacion,
+                toggleComparacion,
+                cancelarComparacion,
+                seleccionarEscenarioComparacion,
                 cambiarVistaPrecios,
                 cambiarTabPrincipal,
                 actualizarGraficos,

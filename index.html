@@ -444,6 +444,8 @@
                             </div>
 
                             <template v-if="tabPrincipal === 'dashboard'">
+                                <!-- Panel único (sin comparación) -->
+                                <template v-if="!modoComparacion">
                                 <section class="kpi-grid nz-grid nz-grid--3">
                                     <article class="kpi-card nz-card nz-card--glass-brand" v-for="card in criticalCards" :key="card.label">
                                         <div class="nz-card__meta">{{ card.label }}</div>
@@ -562,6 +564,265 @@
                                             <div class="metric-pill nz-surface nz-surface--soft"><span>LCOE eólica</span><strong>{{ resultados.lcoeEolica.toFixed(0) }} €/MWh</strong></div>
                                             <div class="metric-pill nz-surface nz-surface--soft"><span>LCOS baterías</span><strong>{{ resultados.lcosBaterias.toFixed(0) }} €/MWh</strong></div>
                                             <div class="metric-pill nz-surface nz-surface--soft"><span>Hidraulicidad</span><strong>{{ resultados.hidraulicidadMedia.toFixed(2) }}x</strong></div>
+                                        </div>
+                                    </article>
+                                </section>
+                            </template>
+                                <!-- Modo comparación: dos paneles lado a lado -->
+                                <template v-else>
+                                    <section class="comparison-layout">
+                                        <!-- Panel izquierdo: escenario principal -->
+                                        <section class="comparison-panel comparison-panel--primary">
+                                            <div class="comparison-panel__header">
+                                                <span class="nz-badge nz-badge--glass-brand">{ nombreEscenario }</span>
+                                            </div>
+                                <section class="kpi-grid nz-grid nz-grid--3">
+                                    <article class="kpi-card nz-card nz-card--glass-brand" v-for="card in criticalCards" :key="card.label">
+                                        <div class="nz-card__meta">{{ card.label }}</div>
+                                        <div class="kpi-card__value" :class="toneClass(card.tone)">{{ card.value }}</div>
+                                        <div class="sparkline-container" :id="'sparkline-' + getCriticalSparklineId(card.label)"></div>
+                                        <div class="nz-card__body">{{ card.sub }}</div>
+                                    </article>
+                                </section>
+
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Mix horario de generación</div>
+                                            <div class="nz-card__meta">Semana representativa (168 horas) o agregado anual. Las áreas apiladas muestran cómo se cubre cada hora de demanda: nuclear de base, renovables, almacenamiento arbitrando valle-pico, hidráulica gestionable, interconexiones y CCGT como último recurso.</div>
+                                        </div>
+                                        <div class="nz-cluster">
+                                            <label class="nz-label" for="week-select">Semana</label>
+                                            <select id="week-select" class="nz-select week-select" v-model.number="semanaVista" @change="actualizarGraficos">
+                                                <option v-for="option in WEEK_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="plot-mix" class="chart-host chart-host--xl"></div>
+                                    <div class="chart-explain nz-callout nz-callout--tip">
+                                        <span class="nz-callout__title">Cómo leerlo</span>
+                                        <div class="nz-callout__body">Si el bloque naranja (CCGT) aparece de día mientras hay excedente solar (vertidos en azul claro negativo), falta almacenamiento o interconexión. Si aparece de noche, falta despacho de baterías, bombeo o nuclear de base. El objetivo PNIEC 2030 es llevar la banda CCGT al mínimo técnico de respaldo (< 5% del mix).</div>
+                                    </div>
+                                </article>
+
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Precio mayorista spot</div>
+                                            <div class="nz-card__meta">Precio marginal horario del mercado diario. Vista semanal (serie temporal), distribución (histograma) o curva de duración (horas ordenadas de mayor a menor precio).</div>
+                                        </div>
+                                        <div class="app-tab-row app-tab-row--compact">
+                                            <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'semana' }" @click="cambiarVistaPrecios('semana')">Semana</button>
+                                            <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'anual' }" @click="cambiarVistaPrecios('anual')">Distribución</button>
+                                            <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'duracion' }" @click="cambiarVistaPrecios('duracion')">Duración</button>
+                                        </div>
+                                    </div>
+                                    <div id="plot-precios" class="chart-host chart-host--lg"></div>
+                                    <div class="metric-grid">
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Media aritmética</span><strong>{{ resultados.precioMedio.toFixed(1) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Ponderada por demanda</span><strong>{{ resultados.precioMedioPonderado.toFixed(1) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>P10</span><strong>{{ resultados.precioP10.toFixed(0) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Mediana</span><strong>{{ resultados.precioMediana.toFixed(0) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>P90</span><strong>{{ resultados.precioP90.toFixed(0) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Horas &lt; 0 €</span><strong>{{ resultados.horasPrecioNegativo }}</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Horas &gt; 150 €</span><strong>{{ resultados.horasPrecioAlto }}</strong></div>
+                                    </div>
+                                    <div class="chart-explain nz-callout nz-callout--tip">
+                                        <span class="nz-callout__title">Qué calcula</span>
+                                        <div class="nz-callout__body">Cada hora se marca el precio como el coste marginal de la última tecnología necesaria para casar la demanda. La <strong>ponderada por demanda</strong> es el precio relevante para el coste real del consumidor (pondera horas pico de 0,70 €/kWh mucho más que horas valle de 0,01 €/kWh). La diferencia con la media aritmética mide cuánto se concentra el coste en horas caras.</div>
+                                    </div>
+                                </article>
+
+                                <section class="nz-grid nz-grid--2 dashboard-panels">
+                                    <article class="nz-card nz-card--glass-soft chart-card">
+                                        <div class="nz-card__header">
+                                            <div>
+                                                <div class="nz-card__title">Comparación con 2025</div>
+                                                <div class="nz-card__meta">Cuánto cambia el sistema frente al último año de referencia con datos REE/OMIE consolidados.</div>
+                                            </div>
+                                        </div>
+                                        <div class="comparison-grid">
+                                            <div class="comparison-card nz-surface nz-surface--soft">
+                                                <span>Gas</span>
+                                                <strong>{{ datos2025.gasTWh }} → {{ resultados.consumoGasTWh.toFixed(1) }} TWh</strong>
+                                                <small :class="diffClass(resultados.consumoGasTWh, datos2025.gasTWh)">{{ diffPct(resultados.consumoGasTWh, datos2025.gasTWh).toFixed(0) }}%</small>
+                                            </div>
+                                            <div class="comparison-card nz-surface nz-surface--soft">
+                                                <span>CO₂</span>
+                                                <strong>{{ datos2025.emisiones }} → {{ resultados.emisionesAnuales.toFixed(1) }} Mt</strong>
+                                                <small :class="diffClass(resultados.emisionesAnuales, datos2025.emisiones)">{{ diffPct(resultados.emisionesAnuales, datos2025.emisiones).toFixed(0) }}%</small>
+                                            </div>
+                                            <div class="comparison-card nz-surface nz-surface--soft">
+                                                <span>Precio</span>
+                                                <strong>{{ datos2025.precioMedio }} → {{ resultados.precioMedio.toFixed(1) }} €/MWh</strong>
+                                                <small :class="diffClass(resultados.precioMedio, datos2025.precioMedio)">{{ diffPct(resultados.precioMedio, datos2025.precioMedio).toFixed(0) }}%</small>
+                                            </div>
+                                            <div class="comparison-card nz-surface nz-surface--soft">
+                                                <span>Renovable</span>
+                                                <strong>{{ datos2025.renovables }}% → {{ resultados.coberturaRenovable.toFixed(0) }}%</strong>
+                                                <small :class="diffClass(resultados.coberturaRenovable, datos2025.renovables, true)">{{ signed(resultados.coberturaRenovable - datos2025.renovables, 0, 'pp') }}</small>
+                                            </div>
+                                        </div>
+                                        <div id="plot-barras" class="chart-host chart-host--md"></div>
+                                    </article>
+
+                                    <article class="nz-card nz-card--glass-soft chart-card">
+                                        <div class="nz-card__header">
+                                            <div>
+                                                <div class="nz-card__title">Demanda sectorial anual</div>
+                                                <div class="nz-card__meta">Desagregación de la demanda total en sectores con perfil horario propio: residencial y servicios (climatización), industria (base), VE (carga inteligente al valle), bombas de calor (invierno) y electrólisis H₂ (flexible según precio).</div>
+                                            </div>
+                                        </div>
+                                        <div class="nz-table-wrap">
+                                            <table class="nz-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sector</th>
+                                                        <th>TWh anuales</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="row in sectorDemandRows" :key="row.label">
+                                                        <td>{{ row.label }}</td>
+                                                        <td>{{ row.value.toFixed(1) }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="metric-grid">
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOE solar</span><strong>{{ resultados.lcoeSolar.toFixed(0) }} €/MWh</strong></div>
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOE eólica</span><strong>{{ resultados.lcoeEolica.toFixed(0) }} €/MWh</strong></div>
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOS baterías</span><strong>{{ resultados.lcosBaterias.toFixed(0) }} €/MWh</strong></div>
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>Hidraulicidad</span><strong>{{ resultados.hidraulicidadMedia.toFixed(2) }}x</strong></div>
+                                        </div>
+                                    </article>
+                                </section>
+                            </template>
+
+                                        </section>
+                                        <!-- Panel derecho: escenario comparado -->
+                                        <section class="comparison-panel comparison-panel--secondary">
+                                            <div class="comparison-panel__header">
+                                                <span class="nz-badge nz-badge--glass-brand">{ nombreEscenarioComparacion }</span>
+                                            </div>
+                                <section class="kpi-grid nz-grid nz-grid--3">
+                                    <article class="kpi-card nz-card nz-card--glass-brand" v-for="card in comparacionCriticalCards" :key="card.label">
+                                        <div class="nz-card__meta">{{ card.label }}</div>
+                                        <div class="kpi-card__value" :class="toneClass(card.tone)">{{ card.value }}</div>
+                                        <div class="sparkline-container" :id="'sparkline-' + getCriticalSparklineId(card.label)"></div>
+                                        <div class="nz-card__body">{{ card.sub }}</div>
+                                    </article>
+                                </section>
+
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Mix horario de generación</div>
+                                            <div class="nz-card__meta">Semana representativa (168 horas) o agregado anual. Las áreas apiladas muestran cómo se cubre cada hora de demanda: nuclear de base, renovables, almacenamiento arbitrando valle-pico, hidráulica gestionable, interconexiones y CCGT como último recurso.</div>
+                                        </div>
+                                        <div class="nz-cluster">
+                                            <label class="nz-label" for="week-select">Semana</label>
+                                            <select id="week-select" class="nz-select week-select" v-model.number="semanaVista" @change="actualizarGraficos">
+                                                <option v-for="option in WEEK_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="plot-mix" class="chart-host chart-host--xl"></div>
+                                    <div class="chart-explain nz-callout nz-callout--tip">
+                                        <span class="nz-callout__title">Cómo leerlo</span>
+                                        <div class="nz-callout__body">Si el bloque naranja (CCGT) aparece de día mientras hay excedente solar (vertidos en azul claro negativo), falta almacenamiento o interconexión. Si aparece de noche, falta despacho de baterías, bombeo o nuclear de base. El objetivo PNIEC 2030 es llevar la banda CCGT al mínimo técnico de respaldo (< 5% del mix).</div>
+                                    </div>
+                                </article>
+
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Precio mayorista spot</div>
+                                            <div class="nz-card__meta">Precio marginal horario del mercado diario. Vista semanal (serie temporal), distribución (histograma) o curva de duración (horas ordenadas de mayor a menor precio).</div>
+                                        </div>
+                                        <div class="app-tab-row app-tab-row--compact">
+                                            <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'semana' }" @click="cambiarVistaPrecios('semana')">Semana</button>
+                                            <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'anual' }" @click="cambiarVistaPrecios('anual')">Distribución</button>
+                                            <button class="nz-btn nz-btn--glass nz-btn--sm" :class="{ 'is-active': vistaPrecios === 'duracion' }" @click="cambiarVistaPrecios('duracion')">Duración</button>
+                                        </div>
+                                    </div>
+                                    <div id="plot-precios" class="chart-host chart-host--lg"></div>
+                                    <div class="metric-grid">
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Media aritmética</span><strong>{{ comparacionResultados.precioMedio.toFixed(1) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Ponderada por demanda</span><strong>{{ comparacionResultados.precioMedioPonderado.toFixed(1) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>P10</span><strong>{{ comparacionResultados.precioP10.toFixed(0) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Mediana</span><strong>{{ comparacionResultados.precioMediana.toFixed(0) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>P90</span><strong>{{ comparacionResultados.precioP90.toFixed(0) }} €/MWh</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Horas &lt; 0 €</span><strong>{{ comparacionResultados.horasPrecioNegativo }}</strong></div>
+                                        <div class="metric-pill nz-surface nz-surface--soft"><span>Horas &gt; 150 €</span><strong>{{ comparacionResultados.horasPrecioAlto }}</strong></div>
+                                    </div>
+                                    <div class="chart-explain nz-callout nz-callout--tip">
+                                        <span class="nz-callout__title">Qué calcula</span>
+                                        <div class="nz-callout__body">Cada hora se marca el precio como el coste marginal de la última tecnología necesaria para casar la demanda. La <strong>ponderada por demanda</strong> es el precio relevante para el coste real del consumidor (pondera horas pico de 0,70 €/kWh mucho más que horas valle de 0,01 €/kWh). La diferencia con la media aritmética mide cuánto se concentra el coste en horas caras.</div>
+                                    </div>
+                                </article>
+
+                                <section class="nz-grid nz-grid--2 dashboard-panels">
+                                    <article class="nz-card nz-card--glass-soft chart-card">
+                                        <div class="nz-card__header">
+                                            <div>
+                                                <div class="nz-card__title">Comparación con 2025</div>
+                                                <div class="nz-card__meta">Cuánto cambia el sistema frente al último año de referencia con datos REE/OMIE consolidados.</div>
+                                            </div>
+                                        </div>
+                                        <div class="comparison-grid">
+                                            <div class="comparison-card nz-surface nz-surface--soft">
+                                                <span>Gas</span>
+                                                <strong>{{ datos2025.gasTWh }} → {{ comparacionResultados.consumoGasTWh.toFixed(1) }} TWh</strong>
+                                                <small :class="diffClass(comparacionResultados.consumoGasTWh, datos2025.gasTWh)">{{ diffPct(comparacionResultados.consumoGasTWh, datos2025.gasTWh).toFixed(0) }}%</small>
+                                            </div>
+                                            <div class="comparison-card nz-surface nz-surface--soft">
+                                                <span>CO₂</span>
+                                                <strong>{{ datos2025.emisiones }} → {{ comparacionResultados.emisionesAnuales.toFixed(1) }} Mt</strong>
+                                                <small :class="diffClass(comparacionResultados.emisionesAnuales, datos2025.emisiones)">{{ diffPct(comparacionResultados.emisionesAnuales, datos2025.emisiones).toFixed(0) }}%</small>
+                                            </div>
+                                            <div class="comparison-card nz-surface nz-surface--soft">
+                                                <span>Precio</span>
+                                                <strong>{{ datos2025.precioMedio }} → {{ comparacionResultados.precioMedio.toFixed(1) }} €/MWh</strong>
+                                                <small :class="diffClass(comparacionResultados.precioMedio, datos2025.precioMedio)">{{ diffPct(comparacionResultados.precioMedio, datos2025.precioMedio).toFixed(0) }}%</small>
+                                            </div>
+                                            <div class="comparison-card nz-surface nz-surface--soft">
+                                                <span>Renovable</span>
+                                                <strong>{{ datos2025.renovables }}% → {{ comparacionResultados.coberturaRenovable.toFixed(0) }}%</strong>
+                                                <small :class="diffClass(comparacionResultados.coberturaRenovable, datos2025.renovables, true)">{{ signed(comparacionResultados.coberturaRenovable - datos2025.renovables, 0, 'pp') }}</small>
+                                            </div>
+                                        </div>
+                                        <div id="plot-barras" class="chart-host chart-host--md"></div>
+                                    </article>
+
+                                    <article class="nz-card nz-card--glass-soft chart-card">
+                                        <div class="nz-card__header">
+                                            <div>
+                                                <div class="nz-card__title">Demanda sectorial anual</div>
+                                                <div class="nz-card__meta">Desagregación de la demanda total en sectores con perfil horario propio: residencial y servicios (climatización), industria (base), VE (carga inteligente al valle), bombas de calor (invierno) y electrólisis H₂ (flexible según precio).</div>
+                                            </div>
+                                        </div>
+                                        <div class="nz-table-wrap">
+                                            <table class="nz-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sector</th>
+                                                        <th>TWh anuales</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="row in comparacionSectorDemandRows" :key="row.label">
+                                                        <td>{{ row.label }}</td>
+                                                        <td>{{ row.value.toFixed(1) }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="metric-grid">
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOE solar</span><strong>{{ comparacionResultados.lcoeSolar.toFixed(0) }} €/MWh</strong></div>
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOE eólica</span><strong>{{ comparacionResultados.lcoeEolica.toFixed(0) }} €/MWh</strong></div>
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>LCOS baterías</span><strong>{{ comparacionResultados.lcosBaterias.toFixed(0) }} €/MWh</strong></div>
+                                            <div class="metric-pill nz-surface nz-surface--soft"><span>Hidraulicidad</span><strong>{{ comparacionResultados.hidraulicidadMedia.toFixed(2) }}x</strong></div>
                                         </div>
                                     </article>
                                 </section>
