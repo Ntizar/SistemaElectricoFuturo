@@ -1316,17 +1316,6 @@
                 return map[label] || '';
             }
 
-            function getSparklineId(label) {
-                const map = {
-                    'Precio medio pond.': 'precio',
-                    'Cobertura renovable': 'renovable',
-                    'Emisiones anuales': 'emisiones',
-                    'Intensidad CO2': 'carbono',
-                    'Facturación mayorista': 'coste',
-                };
-                return map[label] || '';
-            }
-
             function toneClass(tone) {
                 return tone ? `is-${tone}` : '';
             }
