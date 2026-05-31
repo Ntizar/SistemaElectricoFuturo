@@ -445,6 +445,26 @@
                 }, 4000);
             }
 
+            // Función para actualizar manualmente los datos de mercado REE
+            async function reeActualizarDatos() {
+                reeCargandoAPI.value = true;
+                try {
+                    const apiData = await SEF.REEData.cargarDatosTiempoReal(true); // forceRefresh
+                    if (apiData) {
+                        if (apiData.mercado) {
+                            reeMercado.value = { ...reeMercado.value, ...apiData.mercado };
+                        }
+                        if (apiData.ultimaActualizacion) {
+                            reeData.value = { ...reeData.value, ultimaActualizacion: apiData.ultimaActualizacion };
+                        }
+                        console.log('[SEF/REE] Datos actualizados manualmente:', apiData.fuente);
+                    }
+                } catch (e) {
+                    console.warn('[SEF/REE] Error actualizando datos:', e);
+                }
+                reeCargandoAPI.value = false;
+            }
+
             let mixSimulado = null;
             let preciosSimulados = null;
             let sankeyData = null;
@@ -460,6 +480,7 @@
             const reeMercado = ref(null);
             const reePniec = ref(null);
             const reeOffshoreProyectos = ref([]);
+            const reeCargandoAPI = ref(false);
 
             // Selector de fecha REE — datos horarios por día
             const fechaREE = ref('');
@@ -1398,6 +1419,26 @@
                         ...n,
                         estadoClass: n.estado === 'Vigente' || n.estado === 'Aprobado' || n.estado === 'En vigor' ? 'nz-badge--success' : n.estado === 'En desarrollo' ? 'nz-badge--warning' : 'nz-badge--neutral',
                     }));
+
+                    // Cargar datos de mercado en tiempo real (gas TTF, CO2) desde Yahoo Finance
+                    reeCargandoAPI.value = true;
+                    SEF.REEData.cargarDatosTiempoReal().then(apiData => {
+                        if (apiData) {
+                            // Actualizar mercado con datos reales de Yahoo Finance
+                            if (apiData.mercado) {
+                                reeMercado.value = { ...reeMercado.value, ...apiData.mercado };
+                            }
+                            // Actualizar timestamp
+                            if (apiData.ultimaActualizacion) {
+                                reeData.value = { ...reeData.value, ultimaActualizacion: apiData.ultimaActualizacion };
+                            }
+                            console.log('[SEF/REE] Datos de mercado actualizados:', apiData.fuente);
+                        }
+                        reeCargandoAPI.value = false;
+                    }).catch(() => {
+                        console.warn('[SEF/REE] No se pudieron cargar datos de mercado en tiempo real');
+                        reeCargandoAPI.value = false;
+                    });
                 }
 
                 // Tecla P: activar/desactivar modo presentación
@@ -1464,6 +1505,7 @@
                 reeMercado,
                 reePniec,
                 reeOffshoreProyectos,
+                reeCargandoAPI,
                 fechaREE,
                 datosDiaREE,
                 nombreDiaREE,
@@ -1496,6 +1538,7 @@
                 guardarSimulacionLocal,
                 cargarSimulacionLocal,
                 actualizarEstadoConexion,
+                reeActualizarDatos,
                 isOnline,
                 connectionVisible,
                 simulationSavedVisible,
