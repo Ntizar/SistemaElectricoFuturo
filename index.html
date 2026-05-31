@@ -230,6 +230,11 @@
                                 <section class="nz-surface nz-surface--soft nz-stack">
                                     <h3 class="panel-title">📊 Referencia REE 2025</h3>
                                     <p class="panel-sub">Datos de referencia del sistema eléctrico español basados en observaciones de REE (Red Eléctrica de España). Última actualización de la referencia: {{ reeData?.ultimaActualizacion || 'N/A' }}</p>
+                                    <div class="nz-stack" style="flex-direction: row; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--nz-text-primary);">📅 Ver datos horarios del día:</label>
+                                        <input type="date" v-model="fechaREE" min="2025-01-01" max="2025-12-31" style="padding: 0.4rem 0.75rem; border: 1px solid var(--nz-border); border-radius: 6px; font-size: 0.85rem; font-family: inherit; background: var(--nz-surface); color: var(--nz-text-primary); cursor: pointer; transition: border-color 0.2s ease;" onfocus="this.style.borderColor='var(--nz-primary)'" onblur="this.style.borderColor='var(--nz-border)'">
+                                        <span v-if="fechaREE" style="font-size: 0.8rem; color: var(--nz-text-secondary);">— simulación con parámetros REE 2026</span>
+                                    </div>
                                     <div class="nz-grid nz-grid--3">
                                         <article class="nz-card nz-card--glass-brand">
                                             <div class="nz-card__meta">Demanda real</div>
@@ -345,6 +350,22 @@
                                 <section class="nz-callout nz-callout--tip">
                                     <span class="nz-callout__title">Fuente de datos</span>
                                     <div class="nz-callout__body">Los datos provienen de Red Eléctrica de España (REE), Comisión Nacional de los Mercados y la Competencia (CNMC) y el Plan Nacional Integrado de Energía y Clima (PNIEC) actualizado 2024. Para datos en tiempo real, consultar <a href="https://www.ree.es/es/datos" target="_blank" rel="noopener">ree.es/es/datos</a>.</div>
+                                </section>
+
+                                <!-- Gráficos horarios del día seleccionado -->
+                                <section class="nz-surface nz-surface--soft nz-stack" v-if="fechaREE && datosDiaREE">
+                                    <h3 class="panel-title">📈 Datos horarios — {{ nombreDiaREE }}</h3>
+                                    <p class="panel-sub">Simulación con parámetros REE 2026 para el {{ nombreDiaREE }}. Demanda: {{ datosDiaREE.demandaDia }} GWh · Precio medio: {{ datosDiaREE.precioMedio }} €/MWh · Renovables: {{ datosDiaREE.renovablePct }}% · Emisiones: {{ datosDiaREE.emisionesDia }} kt</p>
+                                    <div class="nz-grid nz-grid--2">
+                                        <div>
+                                            <h4 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: var(--nz-text-primary);">⚡ Generación por tecnología (GW)</h4>
+                                            <div id="chart-ree-mix-dia" style="height: 320px;"></div>
+                                        </div>
+                                        <div>
+                                            <h4 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: var(--nz-text-primary);">💰 Precio eléctrico (€/MWh)</h4>
+                                            <div id="chart-ree-precio-dia" style="height: 320px;"></div>
+                                        </div>
+                                    </div>
                                 </section>
                             </div>
 

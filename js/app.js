@@ -391,6 +391,18 @@
             const reePniec = ref(null);
             const reeOffshoreProyectos = ref([]);
 
+            // Selector de fecha REE — datos horarios por día
+            const fechaREE = ref('');
+            const datosDiaREE = ref(null);
+            const nombreDiaREE = computed(() => {
+                if (!fechaREE.value) return '';
+                const [y, m, d] = fechaREE.value.split('-').map(Number);
+                const fecha = new Date(y, m - 1, d);
+                const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+                const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                return `${dias[fecha.getDay()]} ${d} de ${meses[m - 1]} de ${y}`;
+            });
+
             const nombreEscenario = computed(() => {
                 const esc = escenarios.find(item => item.id === escenarioActual.value);
                 return esc ? esc.nombre : 'Personalizado';
@@ -886,6 +898,157 @@
                 cargarEscenario(0);
             }
 
+            // Simulación de un día específico con parámetros REE 2026
+            function simularDiaREE() {
+                if (!fechaREE.value) {
+                    datosDiaREE.value = null;
+                    return;
+                }
+                try {
+                    const [y, m, d] = fechaREE.value.split('-').map(Number);
+                    const fecha = new Date(y, m - 1, d);
+                    const diaDelAnio = Math.round((fecha - new Date(y, 0, 1)) / 86400000);
+
+                    // Parámetros del escenario REE 2026
+                    const paramsREE = {
+                        anioObjetivo: 2026,
+                        nuclear: 7.0,
+                        solar: 26,
+                        eolica: 33,
+                        eolicaOffshore: 0,
+                        hidraulica: 17.5,
+                        ccgt: 24.5,
+                        bateriasPotencia: 3.5,
+                        bateriasCapacidad: 12,
+                        bombeo: 3.5,
+                        bombeoCapacidad: 30,
+                        precioGas: 42,
+                        precioCO2: 68,
+                        demandaAnual: 250,
+                        crecimientoDemanda: 0.3,
+                        electrificacionTWh: 1.2,
+                        eficienciaDemanda: 0.25,
+                        vePorcentajeParque: 3,
+                        smartChargingPct: 48,
+                        bombaCalorPct: 10,
+                        h2ObjetivoMt: 0.08,
+                        autoconsumoFV_GW: 8.5,
+                        interconexion: 3.3,
+                    };
+
+                    const sim = new SEF.SimuladorElectrico(paramsREE);
+                    sim.simularAnio();
+                    sim.calcularResultados();
+
+                    // Extraer datos de ese día (índice diaDelAnio)
+                    const inicio = diaDelAnio * 24;
+                    const mixDia = sim.mixHorario.slice(inicio, inicio + 24);
+                    const precioDia = sim.preciosHorarios.slice(inicio, inicio + 24);
+
+                    // Calcular KPIs del día
+                    const demandaDia = mixDia.reduce((s, g) => s + g.demanda, 0) / 1000; // GWh
+                    const renovable = mixDia.reduce((s, g) => s + g.solar + g.eolica + g.hidraulica, 0);
+                    const renovablePct = demandaDia > 0 ? (renovable / demandaDia * 100) : 0;
+                    const precioMedio = precioDia.reduce((s, p) => s + p, 0) / precioDia.length;
+                    const emisionesDia = (sim.resultados.emisionesAnuales * 1000) / 365; // kt aprox
+
+                    datosDiaREE.value = {
+                        mix: mixDia,
+                        precios: precioDia,
+                        demandaDia: demandaDia.toFixed(1),
+                        renovablePct: renovablePct.toFixed(0),
+                        precioMedio: precioMedio.toFixed(1),
+                        emisionesDia: emisionesDia.toFixed(0),
+                    };
+
+                    // Renderizar gráficos
+                    requestAnimationFrame(() => {
+                        renderizarGraficoMixDia('chart-ree-mix-dia', mixDia);
+                        renderizarGraficoPrecioDia('chart-ree-precio-dia', precioDia);
+                    });
+                } catch (err) {
+                    console.error('Error simulando día REE:', err);
+                    datosDiaREE.value = null;
+                }
+            }
+
+            // Gráfico de mix horario para un día
+            function renderizarGraficoMixDia(divId, mix) {
+                if (!mix || !mix.length) return;
+                const x = mix.map((_, i) => i);
+                const horas = mix.map((_, i) => {
+                    const h = i % 24;
+                    return h.toString().padStart(2, '0') + ':00';
+                });
+                const totalY = mix.reduce((s, g) => s + g.demanda, 0);
+
+                const traces = [
+                    { x, y: mix.map(g => g.nuclear), name: 'Nuclear', type: 'scatter', stackgroup: 'one', line: { width: 0.5 }, fillcolor: SEF.COLORES.nuclear.fill, hovertemplate: 'Hora %{x}<br>Nuclear: %{y:.1f} GW<extra></extra>' },
+                    { x, y: mix.map(g => g.solar), name: 'Solar', type: 'scatter', stackgroup: 'one', line: { width: 0.5 }, fillcolor: SEF.COLORES.solar.fill, hovertemplate: 'Hora %{x}<br>Solar: %{y:.1f} GW<extra></extra>' },
+                    { x, y: mix.map(g => g.eolica), name: 'Eólica', type: 'scatter', stackgroup: 'one', line: { width: 0.5 }, fillcolor: SEF.COLORES.eolica.fill, hovertemplate: 'Hora %{x}<br>Eólica: %{y:.1f} GW<extra></extra>' },
+                    { x, y: mix.map(g => g.hidraulica), name: 'Hidráulica', type: 'scatter', stackgroup: 'one', line: { width: 0.5 }, fillcolor: SEF.COLORES.hidro.fill, hovertemplate: 'Hora %{x}<br>Hidráulica: %{y:.1f} GW<extra></extra>' },
+                    { x, y: mix.map(g => g.gas), name: 'Gas', type: 'scatter', stackgroup: 'one', line: { width: 0.5 }, fillcolor: SEF.COLORES.gas.fill, hovertemplate: 'Hora %{x}<br>Gas: %{y:.1f} GW<extra></extra>' },
+                    { x, y: mix.map(g => g.baterias + g.bombeo + g.v2g), name: 'Almacen.', type: 'scatter', stackgroup: 'one', line: { width: 0.5 }, fillcolor: SEF.COLORES.baterias.fill, hovertemplate: 'Hora %{x}<br>Almacenamiento: %{y:.1f} GW<extra></extra>' },
+                    { x, y: mix.map(g => g.importacion), name: 'Import.', type: 'scatter', stackgroup: 'one', line: { width: 0.5 }, fillcolor: SEF.COLORES.importar.fill, hovertemplate: 'Hora %{x}<br>Importación: %{y:.1f} GW<extra></extra>' },
+                ];
+
+                const lyt = {
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { family: 'Inter, system-ui, sans-serif', color: '#475569', size: 10 },
+                    margin: { t: 8, r: 12, b: 36, l: 44 },
+                    height: 280,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: 1.12, x: 0.5, xanchor: 'center', font: { size: 9 } },
+                    xaxis: { title: 'Hora', tickvals: [0, 3, 6, 9, 12, 15, 18, 21], ticktext: horas, gridcolor: 'rgba(0,0,0,0.06)' },
+                    yaxis: { title: 'GW', zeroline: true, gridcolor: 'rgba(0,0,0,0.06)' },
+                };
+
+                Plotly.react(divId, traces, lyt, { responsive: true, displayModeBar: false });
+            }
+
+            // Gráfico de precio horario para un día
+            function renderizarGraficoPrecioDia(divId, precios) {
+                if (!precios || !precios.length) return;
+                const x = precios.map((_, i) => i);
+                const horas = precios.map((_, i) => {
+                    const h = i % 24;
+                    return h.toString().padStart(2, '0') + ':00';
+                });
+                const media = precios.reduce((s, p) => s + p, 0) / precios.length;
+                const max = Math.max(...precios);
+                const min = Math.min(...precios);
+
+                const traces = [
+                    {
+                        x, y: precios, name: 'Precio', type: 'scatter',
+                        fill: 'tozeroy', fillcolor: SEF.COLORES.precio.fill,
+                        line: { color: SEF.COLORES.precio.line, width: 1.5 },
+                        hovertemplate: 'Hora %{x}<br>Precio: %{y:.0f} €/MWh<extra></extra>',
+                    },
+                    {
+                        x: [0, 23], y: [media, media], name: 'Media', type: 'scatter',
+                        line: { color: '#f59e0b', width: 1.5, dash: 'dash' },
+                        hovertemplate: 'Media: ' + media.toFixed(1) + ' €/MWh<extra></extra>',
+                        showlegend: true,
+                    },
+                ];
+
+                const lyt = {
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { family: 'Inter, system-ui, sans-serif', color: '#475569', size: 10 },
+                    margin: { t: 8, r: 12, b: 36, l: 50 },
+                    height: 280,
+                    showlegend: true,
+                    legend: { orientation: 'h', y: 1.12, x: 0.5, xanchor: 'center', font: { size: 9 } },
+                    xaxis: { title: 'Hora', tickvals: [0, 3, 6, 9, 12, 15, 18, 21], ticktext: horas, gridcolor: 'rgba(0,0,0,0.06)' },
+                    yaxis: { title: '€/MWh', range: [Math.max(0, min - 10), max + 10], zeroline: true, gridcolor: 'rgba(0,0,0,0.06)' },
+                };
+
+                Plotly.react(divId, traces, lyt, { responsive: true, displayModeBar: false });
+            }
+
             async function simularTrayectoria() {
                 trayectoriaSimulando.value = true;
                 progresoTrayectoria.value = 0;
@@ -1071,6 +1234,13 @@
 
             watch(tabPrincipal, () => nextTick(renderizarGraficos));
 
+            // Watcher: al cambiar la fecha REE, simular el día
+            watch(fechaREE, () => {
+                nextTick(() => {
+                    simularDiaREE();
+                });
+            });
+
             // Animación de pulso en KPIs cuando cambian los resultados
             watch(resultados, () => {
                 nextTick(() => {
@@ -1178,9 +1348,15 @@
                 reeMercado,
                 reePniec,
                 reeOffshoreProyectos,
+                fechaREE,
+                datosDiaREE,
+                nombreDiaREE,
                 simular,
                 cargarEscenario,
                 resetear,
+                simularDiaREE,
+                renderizarGraficoMixDia,
+                renderizarGraficoPrecioDia,
                 simularTrayectoria,
                 randomizarSemilla,
                 copiarConfig,
