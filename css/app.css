@@ -1038,3 +1038,259 @@ body.presentation-mode .simulation-saved-badge {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* ============================================================
+   IMPRESIÓN — @media print para informes profesionales
+   ============================================================ */
+@media print {
+    /* Reset de colores para impresión en blanco y negro */
+    @page {
+        size: A4;
+        margin: 1.5cm 2cm;
+    }
+
+    body,
+    .app-shell,
+    .nz-section {
+        background: #fff !important;
+        color: #1a1a1a !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Ocultar elementos de UI no relevantes */
+    .app-sidebar,
+    .app-main__actions,
+    .app-loading,
+    .hero-actions,
+    .hero-note,
+    .sparkline-container,
+    .mode-indicator,
+    .connection-badge,
+    .simulation-saved-badge,
+    .week-select,
+    .nz-btn,
+    .nz-select,
+    .nz-alert,
+    .scenario-grid,
+    .app-tab-row,
+    .app-sidebar__header,
+    .mode-comparacion-banner,
+    .mc-controls,
+    .mc-progress,
+    .chart-card__footer,
+    .footer-shell,
+    .app-main__actions {
+        display: none !important;
+    }
+
+    /* Mostrar solo contenido relevante */
+    .hero-shell {
+        display: block !important;
+        padding: 0 !important;
+        border: none !important;
+        background: none !important;
+    }
+
+    .hero-copy {
+        display: block !important;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 1rem !important;
+        border-bottom: 2px solid #2563eb !important;
+    }
+
+    .hero-headline h1 {
+        font-size: 24pt !important;
+        color: #1a1a1a !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    .hero-subtitle {
+        font-size: 10pt !important;
+        color: #555 !important;
+        max-width: 100% !important;
+    }
+
+    .hero-meta__top {
+        display: none !important;
+    }
+
+    /* KPIs en formato compacto de tabla */
+    .hero-kpis {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 0.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    .hero-kpis .nz-card {
+        border: 1px solid #ddd !important;
+        padding: 0.5rem !important;
+        background: #f9f9f9 !important;
+        break-inside: avoid !important;
+    }
+
+    .hero-kpis .nz-card__meta {
+        font-size: 8pt !important;
+        color: #666 !important;
+        margin-bottom: 0.2rem !important;
+    }
+
+    .hero-kpis__value {
+        font-size: 14pt !important;
+        color: #1a1a1a !important;
+    }
+
+    /* Critical cards en formato tabla */
+    .kpi-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    .kpi-card {
+        border: 1px solid #ddd !important;
+        padding: 0.5rem !important;
+        background: #f9f9f9 !important;
+        break-inside: avoid !important;
+    }
+
+    .kpi-card .nz-card__meta {
+        font-size: 8pt !important;
+        color: #666 !important;
+    }
+
+    .kpi-card__value {
+        font-size: 12pt !important;
+    }
+
+    .kpi-card .nz-card__body {
+        font-size: 7pt !important;
+        color: #666 !important;
+    }
+
+    /* Gráficos — mantener tamaño pero simplificar */
+    .chart-card {
+        border: 1px solid #ddd !important;
+        break-inside: avoid !important;
+        margin-bottom: 1rem !important;
+        page-break-inside: avoid !important;
+    }
+
+    .chart-card .nz-card__header {
+        display: block !important;
+        padding: 0.5rem 0.75rem !important;
+        border-bottom: 1px solid #eee !important;
+    }
+
+    .chart-card .nz-card__title {
+        font-size: 10pt !important;
+        color: #1a1a1a !important;
+    }
+
+    .chart-card .nz-card__meta {
+        font-size: 7pt !important;
+        color: #666 !important;
+    }
+
+    /* Asegurar que los gráficos Plotly se impriman */
+    .js-plotly-plot,
+    .plotly {
+        page-break-inside: avoid !important;
+    }
+
+    .plotly .modebar {
+        display: none !important;
+    }
+
+    /* Tablas de datos */
+    table {
+        width: 100% !important;
+        font-size: 8pt !important;
+        border-collapse: collapse !important;
+    }
+
+    table th,
+    table td {
+        border: 1px solid #ccc !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+
+    table th {
+        background: #f0f0f0 !important;
+        font-weight: 600 !important;
+    }
+
+    /* Trajectory cards */
+    .trajectory-card {
+        border: 1px solid #ddd !important;
+        break-inside: avoid !important;
+    }
+
+    /* Monte Carlo results */
+    .mc-results {
+        break-inside: avoid !important;
+    }
+
+    .mc-table {
+        font-size: 7pt !important;
+    }
+
+    /* Pie de página del informe */
+    .report-footer {
+        display: block !important;
+        margin-top: 2rem !important;
+        padding-top: 0.5rem !important;
+        border-top: 1px solid #ccc !important;
+        font-size: 7pt !important;
+        color: #888 !important;
+        text-align: center !important;
+    }
+
+    /* Mostrar pie de informe */
+    .report-footer {
+        display: block !important;
+    }
+
+    /* Evitar que los elementos se partan entre páginas */
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid !important;
+    }
+
+    /* Asegurar contraste en impresión monocromática */
+    .is-success,
+    .is-positive {
+        color: #1a6b1a !important;
+        font-weight: 700 !important;
+    }
+
+    .is-danger,
+    .is-negative {
+        color: #b91c1c !important;
+        font-weight: 700 !important;
+    }
+
+    .is-warning,
+    .is-warning {
+        color: #92400e !important;
+        font-weight: 600 !important;
+    }
+
+    /* Ocultar tema oscuro al imprimir — siempre blanco */
+    [data-nz-theme="dark"] body {
+        background: #fff !important;
+        color: #1a1a1a !important;
+    }
+}
+
+/* Footer del informe de impresión */
+.report-footer {
+    display: none;
+}
+
+@media print {
+    .report-footer {
+        display: block;
+    }
+}

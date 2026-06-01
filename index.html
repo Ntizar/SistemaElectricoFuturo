@@ -502,6 +502,7 @@
                                     <button class="nz-btn nz-btn--secondary nz-btn--sm" @click="toggleVistaAnual">{{ vistaAnual ? 'Vista semanal' : 'Vista anual' }}</button>
                                     <button class="nz-btn nz-btn--secondary nz-btn--sm" @click="togglePresentacion" :class="{ 'nz-btn--brand-mix': modoPresentacion }">{{ modoPresentacion ? 'Salir presentación' : 'Modo presentación' }}</button>
                                     <button class="nz-btn nz-btn--secondary nz-btn--sm" @click="exportarCSV" :disabled="!mixSimulado">Exportar CSV</button>
+                                    <button class="nz-btn nz-btn--secondary nz-btn--sm" @click="imprimirInforme" :disabled="!mixSimulado">Imprimir</button>
                                 </div>
                             </div>
 
@@ -1179,5 +1180,10 @@
     <script src="js/charts.js"></script>
     <script src="js/ree-data.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Footer del informe (solo visible al imprimir) -->
+    <footer class="report-footer">
+        <div>Sistema Eléctrico Futuro 2026-2035 · Simulación generada el {{ fechaInforme }} · Escenario: {{ nombreEscenario }} · Semilla: {{ params.semilla }} · Aurora v4 · Ntizar</div>
+    </footer>
 </body>
 </html>

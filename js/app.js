@@ -518,6 +518,15 @@
                 return esc ? esc.nombre : 'Seleccionar escenario';
             });
 
+            const fechaInforme = computed(() => {
+                if (!resultados) return '';
+                const ahora = new Date();
+                return ahora.toLocaleDateString('es-ES', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            });
+
             const pniecStatus = computed(() => {
                 const P = SEF.PNIEC_2030;
                 const cap = resultados.capacidades || {};
@@ -1376,6 +1385,11 @@
                 document.body.removeChild(link);
             }
 
+            function imprimirInforme() {
+                if (!mixSimulado || !mixSimulado.length) return;
+                window.print();
+            }
+
             function actualizarGraficos() {
                 renderizarGraficos();
             }
@@ -1603,6 +1617,7 @@
                 nombreEscenario,
                 descripcionEscenario,
                 nombreEscenarioComparacion,
+                fechaInforme,
                 modoComparacion,
                 escenarioComparacion,
                 pniecStatus,
@@ -1644,6 +1659,7 @@
                 cambiarTabPrincipal,
                 actualizarGraficos,
                 exportarCSV,
+                imprimirInforme,
                 formatControlValue,
                 diffPct,
                 diffClass,
