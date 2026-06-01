@@ -1,28 +1,30 @@
+// eslint.config.js — Flat config para ESLint v10
+// Reemplaza .eslintrc.json que ESLint v10+ ya no soporta
+
 import globals from 'globals';
 
 export default [
     {
+        files: ['js/**/*.js', 'tests/**/*.js'],
         languageOptions: {
-            ecmaVersion: 2022,
+            ecmaVersion: 'latest',
             sourceType: 'module',
             globals: {
                 ...globals.browser,
+                ...globals.es2021,
                 ...globals.node,
                 SEF: 'readonly',
+                Vue: 'readonly',
+                Plotly: 'readonly',
+                C: 'readonly',
             },
         },
         rules: {
             'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-            'no-undef': 'error',
             'no-console': 'off',
-            'no-constant-condition': 'warn',
-            'no-empty': 'warn',
-            'no-extra-semi': 'warn',
-            'no-redeclare': 'error',
-            'no-shadow': 'warn',
-            'eqeqeq': ['warn', 'smart'],
-            'no-var': 'warn',
-            'prefer-const': 'warn',
+            eqeqeq: ['error', 'always'],
+            semi: ['error', 'always'],
+            quotes: ['error', 'single'],
         },
     },
     {

@@ -384,7 +384,6 @@
             const monteCarloProgreso = ref(0);
             const monteCarloN = ref(9);
             const monteCarloResultados = ref(null);
-            const monteCarloPercentiles = ref(null);
 
             // Service Worker — estado de conexión y persistencia offline
             const isOnline = ref(navigator.onLine !== false);
@@ -565,15 +564,6 @@
                     },
                 ];
             });
-
-            // Mapeo de claves de resultados a datos horarios para sparklines
-            const SPARKLINE_KEYS = {
-                'precioMedioPonderado': { key: 'precio', color: C.precio.line, label: 'Precio' },
-                'coberturaRenovable': { key: 'renovable', color: '#16a34a', label: 'Renovable' },
-                'emisionesAnuales': { key: 'emision', color: '#dc2626', label: 'Emisión' },
-                'intensidadCarbona': { key: 'carbono', color: '#f59e0b', label: 'CO2' },
-                'costeSistemaMEur': { key: 'coste', color: '#2563eb', label: 'Coste' },
-            };
 
             function extraerSparklineData() {
                 if (!mixSimulado || !preciosSimulados || !mixSimulado.length) return {};
@@ -1123,7 +1113,6 @@
                     const h = i % 24;
                     return h.toString().padStart(2, '0') + ':00';
                 });
-                const totalY = mix.reduce((s, g) => s + g.demanda, 0);
 
                 const traces = [
                     { x, y: mix.map(g => g.nuclear), name: 'Nuclear', type: 'scatter', stackgroup: 'one', line: { width: 0.5 }, fillcolor: SEF.COLORES.nuclear.fill, hovertemplate: 'Hora %{x}<br>Nuclear: %{y:.1f} GW<extra></extra>' },
@@ -1277,7 +1266,7 @@
                     semillas.push(i * 1117 + 42); // semillas determinísticas derivadas
                 }
 
-                const resultados = [];
+                const resultadosMC = [];
                 const total = semillas.length;
 
                 for (let i = 0; i < total; i++) {
@@ -1288,7 +1277,7 @@
 
                     const simulador = new SEF.SimuladorElectrico(paramsClone);
                     const R = simulador.simular();
-                    resultados.push(R);
+                    resultadosMC.push(R);
 
                     monteCarloProgreso.value = Math.round(((i + 1) / total) * 100);
 

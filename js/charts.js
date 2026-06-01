@@ -61,7 +61,7 @@
 
     function totalStackY(data) {
         if (!data || !data.length) return [];
-        const totals = data.map((_, i) => data.reduce((s, d) => s + (d.nuclear || 0) + (d.solar || 0) + (d.eolica || 0) + (d.offshore || 0) + (d.hidraulica || 0) + (d.baterias || 0) + (d.bombeo || 0) + (d.v2g || 0) + (d.importacion || 0) + (d.gas || 0), 0));
+        const totals = data.map(_ => data.reduce((s, d) => s + (d.nuclear || 0) + (d.solar || 0) + (d.eolica || 0) + (d.offshore || 0) + (d.hidraulica || 0) + (d.baterias || 0) + (d.bombeo || 0) + (d.v2g || 0) + (d.importacion || 0) + (d.gas || 0), 0));
         return totals;
     }
 
@@ -491,7 +491,7 @@
     function plotSankey(divId, sankeyData) {
         if (!sankeyData || !sankeyData.nodos.length) return;
 
-        const { nodos, enlaces, generacionTotal, demandaTotal, porTecnologia, porSector } = sankeyData;
+        const { nodos, enlaces, generacionTotal, demandaTotal } = sankeyData;
 
         // Colores para nodos: tecnologías en colores, sectores en gris suave
         const coloresTec = {
@@ -544,7 +544,7 @@
                 source: enlaces.map(e => e.source),
                 target: enlaces.map(e => e.target),
                 value: enlaces.map(e => e.value),
-                color: enlaces.map((e, i) => {
+                color: enlaces.map(e => {
                     const srcIdx = e.source;
                     const color = nodeColors[srcIdx] || '#94a3b8';
                     return color + '55';
@@ -721,6 +721,8 @@
         plotTrajectoryKPIs,
         plotTrajectoryPNIEC,
         plotNuclearComparativa,
+        plotSankey,
+        renderSparkline,
 
         /**
          * Gráfico de barras horizontales para Monte Carlo: muestra P5, P50, P95

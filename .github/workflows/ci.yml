@@ -9,6 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     strategy:
       matrix:
         node-version: [20, 22]
@@ -28,12 +30,14 @@ jobs:
       - name: Ejecutar tests
         run: npm test
 
-      - name: ESLint (solo motor)
-        run: npx eslint js/constants.js js/nuclear.js js/weather.js js/demand.js js/storage.js js/policy.js js/scenarios.js js/simulator.js js/trajectory.js js/montecarlo.js js/engine.js
+      - name: ESLint
+        run: npm run lint
         continue-on-error: true
 
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     needs: test
 
     steps:
