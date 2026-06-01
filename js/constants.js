@@ -121,10 +121,17 @@ SEF.TEMP_MENSUAL = Object.freeze([
     6.3, 7.9, 11.2, 13.7, 17.6, 23.4, 27.0, 26.4, 21.8, 15.8, 10.1, 6.9,
 ]);
 
+// Factores de capacidad históricos REE 2025.
+// Fuente: generación anual / (potencia instalada × 8760h)
+// Solar: 52.5 TWh / 24.7 GW / 8760h ≈ 0.24
+// Eólica: 55.6 TWh / 31.6 GW / 8760h ≈ 0.20
+// Nuclear: 51.9 TWh / 7.0 GW / 8760h ≈ 0.85 (usamos 0.90 por convención REE)
+// Offshore: 0 GW en España en 2025 (estimación UE: 0.43)
+// Hidro: 37.6 TWh / 17.1 GW / 8760h ≈ 0.25 (usamos 0.20 por sequía media)
 SEF.FC_HISTORICOS = Object.freeze({
     nuclear: 0.90,
-    solar: 0.18,
-    eolica: 0.24,
+    solar: 0.24,
+    eolica: 0.20,
     offshore: 0.43,
     hidro: 0.20,
 });

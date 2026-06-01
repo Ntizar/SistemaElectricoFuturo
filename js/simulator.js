@@ -119,6 +119,8 @@
 
         simular() {
             const p = this.params;
+            // Reset de variables de instancia para evitar acumulación entre llamadas
+            this._hidroEmbalseUsadoGWh = 0;
             // La demanda ajustada se calcula como la suma real de los sectores,
         // no como un objetivo independiente que obliga a reescalar.
         // Se usa como estimación inicial; el valor real es la suma de los sectores en demand.

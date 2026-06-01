@@ -27,7 +27,7 @@
             0,
             'Datos Reales 2025',
             '📅',
-            'Aproxima el sistema español observado en 2025: demanda moderada, eólica marina casi inexistente y almacenamiento todavía limitado.',
+            'Aproxima el sistema español observado en 2025: demanda moderada, eólica marina casi inexistente y almacenamiento todavía limitado. Usa capacities de 2025 pero simula año 2026 (clima sintético).',
             {
                 anioObjetivo: 2026,
                 nuclear: 7.0,

@@ -20,6 +20,11 @@
         const airMass = 1 / Math.max(0.05, sinElev);
         const transmit = 0.75 * Math.pow(0.70, Math.pow(airMass, 0.678));
         const irradiance = sinElev * transmit;
+        // Factor 1.35: compensa la simplificación del modelo de transmisión
+        // atmosférica (Beer-Lambert con parámetros fijos). En un modelo completo,
+        // este factor variaría con la masa de aire y la turbidez. Se mantiene
+        // para que el perfil horario adimensional tenga amplitud realista antes
+        // de la calibración en simulator.js (CF_SOLAR_REAL / cfSolarMedio).
         return U.clamp(irradiance * cloudiness * olaCalorFactor * 1.35, 0, 1);
     }
 
