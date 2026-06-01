@@ -129,3 +129,4 @@ Ejecuta 10 años consecutivos con:
 - El proyecto sigue siendo una herramienta exploratoria, no un modelo de despacho oficial.
 - La validación técnica mínima cubre sintaxis JS, simulación anual y trayectoria multianual en entorno Node.
 - Falta validación manual en navegador para confirmar experiencia completa de Vue + Plotly.
+# Deployed: 2026-06-01 08:58:40 UTC
