@@ -1,4 +1,4 @@
-# Plan: SistemaElectricoFuturo — v3.2+
+# Plan: SistemaElectricoFuturo — v3.4+
 
 ## 0. Resumen ejecutivo
 
@@ -6,12 +6,12 @@ Proyecto: simulador horario del sistema eléctrico español 2026-2035.
 Repositorio: `Ntizar/SistemaElectricoFuturo` (rama `main`).
 Deploy: https://ntizar.github.io/SistemaElectricoFuturo/
 
-**Versión actual:** v3.2 (commit `7ced976`, mayo 2026)
+**Versión actual:** v3.4 (commit `7ced976`, mayo 2026)
 **Stack:** HTML estático + Vue 3 CDN + Plotly.js + CSS propio (Ntizar Aurora). Sin build system.
 
 ## 1. Estado actual por fases
 
-### Fase 0 — Sinceridad y foco ✅ (Completado v3.2)
+### Fase 0 — Sinceridad y foco ✅ (Completado v3.4)
 
 | # | Tarea | Estado |
 |---|-------|--------|
@@ -21,7 +21,7 @@ Deploy: https://ntizar.github.io/SistemaElectricoFuturo/
 | R1 | Alinear texto "AR(1) sobre histórico REE" con código real | ✅ |
 | — | Documentar en panel qué es dato y qué es hipótesis | ✅ |
 
-### Fase 1 — Núcleo de simulación correcto ✅ (Completado v3.2)
+### Fase 1 — Núcleo de simulación correcto ✅ (Completado v3.4)
 
 | # | Tarea | Estado |
 |---|-------|--------|
@@ -32,7 +32,7 @@ Deploy: https://ntizar.github.io/SistemaElectricoFuturo/
 | R2 | Verificación de balance energético horario y anual | ✅ |
 | S2 | Offshore con perfil propio (correlación parcial 0.6 con onshore) | ✅ |
 
-### Fase 2 — Calibración y validación ✅ (Completado v3.2)
+### Fase 2 — Calibración y validación ✅ (Completado v3.4)
 
 | # | Tarea | Estado |
 |---|-------|--------|
@@ -46,7 +46,7 @@ Deploy: https://ntizar.github.io/SistemaElectricoFuturo/
 
 | # | Tarea | Estado | Notas |
 |---|-------|--------|-------|
-| S7 | Paradas de recarga nuclear escalonadas | ⏳ Pendiente | ~30 días cada 18 meses por reactor |
+| S7 | Paradas de recarga nuclear escalonadas | ✅ Completada (v3.4) | ~30 días cada 18 meses por reactor, con tracking horario y KPI en dashboard |
 | — | **Escenarios ceteris paribus nuclear** | ✅ | 4 nuevos (IDs 18-21): ENRESA, Prórroga 10a, Prórroga 20a, Cierre 2030 |
 | — | **ENS + LOLE como KPIs principales** | ✅ | Añadidos al dashboard |
 | — | **Monte Carlo multi-semilla** | ✅ | `montecarlo.js`: 9 semillas, percentiles P5-P50-P95 |
@@ -153,5 +153,5 @@ Orden estricto:
 |---------|-------|---------|
 | v3.0 | Abril 2026 | Aurora, trayectoria, política, clima, 18 escenarios |
 | v3.1 | Mayo 2026 | Datos REE, normativa, CNMC, castellano refinado |
-| **v3.2** | **Mayo 2026** | Despacho SRMC, PRNG Mulberry32, calibración CF, calendario ENRESA, ENS+LOLE, Monte Carlo, escenarios ceteris paribus |
+| **v3.4** | **Mayo 2026** | Despacho SRMC, PRNG Mulberry32, calibración CF, calendario ENRESA, ENS+LOLE, Monte Carlo, escenarios ceteris paribus |
 | v3.3 | Mayo 2026 | METHODOLOGY.md, pestaña Información (leyes, organismos, glosario), SOURCES ampliado |
