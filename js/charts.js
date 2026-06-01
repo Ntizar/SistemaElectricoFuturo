@@ -644,6 +644,73 @@
         plotOrReact(divId, traces, lyt);
     }
 
+    function plotNuclearComparativa(divId, trayectoria) {
+        if (!trayectoria?.resumen?.years?.length) return;
+        const years = trayectoria.resumen.years;
+
+        // Nuclear sin prórroga (ENRESA 2019)
+        const nuclearSinProrroga = years.map(year =>
+            SEF.Nuclear.disponibleEnAnio(year, {})
+        );
+
+        // Nuclear con prórroga +10 años
+        const nuclearConProrroga = years.map(year =>
+            SEF.Nuclear.disponibleEnAnio(year, { prorrogaNuclear: true, prorrogaGlobal: 10 })
+        );
+
+        // Gas residual (proxy: si baja nuclear, sube gas)
+        const gasSinProrroga = years.map((year, i) => {
+            const deficit = nuclearSinProrroga[i] - nuclearConProrroga[i];
+            return Math.max(0, deficit * 0.7); // ~70% del déficit se cubre con gas
+        });
+
+        const traces = [
+            {
+                x: years,
+                y: nuclearSinProrroga,
+                name: 'Nuclear ENRESA (cierre)',
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#ef4444', width: 3, dash: 'solid' },
+                marker: { size: 8 },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(239,68,68,0.1)',
+            },
+            {
+                x: years,
+                y: nuclearConProrroga,
+                name: 'Nuclear prórroga +10a',
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#22c55e', width: 3, dash: 'dash' },
+                marker: { size: 8 },
+            },
+            {
+                x: years,
+                y: gasSinProrroga,
+                name: 'Gas adicional (cierre)',
+                type: 'bar',
+                marker: { color: 'rgba(249,115,22,0.4)' },
+                yaxis: 'y2',
+            },
+        ];
+
+        const lyt = layout({
+            yaxis: { title: 'Nuclear (GW)', range: [0, 10] },
+            yaxis2: { title: 'Gas adicional (GW)', overlaying: 'y', side: 'right', range: [0, 6], showgrid: false },
+            legend: { x: 0.02, y: 0.98 },
+            annotations: [{
+                x: 2035,
+                y: 0,
+                text: 'Sin prórroga: 0 GW<br>Con prórroga: 7 GW',
+                showarrow: false,
+                font: { size: 11, color: '#94a3b8' },
+            }],
+        });
+
+        plotOrReact(divId, traces, lyt);
+    }
+
     SEF.Charts = {
         plotMix,
         plotPrecios,
@@ -653,6 +720,7 @@
         plotTrajectoryMix,
         plotTrajectoryKPIs,
         plotTrajectoryPNIEC,
+        plotNuclearComparativa,
 
         /**
          * Gráfico de barras horizontales para Monte Carlo: muestra P5, P50, P95

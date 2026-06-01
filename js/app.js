@@ -1009,6 +1009,8 @@
                     SEF.Charts.plotTrajectoryMix('plot-trayectoria-mix', trayectoria.value);
                     SEF.Charts.plotTrajectoryKPIs('plot-trayectoria-kpis', trayectoria.value);
                     SEF.Charts.plotTrajectoryPNIEC('plot-trayectoria-pniec', trayectoria.value);
+                    // Comparativa nuclear: cierre vs prórroga
+                    SEF.Charts.plotNuclearComparativa('plot-nuclear-comparativa', trayectoria.value);
                 });
             }
 

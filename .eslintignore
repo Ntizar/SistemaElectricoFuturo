@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.min.js
+# Archivos que dependen de CDN (Vue, Plotly) — solo warnings
+js/app.js
+js/charts.js
+js/ree-data.js
