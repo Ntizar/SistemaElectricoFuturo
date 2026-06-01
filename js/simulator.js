@@ -31,6 +31,20 @@
             });
         }
 
+        /**
+         * Calcula la capacidad nuclear efectiva a nivel horario,
+         * incluyendo paradas de recarga escalonadas (~30 días cada 18 meses).
+         */
+        calcularNuclearHorario(horaAnio) {
+            if (!this.params.aplicarPlanNuclear) return this.params.nuclear * SEF.MODEL.FC_NUCLEAR;
+            const override = {
+                prorrogaGlobal: this.params.prorrogaNuclear ? (this.params.prorrogaGlobal || 10) : 0,
+                retiraTodoEn: this.params.cierreNuclear < 2035 ? this.params.cierreNuclear : null,
+            };
+            const capacidadTotal = SEF.Nuclear.capacidadNuclearHoraria(this.params, horaAnio, override);
+            return capacidadTotal * SEF.MODEL.FC_NUCLEAR;
+        }
+
     /**
      * Calcula el precio marginal como el coste SRMC de la última tecnología
      * necesaria para cubrir la demanda. Orden de mérito:
@@ -154,6 +168,7 @@
                 lcosBaterias: SEF.COSTES_REF.baterias,
                 horasSinGas: 0,
                 horasInerciaCritica: 0,
+                horasParadaNuclear: 0,
                 hidraulicidadMedia: weather.resumen.hidraulicidadAnual,
             };
 
@@ -218,7 +233,10 @@
                 // gen.solar[h] = p.solar * weather.solar[h] * (CF_SOLAR_REAL / CF_EFECTIVO_ANUAL)
                 // Como weather.solar[h] ya tiene media ~0.20 (aproximación sintética),
                 // aplicamos un factor de corrección para que coincida con CF_SOLAR_REAL.
-                gen.nuclear = nuclearGW * M.FC_NUCLEAR;
+                // La capacidad nuclear varía horariamente: incluye paradas de recarga escalonadas.
+                gen.nuclear = this.calcularNuclearHorario(h);
+                // Contabilizar horas en parada de recarga nuclear
+                if (gen.nuclear < 0.01 && p.aplicarPlanNuclear) R.horasParadaNuclear++;
                 gen.solar = p.solar * weather.solar[h] * (CF_SOLAR_REAL / Math.max(0.01, cfSolarMedio));
                 gen.eolica = p.eolica * weather.viento[h] * (CF_EOLICA_REAL / Math.max(0.01, cfEolicoMedio));
                 // Offshore con perfil propio: mayor CF, menor variabilidad diurna,

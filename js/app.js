@@ -343,6 +343,7 @@
             lcosBaterias: 0,
             horasSinGas: 0,
             horasInerciaCritica: 0,
+            horasParadaNuclear: 0,
             hidraulicidadMedia: 0,
             mensual: null,
             capacidades: {},
@@ -640,6 +641,12 @@
                     tone: resultados.horasInerciaCritica > 10 ? 'danger' : resultados.horasInerciaCritica > 0 ? 'warning' : 'success',
                 },
                 {
+                    label: 'Paradas nuclear',
+                    value: `${resultados.horasParadaNuclear.toFixed(0)} h`,
+                    sub: 'Horas con reactores en recarga (~30 días cada 18 meses por reactor).',
+                    tone: resultados.horasParadaNuclear > 400 ? 'warning' : 'success',
+                },
+                {
                     label: 'LOLE (Horas de déficit)',
                     value: `${resultados.horasDeficit.toFixed(0)} h/año`,
                     sub: `ENS acumulada: ${resultados.ensTWh.toFixed(2)} TWh · Pico: ${resultados.maxDeficit.toFixed(1)} GW`,
@@ -687,7 +694,7 @@
                     demandaFlexTWh: 0, demandaReducidaTWh: 0, horasImportacion: 0, horasExportacion: 0, horasFlex: 0,
                     demandaAjustadaTWh: 0, nuclearEfectivaGW: 0, costeSistemaMEur: 0,
                     lcoeSolar: 0, lcoeEolica: 0, lcoeGas: 0, lcosBaterias: 0,
-                    horasSinGas: 0, horasInerciaCritica: 0, hidraulicidadMedia: 0,
+                    horasSinGas: 0, horasInerciaCritica: 0, horasParadaNuclear: 0, hidraulicidadMedia: 0,
                     mensual: null, capacidades: {}, policySnapshot: {}, detalleDemanda: [],
                 };
                 // Calcular métricas desde mixComparacion y preciosComparacion
