@@ -5,12 +5,11 @@
  * Los datos de simulación se guardan en localStorage.
  */
 
-const CACHE_NAME = 'sef-cache-v3.4';
+const CACHE_NAME = 'sef-cache-v4.0';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/css/ntizar.css',
-    '/css/ntizar.next.css',
     '/css/app.css',
     '/css/ree-data.css',
     '/js/app.js',
