@@ -983,3 +983,58 @@ body.presentation-mode .connection-status,
 body.presentation-mode .simulation-saved-badge {
     display: none !important;
 }
+
+/* ============================================================================
+   Monte Carlo — Incertidumbre
+   ============================================================================ */
+
+.mc-progress {
+    position: relative;
+    height: 8px;
+    background: var(--nz-surface-raised);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.mc-progress__bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--nz-primary), var(--nz-brand));
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.mc-progress__label {
+    position: absolute;
+    right: 0;
+    top: -20px;
+    font-size: 0.75rem;
+    color: var(--nz-text-secondary);
+    font-weight: 600;
+}
+
+.mc-results h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--nz-text-primary);
+}
+
+.mc-amplitude--low {
+    color: var(--nz-text-primary);
+}
+
+.mc-amplitude--medium {
+    color: var(--nz-amber-700, #d97706);
+    font-weight: 600;
+}
+
+.mc-amplitude--high {
+    color: var(--nz-red-600, #dc2626);
+    font-weight: 600;
+}
+
+/* Responsive: en pantallas pequeñas, charts en columna */
+@media (max-width: 768px) {
+    .mc-results .nz-grid--2 {
+        grid-template-columns: 1fr !important;
+    }
+}

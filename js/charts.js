@@ -653,5 +653,152 @@
         plotTrajectoryMix,
         plotTrajectoryKPIs,
         plotTrajectoryPNIEC,
+
+        /**
+         * Gráfico de barras horizontales para Monte Carlo: muestra P5, P50, P95
+         */
+        plotMonteCarloBar(divId, kpi, datos) {
+            if (!datos || isNaN(datos.p5) || isNaN(datos.p95)) return;
+
+            const trace = {
+                type: 'bar',
+                orientation: 'h',
+                x: [datos.p5, datos.p50, datos.p95],
+                y: [kpi.label],
+                marker: {
+                    color: [C.precioNegro, C.primary, C.brand],
+                    opacity: [0.6, 0.9, 0.9],
+                    line: {
+                        color: ['rgba(0,0,0,0.1)', C.primary, C.brand],
+                        width: [1, 2, 2],
+                    },
+                },
+                text: [
+                    `P5: ${datos.p5.toFixed(1)}`,
+                    `P50: ${datos.p50.toFixed(1)}`,
+                    `P95: ${datos.p95.toFixed(1)}`,
+                ],
+                textposition: 'outside',
+                textfont: { size: 11 },
+                hovertemplate: '%{y}<br>%{text}<extra></extra>',
+            };
+
+            const lyt = layout({
+                title: { text: '', font: { size: 13 } },
+                xaxis: {
+                    title: kpi.unit,
+                    gridcolor: 'rgba(0,0,0,0.05)',
+                    zeroline: false,
+                },
+                yaxis: {
+                    autorange: true,
+                    tickfont: { size: 11 },
+                },
+                margin: { t: 10, r: 60, b: 30, l: 100 },
+                bargap: 0.3,
+                height: 120,
+            });
+
+            plotOrReact(divId, [trace], lyt);
+        },
+
+        /**
+         * Gráfico de banda de confianza: línea P50 con área P5-P95
+         */
+        plotMonteCarloBand(divId, resultados, kpiKey, kpiLabel, unit, decimals) {
+            if (!resultados || !resultados.resultados) return;
+
+            const valores = resultados.resultados
+                .map(r => r[kpiKey])
+                .filter(v => v !== null && v !== undefined && Number.isFinite(v));
+
+            if (valores.length < 3) return;
+
+            // Calcular percentiles por banda
+            const sorted = [...valores].sort((a, b) => a - b);
+            const n = sorted.length;
+            const p = (pct) => {
+                const k = (n - 1) * (pct / 100);
+                const f = Math.floor(k);
+                const c = Math.ceil(k);
+                if (f === c) return sorted[f];
+                return sorted[f] + (sorted[c] - sorted[f]) * (k - f);
+            };
+
+            const p5 = p(5), p50 = p(50), p95 = p(95);
+            const media = valores.reduce((a, b) => a + b, 0) / n;
+
+            // Band chart: P5 (línea inferior), P5-P95 (área), P95 (línea superior), P50 (línea central)
+            const x = ['P5', 'P50', 'P95'];
+
+            const bandTrace = {
+                type: 'scatter',
+                mode: 'lines',
+                fill: 'tozeroy',
+                fillcolor: 'rgba(37, 99, 235, 0.12)',
+                x: x,
+                y: [p5, p95],
+                name: 'Intervalo 90%',
+                hovertemplate: '%{x}: %{y:.1f} ' + unit + '<extra></extra>',
+                line: { width: 0 },
+            };
+
+            const p50Trace = {
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: x,
+                y: [p50, p50, p50],
+                name: 'P50 (mediana)',
+                line: { color: C.primary, width: 3, dash: 'solid' },
+                marker: { size: 8, color: C.primary },
+                hovertemplate: 'P50: %{y:.1f} ' + unit + '<extra></extra>',
+            };
+
+            const p5Trace = {
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: x,
+                y: [p5, p5, p5],
+                name: 'P5 (peor)',
+                line: { color: 'rgba(239, 68, 68, 0.6)', width: 2, dash: 'dot' },
+                marker: { size: 6, color: 'rgba(239, 68, 68, 0.6)' },
+                hovertemplate: 'P5: %{y:.1f} ' + unit + '<extra></extra>',
+            };
+
+            const p95Trace = {
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: x,
+                y: [p95, p95, p95],
+                name: 'P95 (mejor)',
+                line: { color: 'rgba(34, 197, 94, 0.6)', width: 2, dash: 'dot' },
+                marker: { size: 6, color: 'rgba(34, 197, 94, 0.6)' },
+                hovertemplate: 'P95: %{y:.1f} ' + unit + '<extra></extra>',
+            };
+
+            const lyt = layout({
+                title: { text: kpiLabel, font: { size: 13 } },
+                xaxis: {
+                    title: 'Percentil',
+                    gridcolor: 'rgba(0,0,0,0.05)',
+                },
+                yaxis: {
+                    title: unit,
+                    gridcolor: 'rgba(0,0,0,0.05)',
+                },
+                margin: { t: 25, r: 15, b: 35, l: 55 },
+                height: 160,
+                showlegend: true,
+                legend: {
+                    orientation: 'h',
+                    y: -0.25,
+                    x: 0.5,
+                    xanchor: 'center',
+                    font: { size: 10 },
+                },
+            });
+
+            plotOrReact(divId, [bandTrace, p5Trace, p95Trace, p50Trace], lyt);
+        },
     };
 })();

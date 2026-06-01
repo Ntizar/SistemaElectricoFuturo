@@ -23,6 +23,7 @@
         { id: 'dashboard', label: 'Panel' },
         { id: 'analisis', label: 'Análisis' },
         { id: 'trayectoria', label: 'Trayectoria' },
+        { id: 'incertidumbre', label: 'Incertidumbre' },
     ];
 
     const WEEK_OPTIONS = [
@@ -376,6 +377,13 @@
             const modoPresentacion = ref(false);
             const modoComparacion = ref(false);
             const escenarioComparacion = ref(0);
+
+            // Monte Carlo — estado de incertidumbre
+            const monteCarloEjecutando = ref(false);
+            const monteCarloProgreso = ref(0);
+            const monteCarloN = ref(9);
+            const monteCarloResultados = ref(null);
+            const monteCarloPercentiles = ref(null);
 
             // Service Worker — estado de conexión y persistencia offline
             const isOnline = ref(navigator.onLine !== false);
@@ -901,6 +909,19 @@
                     }
                     renderizarTrayectoria();
                     renderizarSparklines();
+                    renderizarMonteCarlo();
+                });
+            }
+
+            function renderizarMonteCarlo() {
+                if (!monteCarloResultados.value || !monteCarloResultados.value.percentiles) return;
+                nextTick(() => {
+                    const mc = monteCarloResultados.value;
+                    const rc = SEF.Charts.plotMonteCarloBand;
+                    rc('plot-mc-precio', mc, 'precioMedioPonderado', 'Precio medio ponderado', '€/MWh', 1);
+                    rc('plot-mc-emisiones', mc, 'emisionesAnuales', 'Emisiones anuales', 'Mt CO₂', 1);
+                    rc('plot-mc-renovable', mc, 'coberturaRenovable', 'Cobertura renovable', '%', 1);
+                    rc('plot-mc-gas', mc, 'consumoGasTWh', 'Consumo de gas', 'TWh', 2);
                 });
             }
 
@@ -1228,6 +1249,82 @@
                 preciosComparacion = null;
             }
 
+            async function ejecutarMonteCarlo() {
+                monteCarloEjecutando.value = true;
+                monteCarloProgreso.value = 0;
+                monteCarloN.value = monteCarloN.value || 9;
+
+                const semillas = [];
+                for (let i = 1; i <= monteCarloN.value; i++) {
+                    semillas.push(i * 1117 + 42); // semillas determinísticas derivadas
+                }
+
+                const resultados = [];
+                const total = semillas.length;
+
+                for (let i = 0; i < total; i++) {
+                    const semilla = semillas[i];
+                    const paramsClone = { ...params, semilla };
+                    paramsClone._semilla = semilla;
+                    paramsClone._anio = paramsClone.anioObjetivo;
+
+                    const simulador = new SEF.SimuladorElectrico(paramsClone);
+                    const R = simulador.simular();
+                    resultados.push(R);
+
+                    monteCarloProgreso.value = Math.round(((i + 1) / total) * 100);
+
+                    // Permitir que la UI se actualice entre iteraciones
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+
+                // Calcular percentiles manualmente (reutilizar lógica de montecarlo.js)
+                const kpis = [
+                    { key: 'precioMedioPonderado', label: 'Precio medio', unit: '€/MWh', decimals: 1 },
+                    { key: 'emisionesAnuales', label: 'Emisiones', unit: 'Mt', decimals: 1 },
+                    { key: 'consumoGasTWh', label: 'Consumo gas', unit: 'TWh', decimals: 2 },
+                    { key: 'coberturaRenovable', label: 'Cobertura renovable', unit: '%', decimals: 1, multiply: 100 },
+                    { key: 'horasDeficit', label: 'Horas déficit', unit: 'h', decimals: 0 },
+                    { key: 'horasInerciaCritica', label: 'Horas inercia crítica', unit: 'h', decimals: 0 },
+                    { key: 'vertidosTWh', label: 'Vertidos', unit: 'TWh', decimals: 2 },
+                    { key: 'horasGas', label: 'Horas sin gas', unit: 'h', decimals: 0 },
+                ];
+
+                const percentiles = {};
+                for (const kpi of kpis) {
+                    const valores = resultados
+                        .map(r => {
+                            const v = r[kpi.key];
+                            return v !== null && v !== undefined && Number.isFinite(v)
+                                ? (kpi.multiply || 1) * v
+                                : null;
+                        })
+                        .filter(v => v !== null);
+                    if (valores.length === 0) {
+                        percentiles[kpi.key] = { p5: NaN, p50: NaN, p95: NaN, min: NaN, max: NaN, media: NaN };
+                        continue;
+                    }
+                    valores.sort((a, b) => a - b);
+                    const n = valores.length;
+                    const p = (pct) => {
+                        const k = (n - 1) * (pct / 100);
+                        const f = Math.floor(k);
+                        const c = Math.ceil(k);
+                        if (f === c) return valores[f];
+                        return valores[f] + (valores[c] - valores[f]) * (k - f);
+                    };
+                    const media = valores.reduce((a, b) => a + b, 0) / n;
+                    percentiles[kpi.key] = {
+                        p5: p(5), p50: p(50), p95: p(95),
+                        min: valores[0], max: valores[n - 1], media,
+                    };
+                }
+
+                monteCarloResultados.value = { kpis, percentiles, nSemillas: total, resultados };
+                monteCarloEjecutando.value = false;
+                monteCarloProgreso.value = 100;
+            }
+
             function cambiarVistaPrecios(vista) {
                 vistaPrecios.value = vista;
                 renderizarGraficos();
@@ -1323,6 +1420,30 @@
             function signed(value, decimals = 1, unit = '') {
                 const prefix = value > 0 ? '+' : '';
                 return `${prefix}${value.toFixed(decimals)}${unit ? ` ${unit}` : ''}`;
+            }
+
+            function fmt(value, decimals = 1) {
+                if (value === null || value === undefined || isNaN(value)) return '—';
+                return Number(value).toFixed(decimals);
+            }
+
+            function mcAmplitud(key, datos) {
+                if (!datos || !datos.percentiles || !datos.percentiles[key]) return 0;
+                const p = datos.percentiles[key];
+                if (isNaN(p.p95) || isNaN(p.p5)) return 0;
+                return p.p95 - p.p5;
+            }
+
+            function mcRangoClass(key, datos) {
+                if (!datos || !datos.percentiles || !datos.percentiles[key]) return '';
+                const p = datos.percentiles[key];
+                if (isNaN(p.p95) || isNaN(p.p5)) return '';
+                const amplitud = p.p95 - p.p5;
+                const media = p.media || 1;
+                const ratio = media > 0 ? amplitud / Math.abs(media) : 0;
+                if (ratio > 0.3) return 'mc-amplitude--high';
+                if (ratio > 0.15) return 'mc-amplitude--medium';
+                return 'mc-amplitude--low';
             }
 
             watch(tabPrincipal, () => nextTick(renderizarGraficos));
@@ -1531,6 +1652,19 @@
                 isOnline,
                 connectionVisible,
                 simulationSavedVisible,
+
+                // Monte Carlo helpers
+                fmt,
+                mcAmplitud,
+                mcRangoClass,
+
+                // Monte Carlo
+                monteCarloEjecutando,
+                monteCarloProgreso,
+                monteCarloN,
+                monteCarloResultados,
+                ejecutarMonteCarlo,
+                simular,
             };
         },
     }).mount('#app');

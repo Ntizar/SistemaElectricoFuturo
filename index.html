@@ -1053,6 +1053,98 @@
                                 </template>
                             </template>
                         </section>
+
+                            <!-- Monte Carlo — Incertidumbre -->
+                            <template v-if="tabPrincipal === 'incertidumbre'">
+                                <article class="nz-card nz-card--glass-soft chart-card chart-card--full">
+                                    <div class="nz-card__header">
+                                        <div>
+                                            <div class="nz-card__title">Simulación Monte Carlo — Incertidumbre climática</div>
+                                            <div class="nz-card__meta">Ejecuta la simulación con múltiples semillas climáticas para cuantificar la variabilidad de los KPIs del sistema. Cada semilla genera un escenario climático diferente pero reproducible.</div>
+                                        </div>
+                                        <div class="nz-cluster">
+                                            <label class="nz-label" style="margin-right: 0.5rem;">Semillas:</label>
+                                            <select v-model.number="monteCarloN" :disabled="monteCarloEjecutando" style="padding: 0.35rem 0.6rem; border: 1px solid var(--nz-border); border-radius: 6px; font-size: 0.85rem; background: var(--nz-surface); color: var(--nz-text-primary);">
+                                                <option :value="5">5</option>
+                                                <option :value="9">9</option>
+                                                <option :value="15">15</option>
+                                                <option :value="25">25</option>
+                                                <option :value="50">50</option>
+                                            </select>
+                                            <button class="nz-btn nz-btn--brand" @click="ejecutarMonteCarlo" :disabled="monteCarloEjecutando || !mixSimulado">
+                                                {{ monteCarloEjecutando ? 'Ejecutando...' : 'Ejecutar Monte Carlo' }}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Progress bar -->
+                                    <div v-if="monteCarloEjecutando" class="mc-progress" style="margin: 1rem 0;">
+                                        <div class="mc-progress__bar" :style="{ width: monteCarloProgreso + '%' }"></div>
+                                        <span class="mc-progress__label">{{ monteCarloProgreso }}%</span>
+                                    </div>
+
+                                    <!-- Results -->
+                                    <template v-if="monteCarloResultados">
+                                        <div class="mc-results">
+                                            <h3 style="margin: 1.5rem 0 0.75rem; font-size: 1.1rem;">Intervalos de confianza por KPI</h3>
+                                            <div class="nz-table-wrap">
+                                                <table class="nz-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>KPI</th>
+                                                            <th>P5 (peor)</th>
+                                                            <th>P50 (mediana)</th>
+                                                            <th>P95 (mejor)</th>
+                                                            <th>Rango</th>
+                                                            <th>Amplitud P5-P95</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr v-for="kpi in monteCarloResultados.kpis" :key="kpi.key">
+                                                            <td><strong>{{ kpi.label }}</strong> <span style="color: var(--nz-text-secondary); font-size: 0.8rem;">({{ kpi.unit }})</span></td>
+                                                            <td>{{ fmt(monteCarloResultados.percentiles[kpi.key].p5, kpi.decimals) }} {{ kpi.unit }}</td>
+                                                            <td>{{ fmt(monteCarloResultados.percentiles[kpi.key].p50, kpi.decimals) }} {{ kpi.unit }}</td>
+                                                            <td>{{ fmt(monteCarloResultados.percentiles[kpi.key].p95, kpi.decimals) }} {{ kpi.unit }}</td>
+                                                            <td>{{ fmt(monteCarloResultados.percentiles[kpi.key].min, kpi.decimals) }} – {{ fmt(monteCarloResultados.percentiles[kpi.key].max, kpi.decimals) }}</td>
+                                                            <td :class="mcRangoClass(kpi.key, monteCarloResultados)">
+                                                                {{ fmt(mcAmplitud(kpi.key, monteCarloResultados), kpi.decimals) }} {{ kpi.unit }}
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- Band chart: P5-P95 bands for key KPIs -->
+                                            <div class="nz-stack" style="margin-top: 1.5rem;">
+                                                <h3 style="margin: 0 0 0.75rem; font-size: 1.1rem;">Distribución de KPIs principales</h3>
+                                                <div class="nz-grid nz-grid--2">
+                                                    <div id="plot-mc-precio" class="chart-host chart-host--md"></div>
+                                                    <div id="plot-mc-emisiones" class="chart-host chart-host--md"></div>
+                                                    <div id="plot-mc-renovable" class="chart-host chart-host--md"></div>
+                                                    <div id="plot-mc-gas" class="chart-host chart-host--md"></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="chart-explain nz-callout nz-callout--info">
+                                                <span class="nz-callout__title">¿Qué significa?</span>
+                                                <div class="nz-callout__body">
+                                                    El P50 es el resultado más probable (mediana). El intervalo P5-P95 captura el 90% de los escenarios climáticos posibles. Una amplitud grande indica alta incertidumbre: el resultado depende mucho del año climático. Una amplitud pequeña indica que el sistema es robusto ante variabilidad climática.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Empty state -->
+                                    <template v-else>
+                                        <div class="nz-alert nz-alert--info" style="margin: 2rem 0;">
+                                            <div class="nz-alert__title">Selecciona un escenario y ejecuta la simulación Monte Carlo</div>
+                                            <div class="nz-alert__body">
+                                                Los resultados dependen del escenario actual. Ajusta los parámetros en la pestaña <strong>Configuración → Modelo</strong> antes de ejecutar. Cada ejecución reemplaza los resultados anteriores.
+                                            </div>
+                                        </div>
+                                    </template>
+                                </article>
+                            </template>
                     </main>
                 </div>
             </div>
