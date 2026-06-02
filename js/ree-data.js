@@ -301,26 +301,33 @@
     }
 
     function fetchYahooFinance(ticker) {
-        // Yahoo Finance query1 API — funciona sin API key desde navegador
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=1d&interval=1d`;
-        return fetch(url, {
+        // Yahoo Finance query1 API — necesita proxy CORS para funcionar desde navegador
+        // Usamos allorigins.win como proxy CORS público
+        const rawUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=1d&interval=1d`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`;
+        return fetch(proxyUrl, {
             headers: { 'Accept': 'application/json' }
         })
         .then(r => {
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            return r.json();
+            return r.text();
         })
-        .then(data => {
-            const result = data.chart?.result?.[0];
-            if (!result) return null;
-            const quotes = result.indicators?.quote?.[0];
-            const meta = result.meta;
-            if (!quotes || !meta) return null;
-            const close = quotes.close[0];
-            return {
-                precio: close,
-                fecha: new Date(meta.chartPreviousClose * 1000).toLocaleDateString('es-ES'),
-            };
+        .then(text => {
+            try {
+                const data = JSON.parse(text);
+                const result = data.chart?.result?.[0];
+                if (!result) return null;
+                const quotes = result.indicators?.quote?.[0];
+                const meta = result.meta;
+                if (!quotes || !meta) return null;
+                const close = quotes.close[0];
+                return {
+                    precio: close,
+                    fecha: new Date(meta.chartPreviousClose * 1000).toLocaleDateString('es-ES'),
+                };
+            } catch {
+                return null;
+            }
         })
         .catch(() => null);
     }

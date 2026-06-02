@@ -1487,7 +1487,8 @@
 
                 // Registrar service worker para modo offline
                 if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('/sw.js')
+                    // Ruta relativa: funciona tanto en GitHub Pages como local
+                    navigator.serviceWorker.register('./sw.js')
                         .then((reg) => {
                             console.log('[SEF] Service Worker registrado:', reg.scope);
                             // Guardar simulación actual tras primer registro

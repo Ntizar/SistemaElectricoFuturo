@@ -1,4 +1,4 @@
-// postbuild.js — Copia scripts JS/CSS al dist/ y transforma referencias en HTML
+// postbuild.js — Copia scripts JS/CSS/SW al dist/ y transforma referencias en HTML
 // Vite no transforma scripts IIFE (sin type="module"), así que los copiamos manualmente.
 
 import fs from 'fs';
@@ -44,9 +44,25 @@ for (const cssFile of cssFiles) {
     }
 }
 
+// Copiar Service Worker a dist/
+const swSrc = path.join(__dirname, 'sw.js');
+const swDest = path.join(distDir, 'sw.js');
+if (fs.existsSync(swSrc)) {
+    fs.copyFileSync(swSrc, swDest);
+    console.log('Post-build: sw.js copiado a dist/');
+}
+
+// Copiar favicon.svg si existe
+const favSrc = path.join(__dirname, 'favicon.svg');
+const favDest = path.join(distDir, 'favicon.svg');
+if (fs.existsSync(favSrc)) {
+    fs.copyFileSync(favSrc, favDest);
+    console.log('Post-build: favicon.svg copiado a dist/');
+}
+
 // Reemplazar las referencias en el HTML
 html = html.replace(/src="\/js\//g, 'src="js/');
 html = html.replace(/href="\/css\//g, 'href="css/');
 
 fs.writeFileSync(htmlPath, html);
-console.log('Post-build: JS y CSS copiados, referencias transformadas');
+console.log('Post-build: JS, CSS y SW copiados, referencias transformadas');

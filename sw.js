@@ -1,31 +1,33 @@
 /**
  * Service Worker — Sistema Eléctrico Futuro
  * Estrategia: caché primero, red como fallback.
- * Caché los assets estáticos (HTML, CSS, JS, fuentes).
+ * Caché los assets estáticos (HTML, CSS, JS).
  * Los datos de simulación se guardan en localStorage.
+ *
+ * V4.1 — Fix: solo cachea assets que existen en el build de Vite.
+ * Eliminadas rutas /css/ y /js/ que ya no existen tras el build.
  */
 
-const CACHE_NAME = 'sef-cache-v4.0';
+const CACHE_NAME = 'sef-cache-v4.1';
+
+// Solo cacheamos assets que Vite genera realmente
 const STATIC_ASSETS = [
     '/',
     '/index.html',
-    '/css/ntizar.css',
-    '/css/app.css',
-    '/css/ree-data.css',
-    '/js/app.js',
-    '/js/charts.js',
-    '/js/simulator.js',
     '/js/constants.js',
-    '/js/demand.js',
+    '/js/theme.js',
+    '/js/nuclear.js',
     '/js/weather.js',
+    '/js/demand.js',
     '/js/storage.js',
     '/js/policy.js',
-    '/js/nuclear.js',
-    '/js/trajectory.js',
-    '/js/montecarlo.js',
     '/js/scenarios.js',
+    '/js/simulator.js',
+    '/js/montecarlo.js',
+    '/js/trajectory.js',
+    '/js/charts.js',
     '/js/ree-data.js',
-    '/js/theme.js',
+    '/js/app.js',
 ];
 
 // Instalación: cachear todos los assets estáticos
@@ -33,6 +35,8 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(STATIC_ASSETS);
+        }).catch((err) => {
+            console.warn('[SW] Error al cachear assets:', err);
         })
     );
     // Activar inmediatamente sin esperar a que se cierren pestañas
